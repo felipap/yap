@@ -3,6 +3,8 @@ import { readFile, stat } from 'fs/promises'
 import { createReadStream } from 'fs'
 import { vlogIdToPath } from './ipc'
 
+console.log('a'.repeat(100))
+
 // Register custom protocols
 export function registerProtocols() {
   // Register the custom protocol as a standard scheme before app is ready
@@ -43,6 +45,7 @@ export function setupProtocolHandlers() {
 
       console.log('Video request URL:', request.url)
       console.log('Vlog ID:', vlogId)
+      console.log('Request headers:', Object.fromEntries(request.headers.entries()))
 
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
@@ -54,8 +57,9 @@ export function setupProtocolHandlers() {
       console.log('Resolved file path:', filePath)
 
       // Check if file exists and get stats
+      let stats
       try {
-        const stats = await stat(filePath)
+        stats = await stat(filePath)
         console.log('File stats:', { size: stats.size, isFile: stats.isFile() })
 
         if (!stats.isFile()) {
@@ -71,12 +75,44 @@ export function setupProtocolHandlers() {
       const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
       console.log('MIME type:', mimeType)
 
-      // Use streaming for better performance with large files
+      // Handle range requests for video seeking
+      const range = request.headers.get('range')
+      if (range) {
+        console.log('Range request:', range)
+
+        const match = range.match(/bytes=(\d+)-(\d*)/)
+        if (match) {
+          const start = parseInt(match[1], 10)
+          const end = match[2] ? parseInt(match[2], 10) : stats.size - 1
+          const chunkSize = end - start + 1
+
+          console.log(`Serving range: ${start}-${end} (${chunkSize} bytes)`)
+
+          const stream = createReadStream(filePath, { start, end })
+
+          return new Response(stream as any, {
+            status: 206, // Partial Content
+            headers: {
+              'Content-Type': mimeType,
+              'Content-Length': chunkSize.toString(),
+              'Content-Range': `bytes ${start}-${end}/${stats.size}`,
+              'Accept-Ranges': 'bytes',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET',
+              'Access-Control-Allow-Headers': 'Content-Type, Range',
+            },
+          })
+        }
+      }
+
+      // Full file request (no range)
+      console.log('Full file request')
       const stream = createReadStream(filePath)
 
       return new Response(stream as any, {
         headers: {
           'Content-Type': mimeType,
+          'Content-Length': stats.size.toString(),
           'Accept-Ranges': 'bytes',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
