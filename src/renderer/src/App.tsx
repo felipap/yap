@@ -18,6 +18,7 @@ export function App() {
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
+  const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
 
   useEffect(() => {
     loadRecordedFiles()
@@ -36,6 +37,47 @@ export function App() {
       console.error('Failed to load cameras:', error)
     }
   }
+
+  const startCameraPreview = async (cameraId: string) => {
+    try {
+      // Stop any existing preview
+      if (previewStream) {
+        previewStream.getTracks().forEach(track => track.stop())
+      }
+
+      // Start new preview
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: cameraId ? { exact: cameraId } : undefined,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
+      })
+      setPreviewStream(stream)
+    } catch (error) {
+      console.error('Failed to start camera preview:', error)
+    }
+  }
+
+  const stopCameraPreview = () => {
+    if (previewStream) {
+      previewStream.getTracks().forEach(track => track.stop())
+      setPreviewStream(null)
+    }
+  }
+
+  useEffect(() => {
+    if ((recordingMode === 'camera' || recordingMode === 'both') && selectedCameraId) {
+      startCameraPreview(selectedCameraId)
+    } else {
+      stopCameraPreview()
+    }
+
+    return () => {
+      stopCameraPreview()
+    }
+  }, [recordingMode, selectedCameraId])
 
   const loadRecordedFiles = async () => {
     try {
@@ -94,16 +136,47 @@ export function App() {
         }}>
           Vlog Electron
         </h1>
-        <RecordingControls
-          isRecording={isRecording}
-          recordingMode={recordingMode}
-          cameras={cameras}
-          selectedCameraId={selectedCameraId}
-          onRecordingModeChange={setRecordingMode}
-          onCameraChange={setSelectedCameraId}
-          onStartRecording={handleStartRecording}
-          onStopRecording={handleStopRecording}
-        />
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <RecordingControls
+              isRecording={isRecording}
+              recordingMode={recordingMode}
+              cameras={cameras}
+              selectedCameraId={selectedCameraId}
+              onRecordingModeChange={setRecordingMode}
+              onCameraChange={setSelectedCameraId}
+              onStartRecording={handleStartRecording}
+              onStopRecording={handleStopRecording}
+            />
+          </div>
+
+          {previewStream && (recordingMode === 'camera' || recordingMode === 'both') && (
+            <div style={{
+              width: '320px',
+              height: '180px',
+              background: 'black',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              border: '2px solid var(--border)'
+            }}>
+              <video
+                ref={(video) => {
+                  if (video && previewStream) {
+                    video.srcObject = previewStream
+                    video.play()
+                  }
+                }}
+                autoPlay
+                muted
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
