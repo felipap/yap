@@ -5,6 +5,7 @@ export interface RecordedFile {
   size: number
   created: Date
   modified: Date
+  thumbnailPath?: string
 }
 
 export type RecordingMode = 'screen' | 'camera' | 'both'

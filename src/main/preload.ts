@@ -13,6 +13,7 @@ export interface RecordedFile {
   size: number
   created: Date
   modified: Date
+  thumbnailPath?: string
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {

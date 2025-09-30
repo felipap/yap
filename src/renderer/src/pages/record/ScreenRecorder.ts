@@ -24,7 +24,7 @@ export class ScreenRecorder {
       if (this.mode === 'screen') {
         this.stream = await this.getScreenStream()
       } else if (this.mode === 'camera') {
-        this.cameraStream = await this.getCameraStream()
+        this.cameraStream = await this.createCameraStream()
         this.stream = this.cameraStream
       } else {
         // Both: combine screen and camera
@@ -148,7 +148,7 @@ export class ScreenRecorder {
     })
   }
 
-  private async getCameraStream(): Promise<MediaStream> {
+  private async createCameraStream(): Promise<MediaStream> {
     console.log('Starting camera recording with camera:', this.cameraId)
 
     const videoConstraints: MediaTrackConstraints = {
@@ -179,7 +179,7 @@ export class ScreenRecorder {
     const screenStream = await this.getScreenStream()
 
     // Get camera stream
-    this.cameraStream = await this.getCameraStream()
+    this.cameraStream = await this.createCameraStream()
 
     // Combine video from screen and audio from camera
     const combinedStream = new MediaStream()

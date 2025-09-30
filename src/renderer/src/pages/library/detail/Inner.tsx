@@ -19,9 +19,9 @@ export function Inner({
   const videoRef = useRef<HTMLVideoElement>(null)
 
   return (
-    <div className="flex flex-col h-screen bg-[var(--bg-primary)]">
+    <div className="flex flex-col h-screen bg-one">
       {/* Header */}
-      <div className="drag-region px-6 py-4 flex justify-between items-center border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+      <div className="drag-region px-6 py-4 flex justify-between items-center border-b border-[var(--border)] bg-two">
         <div className="no-drag-region flex items-center gap-4">
           <button
             onClick={onBack}
@@ -53,7 +53,7 @@ export function Inner({
       </div>
 
       {/* Video player */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-[var(--bg-primary)]">
+      <div className="flex-1 flex items-center justify-center p-6 bg-one">
         <video
           ref={videoRef}
           controls
@@ -66,7 +66,7 @@ export function Inner({
       </div>
 
       {/* Footer hint */}
-      <div className="px-6 py-3 text-center text-sm border-t border-[var(--border)] text-[var(--text-secondary)] bg-[var(--bg-secondary)]">
+      <div className="px-6 py-3 text-center text-sm border-t border-[var(--border)] text-[var(--text-secondary)] bg-two">
         Press ESC to go back
       </div>
     </div>

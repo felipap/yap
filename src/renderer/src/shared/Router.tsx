@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
 type Route =
-  | { name: 'home' }
-  | { name: 'recording' }
-  | { name: 'detail'; vlogId: string }
+  | { name: 'library' }
+  | { name: 'record' }
 
 interface RouterContextType {
   currentRoute: Route
@@ -14,8 +13,8 @@ interface RouterContextType {
 const RouterContext = createContext<RouterContextType | null>(null)
 
 export function RouterProvider({ children }: { children: ReactNode }) {
-  const [currentRoute, setCurrentRoute] = useState<Route>({ name: 'home' })
-  const [history, setHistory] = useState<Route[]>([{ name: 'home' }])
+  const [currentRoute, setCurrentRoute] = useState<Route>({ name: 'library' })
+  const [history, setHistory] = useState<Route[]>([{ name: 'library' }])
 
   const navigate = (route: Route) => {
     setHistory(prev => [...prev, route])

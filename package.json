@@ -1,61 +1,69 @@
 {
-	"name": "vlog-electron",
-	"version": "1.0.0",
-	"description": "A seamless vlogging app with screen recording capabilities",
-	"main": "dist/main.js",
-	"scripts": {
-		"dev": "bun run build:main && concurrently -n tsc,vite,electron \"tsc -p tsconfig.main.json --watch\" \"vite dev\" \"bun run electron:dev\"",
-		"build": "bun run build:main && bun run build:renderer",
-		"build:main": "tsc -p tsconfig.main.json",
-		"build:renderer": "vite build",
-		"electron:dev": "sleep 3 && wait-on http://localhost:3000 && electron .",
-		"electron:pack": "electron-builder",
-		"start": "bun run build && electron ."
-	},
-	"keywords": [
-		"electron",
-		"vlog",
-		"screen-recording",
-		"typescript",
-		"react"
-	],
-	"author": "Felipe",
-	"license": "MIT",
-	"devDependencies": {
-		"@types/node": "^20.10.0",
-		"@types/react": "^18.2.43",
-		"@types/react-dom": "^18.2.17",
-		"@vitejs/plugin-react": "^4.2.1",
-		"concurrently": "^8.2.2",
-		"@tailwindcss/vite": "^4.0.12",
-		"@tailwindcss/forms": "^0.5.10",
-		"@tailwindcss/postcss": "^4.0.12",
-		"tailwind-merge": "^3.0.2",
-		"tailwindcss": "^4.0.12",
-		"electron": "^28.1.0",
-		"electron-builder": "^24.9.1",
-		"typescript": "^5.3.3",
-		"vite": "^5.0.8",
-		"wait-on": "^7.2.0"
-	},
-	"dependencies": {
-		"electron-store": "^8.2.0",
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
-	},
-	"build": {
-		"appId": "com.felipe.vlog-electron",
-		"productName": "Vlog Electron",
-		"directories": {
-			"output": "dist-electron"
-		},
-		"files": [
-			"dist/**/*",
-			"node_modules/**/*"
-		],
-		"mac": {
-			"category": "public.app-category.video",
-			"target": "dmg"
-		}
-	}
+  "name": "vlog-electron",
+  "version": "1.0.0",
+  "description": "A seamless vlogging app with screen recording capabilities",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "bun run build:main && concurrently -n tsc,vite,electron \"tsc -p tsconfig.main.json --watch\" \"vite dev\" \"bun run electron:dev\"",
+    "build": "bun run build:main && bun run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "electron:dev": "sleep 3 && wait-on http://localhost:3000 && electron .",
+    "electron:pack": "electron-builder",
+    "start": "bun run build && electron ."
+  },
+  "keywords": [
+    "electron",
+    "vlog",
+    "screen-recording",
+    "typescript",
+    "react"
+  ],
+  "author": "Felipe",
+  "license": "MIT",
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "always",
+    "printWidth": 80,
+    "semi": false
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.0.12",
+    "@tailwindcss/vite": "^4.0.12",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "prettier": "^3.6.2",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss": "^4.0.12",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "build": {
+    "appId": "com.felipe.vlog-electron",
+    "productName": "Vlog Electron",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "target": "dmg"
+    }
+  }
 }

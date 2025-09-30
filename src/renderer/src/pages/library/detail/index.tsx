@@ -77,7 +77,7 @@ export default function Page({ vlogId }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      <div className="flex items-center justify-center h-screen bg-one text-[var(--text-primary)]">
         Loading...
       </div>
     )
@@ -87,7 +87,7 @@ export default function Page({ vlogId }: PageProps) {
 
   if (error || !vlog) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[var(--bg-primary)] gap-4">
+      <div className="flex flex-col items-center justify-center h-screen bg-one gap-4">
         <h2 className="text-[var(--text-primary)] m-0">
           {error || 'Vlog not found'}
         </h2>

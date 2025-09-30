@@ -1,22 +1,24 @@
+import LibraryPage from './pages/library'
+import RecordPage from './pages/record'
 import { useRouter } from './shared/Router'
-import HomePage from './pages/home'
-import RecordingPage from './pages/recording'
-import DetailPage from './pages/detail'
+import { TopNav } from './shared/ui/TopNav'
 
 export function App() {
   const { currentRoute } = useRouter()
 
-  if (currentRoute.name === 'home') {
-    return <HomePage />
+  let inner = null
+  if (currentRoute.name === 'library') {
+    inner = <LibraryPage />
+  } else if (currentRoute.name === 'record') {
+    inner = <RecordPage />
+  } else {
+    inner = <LibraryPage />
   }
 
-  if (currentRoute.name === 'recording') {
-    return <RecordingPage />
-  }
-
-  if (currentRoute.name === 'detail') {
-    return <DetailPage vlogId={currentRoute.vlogId} />
-  }
-
-  return <HomePage />
+  return (
+    <div className="flex flex-col h-screen text-[14px]">
+      <TopNav currentTab={currentRoute.name} />
+      {inner}
+    </div>
+  )
 }
