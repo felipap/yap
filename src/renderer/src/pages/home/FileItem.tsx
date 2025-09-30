@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RecordedFile } from '../../types'
+import { openFileLocation, deleteFile } from '../../ipc'
 
 interface FileItemProps {
   file: RecordedFile
@@ -32,7 +33,7 @@ export function FileItem({ file, onDeleted, onWatch }: FileItemProps) {
 
   const handleOpenLocation = async () => {
     try {
-      await window.electronAPI.openFileLocation(file.path)
+      await openFileLocation(file.id)
     } catch (error) {
       console.error('Failed to open file location:', error)
     }
@@ -45,7 +46,7 @@ export function FileItem({ file, onDeleted, onWatch }: FileItemProps) {
 
     setIsDeleting(true)
     try {
-      await window.electronAPI.deleteFile(file.path)
+      await deleteFile(file.id)
       onDeleted()
     } catch (error) {
       console.error('Failed to delete file:', error)

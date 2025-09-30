@@ -3,6 +3,13 @@ import { RecordingControls } from './RecordingControls'
 import { FileList } from './FileList'
 import { RecordingMode, RecordedFile } from '../../types'
 import { useRouter } from '../../shared/Router'
+import {
+  getRecordedFiles,
+  getSelectedCameraId,
+  getRecordingMode,
+  setSelectedCameraId as saveSelectedCameraId,
+  setRecordingMode as saveRecordingMode
+} from '../../ipc'
 
 export default function Page() {
   const router = useRouter()
@@ -28,8 +35,8 @@ export default function Page() {
 
   const loadSettings = async () => {
     try {
-      const savedCameraId = await window.electronAPI.store.get<string>('selectedCameraId')
-      const savedMode = await window.electronAPI.store.get<RecordingMode>('recordingMode')
+      const savedCameraId = await getSelectedCameraId()
+      const savedMode = await getRecordingMode()
 
       if (savedCameraId) {
         setSelectedCameraId(savedCameraId)
@@ -57,7 +64,7 @@ export default function Page() {
 
   const loadRecordedFiles = async () => {
     try {
-      const files = await window.electronAPI.getRecordedFiles()
+      const files = await getRecordedFiles()
       setRecordedFiles(files)
     } catch (error) {
       console.error('Failed to load recorded files:', error)
@@ -104,12 +111,12 @@ export default function Page() {
   // Save settings when they change
   useEffect(() => {
     if (selectedCameraId) {
-      window.electronAPI.store.set('selectedCameraId', selectedCameraId)
+      saveSelectedCameraId(selectedCameraId)
     }
   }, [selectedCameraId])
 
   useEffect(() => {
-    window.electronAPI.store.set('recordingMode', recordingMode)
+    saveRecordingMode(recordingMode)
   }, [recordingMode])
 
   const handleStartRecording = () => {
@@ -120,8 +127,7 @@ export default function Page() {
   const handleFileWatch = (file: RecordedFile) => {
     router.navigate({
       name: 'detail',
-      filePath: file.path,
-      fileName: file.name
+      vlogId: file.id
     })
   }
 
@@ -191,8 +197,10 @@ export default function Page() {
         <div style={{
           padding: '16px 24px',
           borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-secondary)'
-        }}>
+          // background: 'var(--bg-secondary)'
+        }}
+          className='bg-red-500'
+        >
           <h2 style={{
             fontSize: '18px',
             fontWeight: '600',

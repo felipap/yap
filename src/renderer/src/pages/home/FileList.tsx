@@ -21,7 +21,7 @@ export function FileList({ files, onFileDeleted, onFileWatch }: FileListProps) {
     <div className="scroll-container">
       {files.map((file) => (
         <FileItem
-          key={file.path}
+          key={file.id}
           file={file}
           onDeleted={onFileDeleted}
           onWatch={onFileWatch}

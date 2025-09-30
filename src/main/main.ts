@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, desktopCapturer, shell, protocol } from 'e
 import { join } from 'path'
 import { readdir, stat, writeFile, mkdir, unlink, readFile } from 'fs/promises'
 import { homedir } from 'os'
+import { createHash } from 'crypto'
 import { store } from './store'
 
 // Register the custom protocol as a standard scheme before app is ready
@@ -53,14 +54,21 @@ app.whenReady().then(() => {
   // Register custom protocol to serve local video files
   protocol.handle('vlog-video', async (request) => {
     try {
-      // Remove the protocol and decode the URL
-      let filePath = request.url.replace('vlog-video://', '')
-      filePath = decodeURIComponent(filePath)
+      // Remove the protocol and get the vlog ID
+      const vlogId = request.url.replace('vlog-video://', '').replace('/', '')
 
       console.log('Video request URL:', request.url)
-      console.log('Decoded file path:', filePath)
+      console.log('Vlog ID:', vlogId)
 
-      const data = await readFile('/' + filePath)
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        console.error(`Vlog with ID ${vlogId} not found in mapping`)
+        return new Response('Vlog not found', { status: 404 })
+      }
+
+      console.log('Resolved file path:', filePath)
+
+      const data = await readFile(filePath)
 
       // Determine MIME type based on file extension
       const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
@@ -108,6 +116,14 @@ ipcMain.handle('get-screen-sources', async () => {
   }
 })
 
+// Helper function to generate a unique ID for a vlog
+function generateVlogId(filePath: string): string {
+  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
+}
+
+// Store mapping of vlog IDs to paths
+const vlogIdToPath = new Map<string, string>()
+
 ipcMain.handle('get-recorded-files', async () => {
   try {
     const documentsPath = join(homedir(), 'Documents', 'VlogRecordings')
@@ -123,7 +139,13 @@ ipcMain.handle('get-recorded-files', async () => {
         .map(async (file) => {
           const filePath = join(documentsPath, file)
           const stats = await stat(filePath)
+          const id = generateVlogId(filePath)
+
+          // Store the mapping
+          vlogIdToPath.set(id, filePath)
+
           return {
+            id,
             name: file,
             path: filePath,
             size: stats.size,
@@ -140,21 +162,30 @@ ipcMain.handle('get-recorded-files', async () => {
   }
 })
 
-ipcMain.handle('open-file-location', async (_, filePath: string) => {
+ipcMain.handle('open-file-location', async (_, vlogId: string) => {
   try {
+    const filePath = vlogIdToPath.get(vlogId)
+    if (!filePath) {
+      throw new Error(`Vlog with ID ${vlogId} not found`)
+    }
     await shell.showItemInFolder(filePath)
   } catch (error) {
-    console.error('Error opening file location:', error)
+    console.error('Error opening vlog location:', error)
     throw error
   }
 })
 
-ipcMain.handle('delete-file', async (_, filePath: string) => {
+ipcMain.handle('delete-file', async (_, vlogId: string) => {
   try {
+    const filePath = vlogIdToPath.get(vlogId)
+    if (!filePath) {
+      throw new Error(`Vlog with ID ${vlogId} not found`)
+    }
     await unlink(filePath)
+    vlogIdToPath.delete(vlogId)
     return true
   } catch (error) {
-    console.error('Error deleting file:', error)
+    console.error('Error deleting vlog:', error)
     throw error
   }
 })
@@ -168,8 +199,11 @@ ipcMain.handle('save-recording', async (_, filename: string, arrayBuffer: ArrayB
     const buffer = Buffer.from(arrayBuffer)
     await writeFile(filepath, buffer)
 
+    const id = generateVlogId(filepath)
+    vlogIdToPath.set(id, filepath)
+
     console.log(`Recording saved: ${filepath}`)
-    return filepath
+    return id
   } catch (error) {
     console.error('Error saving recording:', error)
     throw error

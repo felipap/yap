@@ -7,6 +7,7 @@ export interface ScreenSource {
 }
 
 export interface RecordedFile {
+  id: string
   name: string
   path: string
   size: number
@@ -21,11 +22,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getRecordedFiles: (): Promise<RecordedFile[]> =>
     ipcRenderer.invoke('get-recorded-files'),
 
-  openFileLocation: (filePath: string): Promise<void> =>
-    ipcRenderer.invoke('open-file-location', filePath),
+  openFileLocation: (vlogId: string): Promise<void> =>
+    ipcRenderer.invoke('open-file-location', vlogId),
 
-  deleteFile: (filePath: string): Promise<boolean> =>
-    ipcRenderer.invoke('delete-file', filePath),
+  deleteFile: (vlogId: string): Promise<boolean> =>
+    ipcRenderer.invoke('delete-file', vlogId),
 
   saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> =>
     ipcRenderer.invoke('save-recording', filename, buffer),
@@ -47,8 +48,8 @@ declare global {
     electronAPI: {
       getScreenSources: () => Promise<ScreenSource[]>
       getRecordedFiles: () => Promise<RecordedFile[]>
-      openFileLocation: (filePath: string) => Promise<void>
-      deleteFile: (filePath: string) => Promise<boolean>
+      openFileLocation: (vlogId: string) => Promise<void>
+      deleteFile: (vlogId: string) => Promise<boolean>
       saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
       store: {
         get: <T>(key: string) => Promise<T>

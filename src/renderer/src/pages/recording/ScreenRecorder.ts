@@ -1,3 +1,5 @@
+import { getScreenSources, saveRecording } from '../../ipc'
+
 export type RecordingMode = 'screen' | 'camera' | 'both'
 
 export class ScreenRecorder {
@@ -99,7 +101,7 @@ export class ScreenRecorder {
       const arrayBuffer = await blob.arrayBuffer()
 
       // Save file using Electron API
-      await window.electronAPI.saveRecording(filename, arrayBuffer)
+      await saveRecording(filename, arrayBuffer)
 
       console.log(`Recording saved: ${filename}`)
 
@@ -110,7 +112,7 @@ export class ScreenRecorder {
   }
 
   private async getScreenStream(): Promise<MediaStream> {
-    const sources = await window.electronAPI.getScreenSources()
+    const sources = await getScreenSources()
 
     if (sources.length === 0) {
       throw new Error('No screen sources available. Please check screen recording permissions.')

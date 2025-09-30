@@ -15,7 +15,7 @@ export function App() {
   }
 
   if (currentRoute.name === 'detail') {
-    return <DetailPage filePath={currentRoute.filePath} fileName={currentRoute.fileName} />
+    return <DetailPage vlogId={currentRoute.vlogId} />
   }
 
   return <HomePage />

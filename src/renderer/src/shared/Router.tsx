@@ -3,7 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 type Route =
   | { name: 'home' }
   | { name: 'recording' }
-  | { name: 'detail'; filePath: string; fileName: string }
+  | { name: 'detail'; vlogId: string }
 
 interface RouterContextType {
   currentRoute: Route

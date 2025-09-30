@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ScreenRecorder } from './ScreenRecorder'
 import { RecordingMode } from '../../types'
 import { useRouter } from '../../shared/Router'
+import { getSelectedCameraId, getRecordingMode } from '../../ipc'
 
 export default function Page() {
   const router = useRouter()
@@ -37,8 +38,8 @@ export default function Page() {
 
   const loadSettingsAndStart = async () => {
     try {
-      const savedCameraId = await window.electronAPI.store.get<string>('selectedCameraId')
-      const savedMode = await window.electronAPI.store.get<RecordingMode>('recordingMode')
+      const savedCameraId = await getSelectedCameraId()
+      const savedMode = await getRecordingMode()
 
       const mode = savedMode || 'camera'
       const cameraId = savedCameraId || ''
