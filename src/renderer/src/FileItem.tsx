@@ -1,0 +1,92 @@
+import React, { useState } from 'react'
+
+interface RecordedFile {
+  name: string
+  path: string
+  size: number
+  created: Date
+  modified: Date
+}
+
+interface FileItemProps {
+  file: RecordedFile
+  onDeleted: () => void
+}
+
+export function FileItem({ file, onDeleted }: FileItemProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) {
+      return '0 Bytes'
+    }
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatDate = (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date)
+  }
+
+  const handleOpenLocation = async () => {
+    try {
+      await window.electronAPI.openFileLocation(file.path)
+    } catch (error) {
+      console.error('Failed to open file location:', error)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${file.name}"?`)) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await window.electronAPI.deleteFile(file.path)
+      onDeleted()
+    } catch (error) {
+      console.error('Failed to delete file:', error)
+      alert('Failed to delete file')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <div className="file-item">
+      <div className="file-info">
+        <div className="file-name">{file.name}</div>
+        <div className="file-details">
+          <span>{formatFileSize(file.size)}</span>
+          <span>{formatDate(file.created)}</span>
+        </div>
+      </div>
+      <div className="file-actions">
+        <button
+          className="btn-secondary"
+          onClick={handleOpenLocation}
+          disabled={isDeleting}
+        >
+          📁 Show in Finder
+        </button>
+        <button
+          className="btn-danger"
+          onClick={handleDelete}
+          disabled={isDeleting}
+        >
+          {isDeleting ? '⏳' : '🗑️'} Delete
+        </button>
+      </div>
+    </div>
+  )
+}
+
