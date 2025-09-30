@@ -3,7 +3,6 @@ import { readFile, stat } from 'fs/promises'
 import { createReadStream } from 'fs'
 import { vlogIdToPath } from './ipc'
 
-console.log('a'.repeat(100))
 
 // Register custom protocols
 export function registerProtocols() {

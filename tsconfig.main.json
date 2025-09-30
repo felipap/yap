@@ -15,7 +15,10 @@
     // "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "declaration": false
   },
   "include": [
     "src/main/**/*"

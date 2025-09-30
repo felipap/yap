@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { store } from './store'
@@ -59,3 +60,13 @@ app.on('window-all-closed', () => {
 
 // Setup IPC handlers
 setupIpcHandlers()
+
+// Handle uncaught exceptions with better stack traces
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error)
+  console.error('Stack trace:', error.stack)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})

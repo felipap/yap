@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { getTranscription, transcribeVideo } from '../../../ipc'
+import { withBoundary } from '../../../shared/withBoundary'
 import { TranscriptionResult } from '../../../types'
-import { transcribeVideo, getTranscription } from '../../../ipc'
-import { ErrorBoundary } from '../../../shared/ErrorBoundary'
-import { useBoundary } from '../../../shared/useBoundary'
 
-interface TranscriptionPanelProps {
+interface Props {
   vlogId: string
   videoRef: React.RefObject<HTMLVideoElement>
 }
 
-function TranscriptionPanelContent({
+export const TranscriptionPanel = withBoundary(function ({
   vlogId,
   videoRef,
-}: TranscriptionPanelProps) {
+}: Props) {
   const [transcription, setTranscription] =
     useState<TranscriptionResult | null>(null)
   const [isTranscribing, setIsTranscribing] = useState(false)
@@ -20,7 +19,6 @@ function TranscriptionPanelContent({
   const [transcriptionError, setTranscriptionError] = useState<string | null>(
     null,
   )
-  const { withErrorBoundary } = useBoundary()
 
   // Load existing transcription on mount
   useEffect(() => {
@@ -38,7 +36,7 @@ function TranscriptionPanelContent({
     loadTranscription()
   }, [vlogId])
 
-  const handleTranscribe = withErrorBoundary(async () => {
+  const handleTranscribe = async () => {
     setIsTranscribing(true)
     setTranscriptionError(null)
 
@@ -54,7 +52,7 @@ function TranscriptionPanelContent({
     } finally {
       setIsTranscribing(false)
     }
-  })
+  }
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -138,21 +136,4 @@ function TranscriptionPanelContent({
       )}
     </>
   )
-}
-
-export function TranscriptionPanel(props: TranscriptionPanelProps) {
-  return (
-    <ErrorBoundary
-      fallback={
-        <div className="btn-secondary opacity-50 cursor-not-allowed">
-          🎤 Transcription Error
-        </div>
-      }
-      onError={(error) => {
-        console.error('TranscriptionPanel error:', error)
-      }}
-    >
-      <TranscriptionPanelContent {...props} />
-    </ErrorBoundary>
-  )
-}
+})

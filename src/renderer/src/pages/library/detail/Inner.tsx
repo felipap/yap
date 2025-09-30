@@ -22,7 +22,7 @@ export function Inner({
   return (
     <div className="flex flex-col h-screen bg-one">
       {/* Header */}
-      <div className="drag-region px-6 py-4 flex justify-between items-center border-b border-[var(--border)] bg-two">
+      <div className="drag-region px-6 py-4 flex items-center border-b border-[var(--border)] bg-two">
         <div className="no-drag-region flex items-center gap-4">
           <button onClick={onBack} className="btn-secondary px-4 py-2 text-sm">
             ← Back
@@ -33,7 +33,6 @@ export function Inner({
         </div>
 
         <div className="no-drag-region flex gap-3">
-          <TranscriptionPanel vlogId={vlog.id} videoRef={videoRef} />
           <button
             className="btn-secondary"
             onClick={onOpenLocation}
@@ -50,9 +49,8 @@ export function Inner({
           </button>
         </div>
       </div>
-
       {/* Video player */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-one">
+      <div className="flex items-center justify-center p-6 bg-one">
         <video
           ref={videoRef}
           controls
@@ -64,10 +62,7 @@ export function Inner({
         </video>
       </div>
 
-      {/* Footer hint */}
-      <div className="px-6 py-3 text-center text-sm border-t border-[var(--border)] text-[var(--text-secondary)] bg-two">
-        Press ESC to go back
-      </div>
+      <TranscriptionPanel vlogId={vlog.id} videoRef={videoRef} />
     </div>
   )
 }

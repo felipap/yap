@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react'
+import { Component, ReactNode, ComponentType } from 'react'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -46,5 +46,23 @@ export class ErrorBoundary extends Component<
     }
 
     return this.props.children
+  }
+}
+
+export function withBoundary<P extends object>(
+  Component: ComponentType<P>,
+  fallback?: React.ReactNode,
+): ComponentType<P> {
+  return function WrappedComponent(props: P) {
+    return (
+      <ErrorBoundary
+        fallback={fallback || <div>Something went wrong</div>}
+        onError={(error) => {
+          console.error('Component error:', error)
+        }}
+      >
+        <Component {...props} />
+      </ErrorBoundary>
+    )
   }
 }
