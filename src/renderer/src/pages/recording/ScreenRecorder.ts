@@ -138,26 +138,22 @@ export class ScreenRecorder {
   private async getCameraStream(): Promise<MediaStream> {
     console.log('Starting camera recording with camera:', this.cameraId)
 
-    const constraints: MediaStreamConstraints = {
-      audio: true,
-      video: {
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      }
+    const videoConstraints: MediaTrackConstraints = {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
     }
 
     // If a specific camera is selected, use it
     if (this.cameraId) {
-      constraints.video = {
-        ...constraints.video,
-        deviceId: { exact: this.cameraId }
-      }
+      videoConstraints.deviceId = { exact: this.cameraId }
     } else {
       // Otherwise use the default front camera
-      constraints.video = {
-        ...constraints.video,
-        facingMode: 'user'
-      }
+      videoConstraints.facingMode = 'user'
+    }
+
+    const constraints: MediaStreamConstraints = {
+      audio: true,
+      video: videoConstraints
     }
 
     return navigator.mediaDevices.getUserMedia(constraints)

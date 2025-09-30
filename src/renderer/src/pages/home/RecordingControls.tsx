@@ -1,6 +1,6 @@
-import React from 'react'
+import { RecordingMode } from '../../types'
 
-export type RecordingMode = 'screen' | 'camera' | 'both'
+export type { RecordingMode }
 
 interface RecordingControlsProps {
   isRecording: boolean

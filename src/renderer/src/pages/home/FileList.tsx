@@ -1,12 +1,5 @@
 import { FileItem } from './FileItem'
-
-interface RecordedFile {
-  name: string
-  path: string
-  size: number
-  created: Date
-  modified: Date
-}
+import { RecordedFile } from '../../types'
 
 interface FileListProps {
   files: RecordedFile[]
