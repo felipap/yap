@@ -96,9 +96,7 @@ export function VideoCard({ file, onDeleted, onWatch }: VideoCardProps) {
       {/* Info and Actions */}
       <div className="flex-1 p-6 flex flex-col justify-between">
         <div className="flex flex-col gap-2">
-          <h3 className="text-xl font-semibold text-[var(--text-primary)]">
-            {file.name}
-          </h3>
+          <h3 className="text-xl font-semibold text-contrast">{file.name}</h3>
           <div className="flex gap-4 text-sm text-[var(--text-secondary)]">
             <span>{formatFileSize(file.size)}</span>
             <span>{formatDate(file.created)}</span>
@@ -108,7 +106,7 @@ export function VideoCard({ file, onDeleted, onWatch }: VideoCardProps) {
         {/* Actions */}
         <div className="flex gap-3 mt-4">
           <button
-            className="px-6 py-2 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--color-tertiary)] text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 rounded-md bg-[var(--bg-tertiary)] hover:bg-[var(--color-tertiary)] text-contrast font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={(e) => {
               e.stopPropagation()
               handleOpenLocation()

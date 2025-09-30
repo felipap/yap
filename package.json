@@ -8,7 +8,7 @@
     "build": "bun run build:main && bun run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
-    "electron:dev": "sleep 0 && wait-on http://localhost:3000 && electron .",
+    "electron:dev": "sleep 1 && wait-on http://localhost:3000 && electron .",
     "electron:pack": "electron-builder",
     "start": "bun run build && electron ."
   },

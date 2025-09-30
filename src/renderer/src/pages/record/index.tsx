@@ -228,11 +228,11 @@ export default function Page() {
             <>
               <div className="flex items-center gap-3 px-5 py-3 bg-red-500/10 border-2 border-red-500 rounded-xl">
                 <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-lg font-semibold text-[var(--text-primary)]">
+                <span className="text-lg font-semibold text-contrast">
                   Recording {getModeLabel()}
                 </span>
               </div>
-              <div className="text-[32px] font-bold text-[var(--text-primary)] tabular-nums">
+              <div className="text-[32px] font-bold text-contrast tabular-nums">
                 {formatTime(recordingTime)}
               </div>
             </>
@@ -262,7 +262,7 @@ export default function Page() {
             <div className="w-full aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-one flex items-center justify-center">
               <div className="text-center">
                 <div className="text-8xl mb-4">🖥️</div>
-                <p className="text-xl text-[var(--text-primary)] font-semibold">
+                <p className="text-xl text-contrast font-semibold">
                   Screen Recording Mode
                 </p>
               </div>
@@ -275,7 +275,7 @@ export default function Page() {
           {/* Recording Mode - Hidden when recording */}
           {!isRecording && (
             <div className="flex flex-row gap-3">
-              <label className="text-sm font-semibold text-[var(--text-primary)]">
+              <label className="text-sm font-semibold text-contrast">
                 Recording Mode
               </label>
               <div className="flex gap-3">
@@ -283,7 +283,7 @@ export default function Page() {
                   className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
                     recordingMode === 'camera'
                       ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-two text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                      : 'bg-two text-contrast hover:bg-[var(--bg-tertiary)]'
                   }`}
                   onClick={() => {
                     setRecordingMode('camera')
@@ -295,7 +295,7 @@ export default function Page() {
                   className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
                     recordingMode === 'screen'
                       ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-two text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                      : 'bg-two text-contrast hover:bg-[var(--bg-tertiary)]'
                   }`}
                   onClick={() => {
                     setRecordingMode('screen')
@@ -307,7 +307,7 @@ export default function Page() {
                   className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
                     recordingMode === 'both'
                       ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-two text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                      : 'bg-two text-contrast hover:bg-[var(--bg-tertiary)]'
                   }`}
                   onClick={() => {
                     setRecordingMode('both')
@@ -324,7 +324,7 @@ export default function Page() {
             (recordingMode === 'camera' || recordingMode === 'both') &&
             cameras.length > 0 && (
               <div className="flex flex-row gap-3">
-                <label className="text-sm font-semibold text-[var(--text-primary)]">
+                <label className="text-sm font-semibold text-contrast">
                   Camera
                 </label>
                 <select
@@ -332,7 +332,7 @@ export default function Page() {
                   onChange={(e) => {
                     setSelectedCameraId(e.target.value)
                   }}
-                  className="px-4 py-3 rounded-lg bg-two text-[var(--text-primary)] border border-one focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-3 rounded-lg bg-two text-contrast border border-one focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {cameras.map((camera) => (
                     <option key={camera.deviceId} value={camera.deviceId}>

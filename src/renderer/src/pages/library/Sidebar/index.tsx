@@ -45,7 +45,7 @@ export function Sidebar({
               className={`text-left p-3 rounded-lg transition-colors ${
                 selectedVlog?.id === file.id
                   ? 'bg-blue-500 text-white'
-                  : 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--color-tertiary)]'
+                  : 'bg-[var(--bg-tertiary)] text-contrast hover:bg-[var(--color-tertiary)]'
               }`}
             >
               <div className="flex gap-3">

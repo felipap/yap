@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Film } from 'lucide-react'
 import { deleteFile, openFileLocation } from '../../ipc'
 import { RecordedFile } from '../../types'
 import { DetailPage } from './detail'
@@ -75,14 +76,13 @@ export default function Page() {
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-6xl mb-4">🎬</div>
-              <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                Select a video
+            <div className="text-center flex flex-col gap-2">
+              <div className=" flex justify-center">
+                <Film size={40} className="text-secondary" />
+              </div>
+              <h3 className="text-[15px] font-medium text-secondary mb-2">
+                Select a vlog
               </h3>
-              <p className="text-[var(--text-secondary)]">
-                Choose a video from the sidebar to get started
-              </p>
             </div>
           </div>
         )}

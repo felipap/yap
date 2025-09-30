@@ -1,4 +1,4 @@
-import { RecordedFile, RecordingMode, TranscriptionResult, TranscriptionState, Vlog } from './types'
+import { RecordedFile, RecordingMode, TranscriptionResult, TranscriptionState } from './types'
 
 export interface ScreenSource {
   id: string
@@ -75,27 +75,5 @@ export async function getTranscriptionState(vlogId: string): Promise<Transcripti
 
 export async function getAllTranscriptionStates(): Promise<Record<string, TranscriptionState>> {
   return window.electronAPI.getAllTranscriptionStates()
-}
-
-// Vlog management functions
-export async function getVlog(vlogId: string): Promise<Vlog | null> {
-  return window.electronAPI.getVlog(vlogId)
-}
-
-export async function getAllVlogs(): Promise<Record<string, Vlog>> {
-  return window.electronAPI.getAllVlogs()
-}
-
-export async function updateVlog(vlogId: string, updates: Partial<Vlog>): Promise<boolean> {
-  return window.electronAPI.updateVlog(vlogId, updates)
-}
-
-// Transcription settings functions
-export async function getTranscriptionSpeedUp(): Promise<boolean> {
-  return window.electronAPI.getTranscriptionSpeedUp()
-}
-
-export async function setTranscriptionSpeedUp(speedUp: boolean): Promise<boolean> {
-  return window.electronAPI.setTranscriptionSpeedUp(speedUp)
 }
 
