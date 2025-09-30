@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { RecordingControls } from './RecordingControls'
+import { RecordingControls, RecordingMode } from './RecordingControls'
 import { FileList } from './FileList'
 import { ScreenRecorder } from './ScreenRecorder'
 
@@ -15,10 +15,27 @@ export function App() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordedFiles, setRecordedFiles] = useState<RecordedFile[]>([])
   const [recorder, setRecorder] = useState<ScreenRecorder | null>(null)
+  const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('')
 
   useEffect(() => {
     loadRecordedFiles()
+    loadCameras()
   }, [])
+
+  const loadCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(device => device.kind === 'videoinput')
+      setCameras(videoDevices)
+      if (videoDevices.length > 0 && !selectedCameraId) {
+        setSelectedCameraId(videoDevices[0].deviceId)
+      }
+    } catch (error) {
+      console.error('Failed to load cameras:', error)
+    }
+  }
 
   const loadRecordedFiles = async () => {
     try {
@@ -31,14 +48,14 @@ export function App() {
 
   const handleStartRecording = async () => {
     try {
-      const newRecorder = new ScreenRecorder()
+      const newRecorder = new ScreenRecorder(recordingMode, selectedCameraId)
       setRecorder(newRecorder)
       await newRecorder.start()
       setIsRecording(true)
     } catch (error) {
       console.error('Failed to start recording:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      alert(`Failed to start recording: ${errorMessage}\n\nPlease check:\n1. Screen recording permissions are granted\n2. No other apps are using screen recording`)
+      alert(`Failed to start recording: ${errorMessage}\n\nPlease check:\n1. Camera/Screen recording permissions are granted\n2. No other apps are using the camera/screen`)
     }
   }
 
@@ -79,6 +96,11 @@ export function App() {
         </h1>
         <RecordingControls
           isRecording={isRecording}
+          recordingMode={recordingMode}
+          cameras={cameras}
+          selectedCameraId={selectedCameraId}
+          onRecordingModeChange={setRecordingMode}
+          onCameraChange={setSelectedCameraId}
           onStartRecording={handleStartRecording}
           onStopRecording={handleStopRecording}
         />
