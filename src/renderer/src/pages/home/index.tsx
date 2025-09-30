@@ -136,21 +136,13 @@ export default function Page() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <div className="bg-red-500" style={{
-        padding: '24px',
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: '700',
-          marginBottom: '16px',
-          color: 'var(--text-primary)'
-        }}>
+    <div className="flex flex-col h-screen">
+      <div className="drag-region p-6 border-b border-[var(--border)]">
+        <h1 className="no-drag-region text-2xl font-bold mb-4 text-[var(--text-primary)]">
           Vlog Electron
         </h1>
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
+        <div className="no-drag-region flex gap-6 items-start">
+          <div className="flex-1">
             <RecordingControls
               isRecording={false}
               recordingMode={recordingMode}
@@ -164,14 +156,7 @@ export default function Page() {
           </div>
 
           {previewStream && (recordingMode === 'camera' || recordingMode === 'both') && (
-            <div style={{
-              width: '320px',
-              height: '180px',
-              background: 'black',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              border: '2px solid var(--border)'
-            }}>
+            <div className="w-80 h-[180px] bg-black rounded-lg overflow-hidden border-2 border-[var(--border)]">
               <video
                 ref={(video) => {
                   if (video && previewStream) {
@@ -181,30 +166,16 @@ export default function Page() {
                 }}
                 autoPlay
                 muted
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover'
-                }}
+                className="w-full h-full object-cover"
               />
             </div>
           )}
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--border)',
-          // background: 'var(--bg-secondary)'
-        }}
-          className='bg-red-500'
-        >
-          <h2 style={{
-            fontSize: '18px',
-            fontWeight: '600',
-            color: 'var(--text-primary)'
-          }}>
+      <div className="flex-1 flex flex-col">
+        <div className="px-6 py-4 border-b border-[var(--border)]">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
             Recorded Files
           </h2>
         </div>

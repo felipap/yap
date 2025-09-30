@@ -6,6 +6,7 @@ export class ScreenRecorder {
   private mediaRecorder: MediaRecorder | null = null
   private recordedChunks: Blob[] = []
   private stream: MediaStream | null = null
+  private cameraStream: MediaStream | null = null
   private mode: RecordingMode
   private cameraId: string
 
@@ -14,12 +15,17 @@ export class ScreenRecorder {
     this.cameraId = cameraId
   }
 
+  getCameraStream(): MediaStream | null {
+    return this.cameraStream
+  }
+
   async start(): Promise<void> {
     try {
       if (this.mode === 'screen') {
         this.stream = await this.getScreenStream()
       } else if (this.mode === 'camera') {
-        this.stream = await this.getCameraStream()
+        this.cameraStream = await this.getCameraStream()
+        this.stream = this.cameraStream
       } else {
         // Both: combine screen and camera
         this.stream = await this.getCombinedStream()
@@ -69,6 +75,11 @@ export class ScreenRecorder {
           if (this.stream) {
             this.stream.getTracks().forEach(track => track.stop())
             this.stream = null
+          }
+
+          if (this.cameraStream) {
+            this.cameraStream.getTracks().forEach(track => track.stop())
+            this.cameraStream = null
           }
 
           resolve()
@@ -168,7 +179,7 @@ export class ScreenRecorder {
     const screenStream = await this.getScreenStream()
 
     // Get camera stream
-    const cameraStream = await this.getCameraStream()
+    this.cameraStream = await this.getCameraStream()
 
     // Combine video from screen and audio from camera
     const combinedStream = new MediaStream()
@@ -179,7 +190,7 @@ export class ScreenRecorder {
     })
 
     // Add camera audio track
-    cameraStream.getAudioTracks().forEach(track => {
+    this.cameraStream.getAudioTracks().forEach(track => {
       combinedStream.addTrack(track)
     })
 

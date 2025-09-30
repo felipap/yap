@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ScreenRecorder } from './ScreenRecorder'
 import { RecordingMode } from '../../types'
 import { useRouter } from '../../shared/Router'
@@ -10,6 +10,7 @@ export default function Page() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
   const [recordingTime, setRecordingTime] = useState(0)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     loadSettingsAndStart()
@@ -61,6 +62,11 @@ export default function Page() {
     setRecorder(newRecorder)
     await newRecorder.start()
     setIsRecording(true)
+
+    // Set up camera preview
+    if (videoRef.current && newRecorder.getCameraStream()) {
+      videoRef.current.srcObject = newRecorder.getCameraStream()
+    }
   }
 
   const handleStopRecording = async () => {
@@ -158,6 +164,35 @@ export default function Page() {
           {formatTime(recordingTime)}
         </div>
       </div>
+
+      {/* Camera preview */}
+      {(recordingMode === 'camera' || recordingMode === 'both') && (
+        <div style={{
+          position: 'absolute',
+          bottom: '24px',
+          right: '24px',
+          width: '320px',
+          height: '240px',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: '3px solid var(--border)',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          background: 'var(--bg-secondary)'
+        }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scaleX(-1)' // Mirror the video for a more natural preview
+            }}
+          />
+        </div>
+      )}
 
       {/* Main content */}
       <div style={{
