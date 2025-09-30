@@ -28,7 +28,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('delete-file', filePath),
 
   saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> =>
-    ipcRenderer.invoke('save-recording', filename, buffer)
+    ipcRenderer.invoke('save-recording', filename, buffer),
+
+  store: {
+    get: <T>(key: string): Promise<T> =>
+      ipcRenderer.invoke('store-get', key),
+
+    set: (key: string, value: any): Promise<void> =>
+      ipcRenderer.invoke('store-set', key, value),
+
+    getAll: (): Promise<Record<string, any>> =>
+      ipcRenderer.invoke('store-get-all')
+  }
 })
 
 declare global {
@@ -39,6 +50,11 @@ declare global {
       openFileLocation: (filePath: string) => Promise<void>
       deleteFile: (filePath: string) => Promise<boolean>
       saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
+      store: {
+        get: <T>(key: string) => Promise<T>
+        set: (key: string, value: any) => Promise<void>
+        getAll: () => Promise<Record<string, any>>
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 interface RecordedFile {
   name: string
@@ -11,9 +11,10 @@ interface RecordedFile {
 interface FileItemProps {
   file: RecordedFile
   onDeleted: () => void
+  onWatch: (file: RecordedFile) => void
 }
 
-export function FileItem({ file, onDeleted }: FileItemProps) {
+export function FileItem({ file, onDeleted, onWatch }: FileItemProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const formatFileSize = (bytes: number): string => {
@@ -71,6 +72,15 @@ export function FileItem({ file, onDeleted }: FileItemProps) {
         </div>
       </div>
       <div className="file-actions">
+        <button
+          className="btn-primary"
+          onClick={() => {
+            onWatch(file)
+          }}
+          disabled={isDeleting}
+        >
+          ▶️ Watch
+        </button>
         <button
           className="btn-secondary"
           onClick={handleOpenLocation}

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { RecordingControls, RecordingMode } from './RecordingControls'
 import { FileList } from './FileList'
 import { ScreenRecorder } from './ScreenRecorder'
+import { VideoPlayer } from './VideoPlayer'
 
 interface RecordedFile {
   name: string
@@ -19,11 +20,29 @@ export function App() {
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
+  const [watchingFile, setWatchingFile] = useState<RecordedFile | null>(null)
 
   useEffect(() => {
     loadRecordedFiles()
     loadCameras()
+    loadSettings()
   }, [])
+
+  const loadSettings = async () => {
+    try {
+      const savedCameraId = await window.electronAPI.store.get<string>('selectedCameraId')
+      const savedMode = await window.electronAPI.store.get<RecordingMode>('recordingMode')
+
+      if (savedCameraId) {
+        setSelectedCameraId(savedCameraId)
+      }
+      if (savedMode) {
+        setRecordingMode(savedMode)
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error)
+    }
+  }
 
   const loadCameras = async () => {
     try {
@@ -79,6 +98,17 @@ export function App() {
     }
   }, [recordingMode, selectedCameraId])
 
+  // Save settings when they change
+  useEffect(() => {
+    if (selectedCameraId) {
+      window.electronAPI.store.set('selectedCameraId', selectedCameraId)
+    }
+  }, [selectedCameraId])
+
+  useEffect(() => {
+    window.electronAPI.store.set('recordingMode', recordingMode)
+  }, [recordingMode])
+
   const loadRecordedFiles = async () => {
     try {
       const files = await window.electronAPI.getRecordedFiles()
@@ -119,6 +149,10 @@ export function App() {
 
   const handleFileDeleted = async () => {
     await loadRecordedFiles()
+  }
+
+  const handleFileWatch = (file: RecordedFile) => {
+    setWatchingFile(file)
   }
 
   return (
@@ -197,8 +231,19 @@ export function App() {
         <FileList
           files={recordedFiles}
           onFileDeleted={handleFileDeleted}
+          onFileWatch={handleFileWatch}
         />
       </div>
+
+      {watchingFile && (
+        <VideoPlayer
+          filePath={watchingFile.path}
+          fileName={watchingFile.name}
+          onClose={() => {
+            setWatchingFile(null)
+          }}
+        />
+      )}
     </div>
   )
 }

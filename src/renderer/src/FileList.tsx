@@ -1,4 +1,3 @@
-import React from 'react'
 import { FileItem } from './FileItem'
 
 interface RecordedFile {
@@ -12,9 +11,10 @@ interface RecordedFile {
 interface FileListProps {
   files: RecordedFile[]
   onFileDeleted: () => void
+  onFileWatch: (file: RecordedFile) => void
 }
 
-export function FileList({ files, onFileDeleted }: FileListProps) {
+export function FileList({ files, onFileDeleted, onFileWatch }: FileListProps) {
   if (files.length === 0) {
     return (
       <div className="empty-state">
@@ -31,6 +31,7 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
           key={file.path}
           file={file}
           onDeleted={onFileDeleted}
+          onWatch={onFileWatch}
         />
       ))}
     </div>

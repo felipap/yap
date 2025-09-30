@@ -1,14 +1,33 @@
-import { app, BrowserWindow, ipcMain, desktopCapturer, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, desktopCapturer, shell, protocol } from 'electron'
 import { join } from 'path'
-import { readdir, stat, writeFile, mkdir, unlink } from 'fs/promises'
+import { readdir, stat, writeFile, mkdir, unlink, readFile } from 'fs/promises'
 import { homedir } from 'os'
+import { store } from './store'
+
+// Register the custom protocol as a standard scheme before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'vlog-video',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: false,
+      stream: true
+    }
+  }
+])
 
 let mainWindow: BrowserWindow
 
 function createWindow() {
+  const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: windowBounds.width,
+    height: windowBounds.height,
+    x: windowBounds.x,
+    y: windowBounds.y,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -19,12 +38,48 @@ function createWindow() {
     visualEffectState: 'active'
   })
 
+  // Save window bounds on close
+  mainWindow.on('close', () => {
+    const bounds = mainWindow.getBounds()
+    store.set('windowBounds', bounds)
+  })
+
   // Load from localhost in development
   mainWindow.loadURL('http://localhost:3000')
   mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {
+  // Register custom protocol to serve local video files
+  protocol.handle('vlog-video', async (request) => {
+    try {
+      // Remove the protocol and decode the URL
+      let filePath = request.url.replace('vlog-video://', '')
+      filePath = decodeURIComponent(filePath)
+
+      console.log('Video request URL:', request.url)
+      console.log('Decoded file path:', filePath)
+
+      const data = await readFile('/' + filePath)
+
+      // Determine MIME type based on file extension
+      const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+
+      console.log('Successfully loaded video:', filePath, 'Size:', data.length, 'bytes')
+
+      return new Response(new Uint8Array(data), {
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Length': data.length.toString()
+        }
+      })
+    } catch (error) {
+      console.error('Error loading video file:', error)
+      console.error('Request URL:', request.url)
+      return new Response('File not found', { status: 404 })
+    }
+  })
+
   createWindow()
 
   app.on('activate', () => {
@@ -119,4 +174,17 @@ ipcMain.handle('save-recording', async (_, filename: string, arrayBuffer: ArrayB
     console.error('Error saving recording:', error)
     throw error
   }
+})
+
+// Store handlers
+ipcMain.handle('store-get', (_, key: string) => {
+  return store.get(key)
+})
+
+ipcMain.handle('store-set', (_, key: string, value: any) => {
+  store.set(key, value)
+})
+
+ipcMain.handle('store-get-all', () => {
+  return store.store
 })
