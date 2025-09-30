@@ -1,7 +1,14 @@
+export type RecordingMode = 'screen' | 'camera' | 'both'
+
 export class ScreenRecorder {
   private mediaRecorder: MediaRecorder | null = null
   private recordedChunks: Blob[] = []
   private stream: MediaStream | null = null
+  private mode: RecordingMode
+
+  constructor(mode: RecordingMode = 'screen') {
+    this.mode = mode
+  }
 
   async start(): Promise<void> {
     try {
