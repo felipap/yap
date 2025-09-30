@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
 import { access, mkdir, readFile, unlink } from 'fs/promises'
+import { createReadStream } from 'fs'
 import { OpenAI } from 'openai'
 import { homedir } from 'os'
 import { join } from 'path'
@@ -26,7 +27,7 @@ export async function checkFFmpegAvailable(): Promise<boolean> {
   })
 }
 
-export async function extractAudioFromVideo(videoPath: string): Promise<string> {
+export async function extractAudioFromVideo(videoPath: string, speedUp: boolean = false): Promise<string> {
   const isAvailable = await checkFFmpegAvailable()
   if (!isAvailable) {
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
@@ -35,7 +36,8 @@ export async function extractAudioFromVideo(videoPath: string): Promise<string> 
   const tempDir = join(homedir(), 'Documents', 'VlogRecordings', 'temp')
   await mkdir(tempDir, { recursive: true })
 
-  const audioPath = join(tempDir, `${createHash('md5').update(videoPath).digest('hex')}.wav`)
+  const hash = createHash('md5').update(videoPath + (speedUp ? '-2x' : '')).digest('hex')
+  const audioPath = join(tempDir, `${hash}.wav`)
 
   // Check if audio already exists
   try {
@@ -46,15 +48,22 @@ export async function extractAudioFromVideo(videoPath: string): Promise<string> 
   }
 
   return new Promise((resolve, reject) => {
-    const ffmpeg = spawn('ffmpeg', [
+    const args = [
       '-i', videoPath,
       '-vn', // No video
       '-acodec', 'pcm_s16le', // 16-bit PCM
       '-ar', '16000', // 16kHz sample rate (good for speech)
       '-ac', '1', // Mono
-      '-y', // Overwrite
-      audioPath
-    ])
+    ]
+
+    // Add speed-up filter if requested
+    if (speedUp) {
+      args.push('-filter:a', 'atempo=2.0') // 2x speed
+    }
+
+    args.push('-y', audioPath) // Overwrite
+
+    const ffmpeg = spawn('ffmpeg', args)
 
     let errorOutput = ''
 
@@ -76,30 +85,23 @@ export async function extractAudioFromVideo(videoPath: string): Promise<string> 
   })
 }
 
-async function createFileFromPath(audioPath: string): Promise<File> {
-  const buffer = await readFile(audioPath)
-  const uint8Array = new Uint8Array(buffer)
-  const blob = new Blob([uint8Array], { type: 'audio/wav' })
-  // @ts-ignore
-  return new File([blob], 'audio.wav', { type: 'audio/wav' })
-}
 
-export async function transcribeAudio(audioPath: string, apiKey: string): Promise<TranscriptionResult> {
+export async function transcribeAudio(audioPath: string, apiKey: string, speedUp: boolean = false): Promise<TranscriptionResult> {
   const openai = new OpenAI({
     apiKey: apiKey
   })
 
   try {
     const transcription = await openai.audio.transcriptions.create({
-      file: await createFileFromPath(audioPath),
+      file: createReadStream(audioPath),
       model: 'whisper-1',
       response_format: 'verbose_json',
       timestamp_granularities: ['segment']
     })
 
     const segments = transcription.segments?.map(segment => ({
-      start: segment.start,
-      end: segment.end,
+      start: speedUp ? segment.start * 2 : segment.start, // Adjust timestamps back to real time
+      end: speedUp ? segment.end * 2 : segment.end,
       text: segment.text
     })) || []
 
@@ -115,13 +117,13 @@ export async function transcribeAudio(audioPath: string, apiKey: string): Promis
   }
 }
 
-export async function transcribeVideo(videoPath: string, apiKey: string): Promise<TranscriptionResult> {
+export async function transcribeVideo(videoPath: string, apiKey: string, speedUp: boolean = false): Promise<TranscriptionResult> {
   try {
     // Extract audio from video
-    const audioPath = await extractAudioFromVideo(videoPath)
+    const audioPath = await extractAudioFromVideo(videoPath, speedUp)
 
     // Transcribe the audio
-    const result = await transcribeAudio(audioPath, apiKey)
+    const result = await transcribeAudio(audioPath, apiKey, speedUp)
 
     // Clean up temporary audio file
     try {

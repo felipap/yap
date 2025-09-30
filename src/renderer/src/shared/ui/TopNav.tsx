@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
+import { Library, Video } from 'lucide-react'
 
 interface TopNavProps {
   currentTab: 'library' | 'record'
@@ -33,14 +34,15 @@ export function TopNav({ currentTab }: TopNavProps) {
 
   return (
     <div className="drag-region">
-      <div className="no-drag-region w-fit select-none flex items-center gap-3 py-1.5 bg-four pl-20 border-b">
+      <div className="flex flex-row justify-start w-full select-none items-center gap-3 py-1.5 px-2 bg-four pl-20 border-b">
         <TabButton
           active={currentTab === 'library'}
           onClick={() => {
             router.navigate({ name: 'library' })
           }}
         >
-          📚 Library
+          <Library className="w-4 h-4" />
+          Library
         </TabButton>
         <TabButton
           active={currentTab === 'record'}
@@ -48,7 +50,8 @@ export function TopNav({ currentTab }: TopNavProps) {
             router.navigate({ name: 'record' })
           }}
         >
-          🎥 Record
+          <Video className="w-4 h-4" />
+          Record
         </TabButton>
       </div>
     </div>
@@ -65,7 +68,7 @@ function TabButton({ onClick, active = false, children }: TabButtonProps) {
   return (
     <button
       className={twMerge(
-        'px-3 h-7 text-sm font-medium transition-colors  rounded-md hover:bg-two',
+        'no-drag-region px-3 h-7 text-sm font-medium transition-colors rounded-md hover:bg-two flex items-center gap-2',
         active ? 'text-contrast bg-two' : 'text-secondary',
       )}
       onClick={onClick}

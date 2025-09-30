@@ -27,6 +27,7 @@ export const TranscriptionPanel = withBoundary(function ({
         const existingTranscription = await getTranscription(vlogId)
         if (existingTranscription) {
           setTranscription(existingTranscription)
+          setShowTranscription(true) // Automatically show if transcription exists
         }
       } catch (error) {
         console.error('Failed to load transcription:', error)
@@ -88,7 +89,7 @@ export const TranscriptionPanel = withBoundary(function ({
 
       {/* Transcription panel */}
       {showTranscription && transcription && (
-        <div className="w-96 bg-two rounded-lg p-4 border border-[var(--border)]">
+        <div className="bg-two rounded-lg p-4 border">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-[var(--text-primary)] m-0">
               Transcript
@@ -101,7 +102,7 @@ export const TranscriptionPanel = withBoundary(function ({
             </button>
           </div>
 
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="">
             {transcription.segments.map((segment, index) => (
               <div
                 key={index}

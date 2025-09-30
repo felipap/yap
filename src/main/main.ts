@@ -37,6 +37,9 @@ function createWindow() {
   // Load from localhost in development
   mainWindow.loadURL('http://localhost:3000')
   mainWindow.webContents.openDevTools()
+
+  // Setup IPC handlers after window is created
+  setupIpcHandlers(mainWindow)
 }
 
 app.whenReady().then(() => {
@@ -58,8 +61,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-// Setup IPC handlers
-setupIpcHandlers()
 
 // Handle uncaught exceptions with better stack traces
 process.on('uncaughtException', (error) => {

@@ -240,7 +240,7 @@ export default function Page() {
 
           {/* Camera Preview */}
           {(recordingMode === 'camera' || recordingMode === 'both') && (
-            <div className="relative w-full aspect-video bg-gray-900 rounded-2xl overflow-hidden border-4 border-[var(--border)] shadow-2xl">
+            <div className="relative w-full aspect-video bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
               {previewStream || videoRef.current?.srcObject ? (
                 <video
                   ref={videoRef}
@@ -259,7 +259,7 @@ export default function Page() {
           )}
 
           {recordingMode === 'screen' && (
-            <div className="w-full aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-[var(--border)] flex items-center justify-center">
+            <div className="w-full aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-one flex items-center justify-center">
               <div className="text-center">
                 <div className="text-8xl mb-4">🖥️</div>
                 <p className="text-xl text-[var(--text-primary)] font-semibold">
@@ -332,7 +332,7 @@ export default function Page() {
                   onChange={(e) => {
                     setSelectedCameraId(e.target.value)
                   }}
-                  className="px-4 py-3 rounded-lg bg-two text-[var(--text-primary)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-3 rounded-lg bg-two text-[var(--text-primary)] border border-one focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {cameras.map((camera) => (
                     <option key={camera.deviceId} value={camera.deviceId}>

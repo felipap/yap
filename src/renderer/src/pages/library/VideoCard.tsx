@@ -59,7 +59,7 @@ export function VideoCard({ file, onDeleted, onWatch }: VideoCardProps) {
 
   return (
     <div
-      className="flex bg-two rounded-lg overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow cursor-pointer group"
+      className="flex bg-two rounded-lg overflow-hidden border border-one hover:shadow-lg transition-shadow cursor-pointer group"
       onClick={() => {
         if (!isDeleting) {
           onWatch(file)

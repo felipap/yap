@@ -1,9 +1,9 @@
-import { ipcMain, desktopCapturer, shell } from 'electron'
+import { ipcMain, desktopCapturer, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { readdir, stat, writeFile, mkdir, unlink, access } from 'fs/promises'
 import { homedir } from 'os'
 import { createHash } from 'crypto'
-import { store } from './store'
+import { store, Vlog, setVlog, getVlog, updateVlog, deleteVlog, getAllVlogs } from './store'
 import { getThumbnailPath } from './lib/thumbnails'
 import { transcribeVideo, getVideoDuration } from './lib/transcription'
 
@@ -17,7 +17,7 @@ function generateVlogId(filePath: string): string {
 
 
 // IPC handlers
-export function setupIpcHandlers() {
+export function setupIpcHandlers(mainWindow: BrowserWindow) {
   ipcMain.handle('get-screen-sources', async () => {
     try {
       const sources = await desktopCapturer.getSources({
@@ -37,32 +37,45 @@ export function setupIpcHandlers() {
       // Create directory if it doesn't exist
       await mkdir(documentsPath, { recursive: true })
 
+      // Get existing vlog data from store
+      const storedVlogs = getAllVlogs()
+
+      // Scan filesystem for video files
       const files = await readdir(documentsPath)
+      const videoFiles = files.filter(file => file.endsWith('.mp4') || file.endsWith('.webm'))
 
       const fileStats = await Promise.all(
-        files
-          .filter(file => file.endsWith('.mp4') || file.endsWith('.webm'))
-          .map(async (file) => {
-            const filePath = join(documentsPath, file)
-            const stats = await stat(filePath)
-            const id = generateVlogId(filePath)
+        videoFiles.map(async (file) => {
+          const filePath = join(documentsPath, file)
+          const stats = await stat(filePath)
+          const id = generateVlogId(filePath)
 
-            // Store the mapping
-            vlogIdToPath.set(id, filePath)
+          // Store the mapping
+          vlogIdToPath.set(id, filePath)
 
-            // Check if thumbnail exists
-            const thumbnailPath = getThumbnailPath(filePath)
-
-            return {
+          // Get or create vlog data
+          let vlog = storedVlogs[id]
+          if (!vlog) {
+            // Create new vlog entry
+            vlog = {
               id,
               name: file,
               path: filePath,
-              size: stats.size,
-              created: stats.birthtime,
-              modified: stats.mtime,
-              thumbnailPath: `vlog-thumbnail://${id}.jpg`
+              timestamp: stats.birthtime.toISOString()
             }
-          })
+            setVlog(vlog)
+          }
+
+          return {
+            id,
+            name: file,
+            path: filePath,
+            size: stats.size,
+            created: stats.birthtime,
+            modified: stats.mtime,
+            thumbnailPath: `vlog-thumbnail://${id}.jpg`
+          }
+        })
       )
 
       return fileStats.sort((a, b) => b.created.getTime() - a.created.getTime())
@@ -103,6 +116,8 @@ export function setupIpcHandlers() {
         // Thumbnail might not exist, that's okay
       }
 
+      // Remove from vlog store
+      deleteVlog(vlogId)
       vlogIdToPath.delete(vlogId)
       return true
     } catch (error) {
@@ -122,6 +137,15 @@ export function setupIpcHandlers() {
 
       const id = generateVlogId(filepath)
       vlogIdToPath.set(id, filepath)
+
+      // Create and save vlog object
+      const vlog: Vlog = {
+        id,
+        name: filename,
+        path: filepath,
+        timestamp: new Date().toISOString()
+      }
+      setVlog(vlog)
 
       console.log(`Recording saved: ${filepath}`)
       return id
@@ -158,26 +182,86 @@ export function setupIpcHandlers() {
         throw new Error('OpenAI API key not configured. Please add "openaiApiKey" to your vlog-settings.json file.')
       }
 
-      const result = await transcribeVideo(filePath, apiKey)
+      // Set transcription state to transcribing
+      const transcriptionState = {
+        status: 'transcribing' as const,
+        startTime: Date.now()
+      }
+      updateVlog(vlogId, { transcription: transcriptionState })
 
-      // Store transcription result in the store
-      const transcriptionKey = `transcription_${vlogId}`
-      store.set(transcriptionKey, result)
+      // Notify renderer that transcription started
+      mainWindow?.webContents.send('transcription-status-changed', vlogId, transcriptionState)
+
+      // Get speed-up setting
+      const speedUp = store.get('transcriptionSpeedUp') || false
+      const result = await transcribeVideo(filePath, apiKey, speedUp)
+
+      // Update transcription state to completed
+      const completedState = {
+        status: 'completed' as const,
+        result: result,
+        startTime: transcriptionState.startTime
+      }
+      updateVlog(vlogId, { transcription: completedState })
+
+      // Notify renderer that transcription completed
+      mainWindow?.webContents.send('transcription-status-changed', vlogId, completedState)
 
       return result
     } catch (error) {
       console.error('Error transcribing video:', error)
+
+      // Update transcription state to error
+      const errorState = {
+        status: 'error' as const,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        startTime: Date.now()
+      }
+      updateVlog(vlogId, { transcription: errorState })
+
+      // Notify renderer that transcription failed
+      mainWindow?.webContents.send('transcription-status-changed', vlogId, errorState)
+
       throw error
     }
   })
 
   ipcMain.handle('get-transcription', async (_, vlogId: string) => {
     try {
-      const transcriptionKey = `transcription_${vlogId}`
-      return store.get(transcriptionKey) || null
+      const vlog = getVlog(vlogId)
+      if (!vlog || !vlog.transcription) {
+        return null
+      }
+      return vlog.transcription.result || null
     } catch (error) {
       console.error('Error getting transcription:', error)
       return null
+    }
+  })
+
+  ipcMain.handle('get-transcription-state', async (_, vlogId: string) => {
+    try {
+      const vlog = getVlog(vlogId)
+      return vlog?.transcription || { status: 'idle' }
+    } catch (error) {
+      console.error('Error getting transcription state:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('get-all-transcription-states', async () => {
+    try {
+      const vlogs = getAllVlogs()
+      const states: Record<string, any> = {}
+      for (const [id, vlog] of Object.entries(vlogs)) {
+        if (vlog.transcription) {
+          states[id] = vlog.transcription
+        }
+      }
+      return states
+    } catch (error) {
+      console.error('Error getting all transcription states:', error)
+      throw error
     }
   })
 
@@ -191,6 +275,55 @@ export function setupIpcHandlers() {
       return await getVideoDuration(filePath)
     } catch (error) {
       console.error('Error getting video duration:', error)
+      throw error
+    }
+  })
+
+  // Vlog management handlers
+  ipcMain.handle('get-vlog', async (_, vlogId: string) => {
+    try {
+      return getVlog(vlogId)
+    } catch (error) {
+      console.error('Error getting vlog:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('get-all-vlogs', async () => {
+    try {
+      return getAllVlogs()
+    } catch (error) {
+      console.error('Error getting all vlogs:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('update-vlog', async (_, vlogId: string, updates: Partial<Vlog>) => {
+    try {
+      updateVlog(vlogId, updates)
+      return true
+    } catch (error) {
+      console.error('Error updating vlog:', error)
+      throw error
+    }
+  })
+
+  // Transcription settings handlers
+  ipcMain.handle('get-transcription-speed-up', async () => {
+    try {
+      return store.get('transcriptionSpeedUp') || false
+    } catch (error) {
+      console.error('Error getting transcription speed-up setting:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('set-transcription-speed-up', async (_, speedUp: boolean) => {
+    try {
+      store.set('transcriptionSpeedUp', speedUp)
+      return true
+    } catch (error) {
+      console.error('Error setting transcription speed-up:', error)
       throw error
     }
   })

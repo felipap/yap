@@ -19,6 +19,14 @@ export interface TranscriptionResult {
   duration: number
 }
 
+export interface TranscriptionState {
+  status: 'idle' | 'transcribing' | 'completed' | 'error'
+  progress?: number
+  error?: string
+  result?: TranscriptionResult
+  startTime?: number
+}
+
 export interface RecordedFile {
   id: string
   name: string
@@ -65,7 +73,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-transcription', vlogId),
 
   getVideoDuration: (vlogId: string): Promise<number> =>
-    ipcRenderer.invoke('get-video-duration', vlogId)
+    ipcRenderer.invoke('get-video-duration', vlogId),
+
+  getTranscriptionState: (vlogId: string): Promise<TranscriptionState> =>
+    ipcRenderer.invoke('get-transcription-state', vlogId),
+
+  getAllTranscriptionStates: (): Promise<Record<string, TranscriptionState>> =>
+    ipcRenderer.invoke('get-all-transcription-states'),
+  getVlog: (vlogId: string) => ipcRenderer.invoke('get-vlog', vlogId),
+  getAllVlogs: () => ipcRenderer.invoke('get-all-vlogs'),
+  updateVlog: (vlogId: string, updates: any) => ipcRenderer.invoke('update-vlog', vlogId, updates),
+  getTranscriptionSpeedUp: () => ipcRenderer.invoke('get-transcription-speed-up'),
+  setTranscriptionSpeedUp: (speedUp: boolean) => ipcRenderer.invoke('set-transcription-speed-up', speedUp)
 })
 
 declare global {
@@ -84,6 +103,13 @@ declare global {
       transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
       getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
       getVideoDuration: (vlogId: string) => Promise<number>
+      getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
+      getAllTranscriptionStates: () => Promise<Record<string, TranscriptionState>>
+      getVlog: (vlogId: string) => Promise<any>
+      getAllVlogs: () => Promise<Record<string, any>>
+      updateVlog: (vlogId: string, updates: any) => Promise<boolean>
+      getTranscriptionSpeedUp: () => Promise<boolean>
+      setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
     }
   }
 }
