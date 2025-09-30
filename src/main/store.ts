@@ -3,6 +3,7 @@ import Store, { Schema } from 'electron-store'
 export interface AppSettings {
   selectedCameraId: string
   recordingMode: 'camera' | 'screen' | 'both'
+  openaiApiKey?: string
   windowBounds?: {
     width: number
     height: number
@@ -20,6 +21,10 @@ const schema: Schema<AppSettings> = {
     type: 'string',
     enum: ['camera', 'screen', 'both'],
     default: 'camera'
+  },
+  openaiApiKey: {
+    type: 'string',
+    default: ''
   },
   windowBounds: {
     type: 'object',

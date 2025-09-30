@@ -1,0 +1,158 @@
+import { useState, useEffect } from 'react'
+import { TranscriptionResult } from '../../../types'
+import { transcribeVideo, getTranscription } from '../../../ipc'
+import { ErrorBoundary } from '../../../shared/ErrorBoundary'
+import { useBoundary } from '../../../shared/useBoundary'
+
+interface TranscriptionPanelProps {
+  vlogId: string
+  videoRef: React.RefObject<HTMLVideoElement>
+}
+
+function TranscriptionPanelContent({
+  vlogId,
+  videoRef,
+}: TranscriptionPanelProps) {
+  const [transcription, setTranscription] =
+    useState<TranscriptionResult | null>(null)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [showTranscription, setShowTranscription] = useState(false)
+  const [transcriptionError, setTranscriptionError] = useState<string | null>(
+    null,
+  )
+  const { withErrorBoundary } = useBoundary()
+
+  // Load existing transcription on mount
+  useEffect(() => {
+    const loadTranscription = async () => {
+      try {
+        const existingTranscription = await getTranscription(vlogId)
+        if (existingTranscription) {
+          setTranscription(existingTranscription)
+        }
+      } catch (error) {
+        console.error('Failed to load transcription:', error)
+      }
+    }
+
+    loadTranscription()
+  }, [vlogId])
+
+  const handleTranscribe = withErrorBoundary(async () => {
+    setIsTranscribing(true)
+    setTranscriptionError(null)
+
+    try {
+      const result = await transcribeVideo(vlogId)
+      setTranscription(result)
+      setShowTranscription(true)
+    } catch (error) {
+      console.error('Transcription failed:', error)
+      setTranscriptionError(
+        error instanceof Error ? error.message : 'Transcription failed',
+      )
+    } finally {
+      setIsTranscribing(false)
+    }
+  })
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleSegmentClick = (startTime: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = startTime
+    }
+  }
+
+  return (
+    <>
+      {/* Transcription button */}
+      {transcription ? (
+        <button
+          className="btn-secondary"
+          onClick={() => setShowTranscription(!showTranscription)}
+        >
+          {showTranscription ? '📝 Hide Transcript' : '📝 Show Transcript'}
+        </button>
+      ) : (
+        <button
+          className="btn-primary"
+          onClick={handleTranscribe}
+          disabled={isTranscribing}
+        >
+          {isTranscribing ? '⏳ Transcribing...' : '🎤 Transcribe'}
+        </button>
+      )}
+
+      {/* Transcription panel */}
+      {showTranscription && transcription && (
+        <div className="w-96 bg-two rounded-lg p-4 border border-[var(--border)]">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] m-0">
+              Transcript
+            </h3>
+            <button
+              onClick={() => setShowTranscription(false)}
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {transcription.segments.map((segment, index) => (
+              <div
+                key={index}
+                className="p-2 rounded cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                onClick={() => handleSegmentClick(segment.start)}
+              >
+                <div className="text-xs text-[var(--text-secondary)] mb-1">
+                  {formatTime(segment.start)} - {formatTime(segment.end)}
+                </div>
+                <div className="text-sm text-[var(--text-primary)]">
+                  {segment.text}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Error message */}
+      {transcriptionError && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
+          <div className="flex justify-between items-center">
+            <span>{transcriptionError}</span>
+            <button
+              onClick={() => setTranscriptionError(null)}
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export function TranscriptionPanel(props: TranscriptionPanelProps) {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="btn-secondary opacity-50 cursor-not-allowed">
+          🎤 Transcription Error
+        </div>
+      }
+      onError={(error) => {
+        console.error('TranscriptionPanel error:', error)
+      }}
+    >
+      <TranscriptionPanelContent {...props} />
+    </ErrorBoundary>
+  )
+}

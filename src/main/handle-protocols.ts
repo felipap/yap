@@ -1,5 +1,6 @@
 import { protocol } from 'electron'
-import { readFile } from 'fs/promises'
+import { readFile, stat } from 'fs/promises'
+import { createReadStream } from 'fs'
 import { vlogIdToPath } from './ipc'
 
 // Register custom protocols
@@ -13,8 +14,8 @@ export function registerProtocols() {
         secure: true,
         supportFetchAPI: true,
         corsEnabled: false,
-        stream: true
-      }
+        stream: true,
+      },
     },
     {
       scheme: 'vlog-thumbnail',
@@ -23,9 +24,9 @@ export function registerProtocols() {
         secure: true,
         supportFetchAPI: true,
         corsEnabled: false,
-        stream: true
-      }
-    }
+        stream: true,
+      },
+    },
   ])
 }
 
@@ -35,7 +36,10 @@ export function setupProtocolHandlers() {
   protocol.handle('vlog-video', async (request) => {
     try {
       // Remove the protocol and get the vlog ID
-      const vlogId = request.url.replace('vlog-video://', '').replace('/', '')
+      const vlogId = request.url
+        .replace('vlog-video://', '')
+        .replace('/', '')
+        .replace(/(\.mp4)|(\.webm)/, '')
 
       console.log('Video request URL:', request.url)
       console.log('Vlog ID:', vlogId)
@@ -49,26 +53,44 @@ export function setupProtocolHandlers() {
 
       console.log('Resolved file path:', filePath)
 
-      const data = await readFile(filePath)
+      // Check if file exists and get stats
+      try {
+        const stats = await stat(filePath)
+        console.log('File stats:', { size: stats.size, isFile: stats.isFile() })
+
+        if (!stats.isFile()) {
+          console.error('Path is not a file:', filePath)
+          return new Response('Not a file', { status: 400 })
+        }
+      } catch (statError) {
+        console.error('File stat error:', statError)
+        return new Response('File not accessible', { status: 404 })
+      }
 
       // Determine MIME type based on file extension
       const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+      console.log('MIME type:', mimeType)
 
-      console.log('Successfully loaded video:', filePath, 'Size:', data.length, 'bytes')
+      // Use streaming for better performance with large files
+      const stream = createReadStream(filePath)
 
-      return new Response(new Uint8Array(data), {
+      return new Response(stream as any, {
         headers: {
           'Content-Type': mimeType,
-          'Content-Length': data.length.toString(),
+          'Accept-Ranges': 'bytes',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Content-Type'
-        }
+          'Access-Control-Allow-Headers': 'Content-Type, Range',
+        },
       })
     } catch (error) {
       console.error('Error loading video file:', error)
       console.error('Request URL:', request.url)
-      return new Response('File not found', { status: 404 })
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      return new Response('Internal server error', { status: 500 })
     }
   })
 
@@ -76,7 +98,10 @@ export function setupProtocolHandlers() {
   protocol.handle('vlog-thumbnail', async (request) => {
     try {
       // Remove the protocol and get the vlog ID
-      const vlogId = request.url.replace('vlog-thumbnail://', '').replace('/', '').replace('.jpg', '')
+      const vlogId = request.url
+        .replace('vlog-thumbnail://', '')
+        .replace('/', '')
+        .replace('.jpg', '')
 
       console.log('Thumbnail request URL:', request.url)
       console.log('Vlog ID:', vlogId)
@@ -100,7 +125,13 @@ export function setupProtocolHandlers() {
 
       const data = await readFile(thumbnailPath)
 
-      console.log('Successfully loaded thumbnail:', thumbnailPath, 'Size:', data.length, 'bytes')
+      console.log(
+        'Successfully loaded thumbnail:',
+        thumbnailPath,
+        'Size:',
+        data.length,
+        'bytes',
+      )
 
       return new Response(new Uint8Array(data), {
         headers: {
@@ -108,8 +139,8 @@ export function setupProtocolHandlers() {
           'Content-Length': data.length.toString(),
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Content-Type'
-        }
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
       })
     } catch (error) {
       console.error('Error loading thumbnail file:', error)

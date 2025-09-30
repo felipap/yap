@@ -1,3 +1,16 @@
+export interface TranscriptionSegment {
+  start: number
+  end: number
+  text: string
+}
+
+export interface TranscriptionResult {
+  text: string
+  segments: TranscriptionSegment[]
+  language?: string
+  duration: number
+}
+
 export interface RecordedFile {
   id: string
   name: string
@@ -6,6 +19,7 @@ export interface RecordedFile {
   created: Date
   modified: Date
   thumbnailPath?: string
+  transcription?: TranscriptionResult
 }
 
 export type RecordingMode = 'screen' | 'camera' | 'both'

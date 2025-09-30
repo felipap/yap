@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useRouter } from '../../shared/Router'
-import { RecordedFile } from '../../types'
-import { getRecordedFiles, openFileLocation, deleteFile } from '../../ipc'
+import { deleteFile, getRecordedFiles, openFileLocation } from '../../../ipc'
+import { useRouter } from '../../../shared/Router'
+import { RecordedFile } from '../../../types'
 import { Inner } from './Inner'
 
 interface PageProps {
@@ -19,7 +19,7 @@ export default function Page({ vlogId }: PageProps) {
     const loadVlog = async () => {
       try {
         const files = await getRecordedFiles()
-        const foundFile = files.find(f => f.id === vlogId)
+        const foundFile = files.find((f) => f.id === vlogId)
         if (foundFile) {
           setVlog(foundFile)
         } else {
@@ -94,9 +94,12 @@ export default function Page({ vlogId }: PageProps) {
         <p className="text-[var(--text-secondary)] m-0">
           The vlog you're looking for doesn't exist or may have been deleted.
         </p>
-        <button className="btn-primary" onClick={() => {
-          router.goBack()
-        }}>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            router.goBack()
+          }}
+        >
           Go Back
         </button>
       </div>

@@ -6,6 +6,19 @@ export interface ScreenSource {
   thumbnail: string
 }
 
+export interface TranscriptionSegment {
+  start: number
+  end: number
+  text: string
+}
+
+export interface TranscriptionResult {
+  text: string
+  segments: TranscriptionSegment[]
+  language?: string
+  duration: number
+}
+
 export interface RecordedFile {
   id: string
   name: string
@@ -14,6 +27,7 @@ export interface RecordedFile {
   created: Date
   modified: Date
   thumbnailPath?: string
+  transcription?: TranscriptionResult
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -41,7 +55,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     getAll: (): Promise<Record<string, any>> =>
       ipcRenderer.invoke('store-get-all')
-  }
+  },
+
+  // Transcription functions
+  transcribeVideo: (vlogId: string): Promise<TranscriptionResult> =>
+    ipcRenderer.invoke('transcribe-video', vlogId),
+
+  getTranscription: (vlogId: string): Promise<TranscriptionResult | null> =>
+    ipcRenderer.invoke('get-transcription', vlogId),
+
+  getVideoDuration: (vlogId: string): Promise<number> =>
+    ipcRenderer.invoke('get-video-duration', vlogId)
 })
 
 declare global {
@@ -57,6 +81,9 @@ declare global {
         set: (key: string, value: any) => Promise<void>
         getAll: () => Promise<Record<string, any>>
       }
+      transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
+      getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
+      getVideoDuration: (vlogId: string) => Promise<number>
     }
   }
 }

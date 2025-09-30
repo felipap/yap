@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { RecordedFile } from '../../types'
+import { RecordedFile } from '../../../types'
+import { TranscriptionPanel } from './TranscriptionPanel'
 
 interface InnerProps {
   vlog: RecordedFile
@@ -14,7 +15,7 @@ export function Inner({
   onBack,
   onOpenLocation,
   onDelete,
-  isDeleting
+  isDeleting,
 }: InnerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -23,10 +24,7 @@ export function Inner({
       {/* Header */}
       <div className="drag-region px-6 py-4 flex justify-between items-center border-b border-[var(--border)] bg-two">
         <div className="no-drag-region flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="btn-secondary px-4 py-2 text-sm"
-          >
+          <button onClick={onBack} className="btn-secondary px-4 py-2 text-sm">
             ← Back
           </button>
           <h2 className="text-lg font-semibold m-0 text-[var(--text-primary)]">
@@ -35,6 +33,7 @@ export function Inner({
         </div>
 
         <div className="no-drag-region flex gap-3">
+          <TranscriptionPanel vlogId={vlog.id} videoRef={videoRef} />
           <button
             className="btn-secondary"
             onClick={onOpenLocation}
@@ -72,4 +71,3 @@ export function Inner({
     </div>
   )
 }
-

@@ -5,6 +5,7 @@ import { homedir } from 'os'
 import { createHash } from 'crypto'
 import { store } from './store'
 import { getThumbnailPath } from './lib/thumbnails'
+import { transcribeVideo, getVideoDuration } from './lib/transcription'
 
 // Store mapping of vlog IDs to paths
 export const vlogIdToPath = new Map<string, string>()
@@ -141,5 +142,56 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('store-get-all', () => {
     return store.store
+  })
+
+  // Transcription handlers
+  ipcMain.handle('transcribe-video', async (_, vlogId: string) => {
+    try {
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      // Get API key from settings
+      const apiKey = store.get('openaiApiKey')
+      if (!apiKey) {
+        throw new Error('OpenAI API key not configured. Please add "openaiApiKey" to your vlog-settings.json file.')
+      }
+
+      const result = await transcribeVideo(filePath, apiKey)
+
+      // Store transcription result in the store
+      const transcriptionKey = `transcription_${vlogId}`
+      store.set(transcriptionKey, result)
+
+      return result
+    } catch (error) {
+      console.error('Error transcribing video:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('get-transcription', async (_, vlogId: string) => {
+    try {
+      const transcriptionKey = `transcription_${vlogId}`
+      return store.get(transcriptionKey) || null
+    } catch (error) {
+      console.error('Error getting transcription:', error)
+      return null
+    }
+  })
+
+  ipcMain.handle('get-video-duration', async (_, vlogId: string) => {
+    try {
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      return await getVideoDuration(filePath)
+    } catch (error) {
+      console.error('Error getting video duration:', error)
+      throw error
+    }
   })
 }

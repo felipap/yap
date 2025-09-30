@@ -1,4 +1,4 @@
-import { RecordedFile, RecordingMode } from './types'
+import { RecordedFile, RecordingMode, TranscriptionResult } from './types'
 
 export interface ScreenSource {
   id: string
@@ -54,5 +54,18 @@ export async function getRecordingMode(): Promise<RecordingMode | undefined> {
 
 export async function setRecordingMode(mode: RecordingMode): Promise<void> {
   return setStoredValue('recordingMode', mode)
+}
+
+// Transcription functions
+export async function transcribeVideo(vlogId: string): Promise<TranscriptionResult> {
+  return window.electronAPI.transcribeVideo(vlogId)
+}
+
+export async function getTranscription(vlogId: string): Promise<TranscriptionResult | null> {
+  return window.electronAPI.getTranscription(vlogId)
+}
+
+export async function getVideoDuration(vlogId: string): Promise<number> {
+  return window.electronAPI.getVideoDuration(vlogId)
 }
 
