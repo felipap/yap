@@ -137,10 +137,9 @@ export default function Page() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <div style={{
+      <div className="bg-red-500" style={{
         padding: '24px',
         borderBottom: '1px solid var(--border)',
-        background: 'var(--bg-primary)'
       }}>
         <h1 style={{
           fontSize: '24px',

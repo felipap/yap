@@ -142,3 +142,4 @@ The app uses Electron's `desktopCapturer` API to capture screen content. The rec
 
 MIT License - feel free to modify and distribute as needed.
 
+

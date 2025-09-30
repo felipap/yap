@@ -45,3 +45,4 @@ echo "   bun run dev"
 echo ""
 echo "✨ Setup complete! Happy vlogging!"
 
+
