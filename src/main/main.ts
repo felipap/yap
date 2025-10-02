@@ -1,9 +1,13 @@
 import 'source-map-support/register'
+import { config } from 'dotenv'
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { store } from './store'
 import { setupIpcHandlers } from './ipc'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
+
+// Load environment variables from .env file
+config()
 
 // Register the custom protocols
 registerProtocols()

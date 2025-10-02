@@ -48,6 +48,7 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "electron-store": "^8.2.0",
     "lucide-react": "^0.544.0",
     "openai": "^4.20.1",

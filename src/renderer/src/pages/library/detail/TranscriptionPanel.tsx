@@ -6,55 +6,29 @@ import { TranscriptionResult } from '../../../types'
 interface Props {
   vlogId: string
   videoRef: React.RefObject<HTMLVideoElement>
+  onTranscribe?: () => void
+  isTranscribing?: boolean
+  transcriptionError?: string | null
+  transcription?: TranscriptionResult | null
 }
 
 export const TranscriptionPanel = withBoundary(function ({
   vlogId,
   videoRef,
+  onTranscribe,
+  isTranscribing,
+  transcriptionError,
+  transcription,
 }: Props) {
-  const [transcription, setTranscription] =
-    useState<TranscriptionResult | null>(null)
-  const [isTranscribing, setIsTranscribing] = useState(false)
   const [showTranscription, setShowTranscription] = useState(false)
-  const [transcriptionError, setTranscriptionError] = useState<string | null>(
-    null,
-  )
   const transcriptContainerRef = useRef<HTMLDivElement>(null)
 
-  // Load existing transcription on mount
+  // Show transcription panel when transcription becomes available
   useEffect(() => {
-    const loadTranscription = async () => {
-      try {
-        const existingTranscription = await getTranscription(vlogId)
-        if (existingTranscription) {
-          setTranscription(existingTranscription)
-          setShowTranscription(true) // Automatically show if transcription exists
-        }
-      } catch (error) {
-        console.error('Failed to load transcription:', error)
-      }
-    }
-
-    loadTranscription()
-  }, [vlogId])
-
-  const handleTranscribe = async () => {
-    setIsTranscribing(true)
-    setTranscriptionError(null)
-
-    try {
-      const result = await transcribeVideo(vlogId)
-      setTranscription(result)
+    if (transcription) {
       setShowTranscription(true)
-    } catch (error) {
-      console.error('Transcription failed:', error)
-      setTranscriptionError(
-        error instanceof Error ? error.message : 'Transcription failed',
-      )
-    } finally {
-      setIsTranscribing(false)
     }
-  }
+  }, [transcription])
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -98,7 +72,6 @@ export const TranscriptionPanel = withBoundary(function ({
         segmentElement.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
-          k,
         })
 
         // Add a temporary highlight
@@ -110,26 +83,12 @@ export const TranscriptionPanel = withBoundary(function ({
     }
   }
 
+  if (!transcription) {
+    return null
+  }
+
   return (
     <>
-      {/* Transcription button */}
-      {transcription ? (
-        <button
-          className="btn-secondary"
-          onClick={() => setShowTranscription(!showTranscription)}
-        >
-          {showTranscription ? '📝 Hide Transcript' : '📝 Show Transcript'}
-        </button>
-      ) : (
-        <button
-          className="btn-primary"
-          onClick={handleTranscribe}
-          disabled={isTranscribing}
-        >
-          {isTranscribing ? '⏳ Transcribing...' : '🎤 Transcribe'}
-        </button>
-      )}
-
       {/* Transcription panel */}
       {showTranscription && transcription && (
         <div className="bg-two rounded-lg p-4 border">
@@ -168,21 +127,6 @@ export const TranscriptionPanel = withBoundary(function ({
                 <div className="text-sm text-contrast">{segment.text}</div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Error message */}
-      {transcriptionError && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
-          <div className="flex justify-between items-center">
-            <span>{transcriptionError}</span>
-            <button
-              onClick={() => setTranscriptionError(null)}
-              className="ml-4 text-white hover:text-gray-200"
-            >
-              ✕
-            </button>
           </div>
         </div>
       )}

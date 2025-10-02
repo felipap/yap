@@ -14,12 +14,22 @@ export interface Vlog {
   path: string
   timestamp: string
   transcription?: TranscriptionState
+  summary?: string
+}
+
+export interface UserProfile {
+  name: string
+  role: string
+  interests: string[]
+  languages: string[]
+  context: string
 }
 
 export interface AppSettings {
   selectedCameraId: string
   recordingMode: 'camera' | 'screen' | 'both'
   openaiApiKey?: string
+  geminiApiKey?: string
   windowBounds?: {
     width: number
     height: number
@@ -28,6 +38,7 @@ export interface AppSettings {
   }
   vlogs?: Record<string, Vlog>
   transcriptionSpeedUp?: boolean
+  userProfile?: UserProfile
 }
 
 const schema: Schema<AppSettings> = {
@@ -41,6 +52,10 @@ const schema: Schema<AppSettings> = {
     default: 'camera'
   },
   openaiApiKey: {
+    type: 'string',
+    default: ''
+  },
+  geminiApiKey: {
     type: 'string',
     default: ''
   },

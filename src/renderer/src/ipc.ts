@@ -77,3 +77,12 @@ export async function getAllTranscriptionStates(): Promise<Record<string, Transc
   return window.electronAPI.getAllTranscriptionStates()
 }
 
+// Summary functions
+export async function generateVideoSummary(vlogId: string, transcription: string): Promise<string> {
+  return window.electronAPI.generateVideoSummary(vlogId, transcription)
+}
+
+export async function saveVideoSummary(vlogId: string, summary: string): Promise<void> {
+  return window.electronAPI.saveVideoSummary(vlogId, summary)
+}
+

@@ -3,9 +3,11 @@ import { join } from 'path'
 import { readdir, stat, writeFile, mkdir, unlink, access } from 'fs/promises'
 import { homedir } from 'os'
 import { createHash } from 'crypto'
-import { store, Vlog, setVlog, getVlog, updateVlog, deleteVlog, getAllVlogs } from './store'
+import { store, Vlog, UserProfile, setVlog, getVlog, updateVlog, deleteVlog, getAllVlogs } from './store'
 import { getThumbnailPath } from './lib/thumbnails'
 import { transcribeVideo, getVideoDuration } from './lib/transcription'
+import { generateVideoSummary } from './lib/videoSummary'
+
 
 // Store mapping of vlog IDs to paths
 export const vlogIdToPath = new Map<string, string>()
@@ -73,7 +75,9 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
             size: stats.size,
             created: stats.birthtime,
             modified: stats.mtime,
-            thumbnailPath: `vlog-thumbnail://${id}.jpg`
+            thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+            summary: vlog.summary,
+            transcription: vlog.transcription
           }
         })
       )
@@ -176,10 +180,10 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      // Get API key from settings
-      const apiKey = store.get('openaiApiKey')
+      // Get API key from environment variable
+      const apiKey = process.env.GEMINI_API_KEY
       if (!apiKey) {
-        throw new Error('OpenAI API key not configured. Please add "openaiApiKey" to your vlog-settings.json file.')
+        throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY environment variable.')
       }
 
       // Set transcription state to transcribing
@@ -324,6 +328,58 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       return true
     } catch (error) {
       console.error('Error setting transcription speed-up:', error)
+      throw error
+    }
+  })
+
+  // User profile handlers
+  ipcMain.handle('get-user-profile', async () => {
+    try {
+      const profile: UserProfile = store.get('userProfile') || {
+        name: 'Felipe',
+        role: 'Solo founder/entrepreneur',
+        interests: ['AI', 'tech projects', 'workflow automation', 'inbox agents'],
+        languages: ['English', 'Portuguese'],
+        context: 'Working on AI and tech projects, exploring business ideas, considering co-founders for certain projects'
+      }
+      return profile
+    } catch (error) {
+      console.error('Error getting user profile:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('update-user-profile', async (_, profile: UserProfile) => {
+    try {
+      store.set('userProfile', profile)
+      return true
+    } catch (error) {
+      console.error('Error updating user profile:', error)
+      throw error
+    }
+  })
+
+  // Summary handlers
+
+  ipcMain.handle('generate-video-summary', async (_, vlogId: string, transcription: string) => {
+    try {
+      const summary = await generateVideoSummary(vlogId, transcription)
+
+      // Save the generated summary in the Vlog object
+      updateVlog(vlogId, { summary })
+
+      return summary
+    } catch (error) {
+      console.error('Error generating video summary:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('save-video-summary', async (_, vlogId: string, summary: string) => {
+    try {
+      updateVlog(vlogId, { summary })
+    } catch (error) {
+      console.error('Error saving video summary:', error)
       throw error
     }
   })

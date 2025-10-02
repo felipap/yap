@@ -36,6 +36,7 @@ export interface RecordedFile {
   modified: Date
   thumbnailPath?: string
   transcription?: TranscriptionResult
+  summary?: string
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -84,7 +85,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllVlogs: () => ipcRenderer.invoke('get-all-vlogs'),
   updateVlog: (vlogId: string, updates: any) => ipcRenderer.invoke('update-vlog', vlogId, updates),
   getTranscriptionSpeedUp: () => ipcRenderer.invoke('get-transcription-speed-up'),
-  setTranscriptionSpeedUp: (speedUp: boolean) => ipcRenderer.invoke('set-transcription-speed-up', speedUp)
+  setTranscriptionSpeedUp: (speedUp: boolean) => ipcRenderer.invoke('set-transcription-speed-up', speedUp),
+  generateVideoSummary: (vlogId: string, transcription: string): Promise<string> =>
+    ipcRenderer.invoke('generate-video-summary', vlogId, transcription),
+  saveVideoSummary: (vlogId: string, summary: string): Promise<void> =>
+    ipcRenderer.invoke('save-video-summary', vlogId, summary)
 })
 
 declare global {
@@ -110,6 +115,8 @@ declare global {
       updateVlog: (vlogId: string, updates: any) => Promise<boolean>
       getTranscriptionSpeedUp: () => Promise<boolean>
       setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
+      generateVideoSummary: (vlogId: string, transcription: string) => Promise<string>
+      saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
     }
   }
 }

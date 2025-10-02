@@ -25,6 +25,7 @@ export interface Vlog {
   path: string
   timestamp: string
   transcription?: TranscriptionState
+  summary?: string
 }
 
 export interface RecordedFile {
@@ -36,6 +37,7 @@ export interface RecordedFile {
   modified: Date
   thumbnailPath?: string
   transcription?: TranscriptionResult
+  summary?: string
 }
 
 export type RecordingMode = 'screen' | 'camera' | 'both'

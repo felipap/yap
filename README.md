@@ -1,1 +1,7 @@
-do it later, ai!
+# vlogger
+
+A macOS app for recording and consuming vlogs.
+
+# License
+
+MIT
