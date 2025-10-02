@@ -5,6 +5,7 @@ import { join } from 'path'
 import { store } from './store'
 import { setupIpcHandlers } from './ipc'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
+import { ensureCacheDir } from './lib/thumbnails'
 
 // Load environment variables from .env file
 config()
@@ -25,11 +26,11 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: join(__dirname, 'preload.js')
+      preload: join(__dirname, 'preload.js'),
     },
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
-    visualEffectState: 'active'
+    visualEffectState: 'active',
   })
 
   // Save window bounds on close
@@ -46,7 +47,10 @@ function createWindow() {
   setupIpcHandlers(mainWindow)
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Initialize cache directory
+  await ensureCacheDir()
+
   // Setup protocol handlers
   setupProtocolHandlers()
 
@@ -64,7 +68,6 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
 
 // Handle uncaught exceptions with better stack traces
 process.on('uncaughtException', (error) => {

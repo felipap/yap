@@ -42,18 +42,56 @@ export default function Page() {
 
       if (videoFiles.length > 0) {
         console.log('Dropped video files:')
+        const results = []
+
         for (const file of videoFiles) {
           try {
             console.log(`- Importing: ${file.name} (${file.path})`)
-            const importedFile = await importVideoFile(file.path)
-            console.log(`- Successfully imported: ${importedFile.name}`)
+            const result = await importVideoFile(file.path)
+
+            if (result.success && result.vlog) {
+              console.log(`- Successfully imported: ${result.vlog.name}`)
+              results.push({
+                file: file.name,
+                status: 'success',
+                message: result.message,
+              })
+            } else if (result.isDuplicate) {
+              console.log(`- Duplicate found: ${file.name}`)
+              results.push({
+                file: file.name,
+                status: 'duplicate',
+                message: result.message,
+              })
+            }
           } catch (error) {
             console.error(`- Failed to import ${file.name}:`, error)
-            alert(
-              `Failed to import ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            )
+            results.push({
+              file: file.name,
+              status: 'error',
+              message: `Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            })
           }
         }
+
+        // Show summary of import results
+        const successCount = results.filter(
+          (r) => r.status === 'success',
+        ).length
+        const duplicateCount = results.filter(
+          (r) => r.status === 'duplicate',
+        ).length
+        const errorCount = results.filter((r) => r.status === 'error').length
+
+        let summaryMessage = `Import complete: ${successCount} imported`
+        if (duplicateCount > 0) {
+          summaryMessage += `, ${duplicateCount} duplicates skipped`
+        }
+        if (errorCount > 0) {
+          summaryMessage += `, ${errorCount} failed`
+        }
+
+        alert(summaryMessage)
       }
     }
 

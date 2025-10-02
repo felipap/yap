@@ -3,6 +3,7 @@ import {
   RecordingMode,
   TranscriptionResult,
   TranscriptionState,
+  ImportResult,
 } from './types'
 
 export interface ScreenSource {
@@ -109,6 +110,6 @@ export async function saveVideoSummary(
 }
 
 // Import functions
-export async function importVideoFile(filePath: string): Promise<RecordedFile> {
+export async function importVideoFile(filePath: string): Promise<ImportResult> {
   return window.electronAPI.importVideoFile(filePath)
 }

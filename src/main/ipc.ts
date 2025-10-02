@@ -417,6 +417,27 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       // Generate unique ID for the file
       const id = generateVlogId(filePath)
 
+      // Check if file already exists
+      const existingVlog = getVlog(id)
+      if (existingVlog) {
+        return {
+          success: false,
+          isDuplicate: true,
+          message: `"${fileName}" is already in your library`,
+          existingVlog: {
+            id: existingVlog.id,
+            name: existingVlog.name,
+            path: existingVlog.path,
+            size: stats.size,
+            created: new Date(existingVlog.timestamp),
+            modified: stats.mtime,
+            thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+            summary: existingVlog.summary,
+            transcription: existingVlog.transcription,
+          },
+        }
+      }
+
       // Store the mapping
       vlogIdToPath.set(id, filePath)
 
@@ -455,15 +476,20 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       console.log(`Imported video file: ${filePath}`)
       return {
-        id,
-        name: fileName,
-        path: filePath,
-        size: stats.size,
-        created: createdDate,
-        modified: stats.mtime,
-        thumbnailPath: `vlog-thumbnail://${id}.jpg`,
-        summary: vlog.summary,
-        transcription: vlog.transcription,
+        success: true,
+        isDuplicate: false,
+        message: `Successfully imported "${fileName}"`,
+        vlog: {
+          id,
+          name: fileName,
+          path: filePath,
+          size: stats.size,
+          created: createdDate,
+          modified: stats.mtime,
+          thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+          summary: vlog.summary,
+          transcription: vlog.transcription,
+        },
       }
     } catch (error) {
       console.error('Error importing video file:', error)

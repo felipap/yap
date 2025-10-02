@@ -42,3 +42,10 @@ export interface RecordedFile {
 
 export type RecordingMode = 'screen' | 'camera' | 'both'
 
+export interface ImportResult {
+  success: boolean
+  isDuplicate: boolean
+  message: string
+  vlog?: RecordedFile
+  existingVlog?: RecordedFile
+}
