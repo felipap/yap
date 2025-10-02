@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { RecordedFile } from '../../types'
-import { openFileLocation, deleteFile } from '../../ipc'
+import { openFileLocation, untrackVlog } from '../../ipc'
 
 interface VideoCardProps {
   file: RecordedFile
@@ -41,17 +41,21 @@ export function VideoCard({ file, onDeleted, onWatch }: VideoCardProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${file.name}"?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to remove "${file.name}" from your library? The file will remain on your computer.`,
+      )
+    ) {
       return
     }
 
     setIsDeleting(true)
     try {
-      await deleteFile(file.id)
+      await untrackVlog(file.id)
       onDeleted()
     } catch (error) {
-      console.error('Failed to delete file:', error)
-      alert('Failed to delete file')
+      console.error('Failed to remove file from library:', error)
+      alert('Failed to remove file from library')
     } finally {
       setIsDeleting(false)
     }
@@ -123,7 +127,7 @@ export function VideoCard({ file, onDeleted, onWatch }: VideoCardProps) {
             }}
             disabled={isDeleting}
           >
-            {isDeleting ? '⏳ Deleting...' : '🗑️ Delete'}
+            {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
           </button>
         </div>
       </div>

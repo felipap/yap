@@ -1,4 +1,9 @@
-import { RecordedFile, RecordingMode, TranscriptionResult, TranscriptionState } from './types'
+import {
+  RecordedFile,
+  RecordingMode,
+  TranscriptionResult,
+  TranscriptionState,
+} from './types'
 
 export interface ScreenSource {
   id: string
@@ -18,11 +23,14 @@ export async function openFileLocation(vlogId: string): Promise<void> {
   return window.electronAPI.openFileLocation(vlogId)
 }
 
-export async function deleteFile(vlogId: string): Promise<boolean> {
-  return window.electronAPI.deleteFile(vlogId)
+export async function untrackVlog(vlogId: string): Promise<boolean> {
+  return window.electronAPI.untrackVlog(vlogId)
 }
 
-export async function saveRecording(filename: string, buffer: ArrayBuffer): Promise<string> {
+export async function saveRecording(
+  filename: string,
+  buffer: ArrayBuffer,
+): Promise<string> {
   return window.electronAPI.saveRecording(filename, buffer)
 }
 
@@ -57,11 +65,15 @@ export async function setRecordingMode(mode: RecordingMode): Promise<void> {
 }
 
 // Transcription functions
-export async function transcribeVideo(vlogId: string): Promise<TranscriptionResult> {
+export async function transcribeVideo(
+  vlogId: string,
+): Promise<TranscriptionResult> {
   return window.electronAPI.transcribeVideo(vlogId)
 }
 
-export async function getTranscription(vlogId: string): Promise<TranscriptionResult | null> {
+export async function getTranscription(
+  vlogId: string,
+): Promise<TranscriptionResult | null> {
   return window.electronAPI.getTranscription(vlogId)
 }
 
@@ -69,20 +81,30 @@ export async function getVideoDuration(vlogId: string): Promise<number> {
   return window.electronAPI.getVideoDuration(vlogId)
 }
 
-export async function getTranscriptionState(vlogId: string): Promise<TranscriptionState> {
+export async function getTranscriptionState(
+  vlogId: string,
+): Promise<TranscriptionState> {
   return window.electronAPI.getTranscriptionState(vlogId)
 }
 
-export async function getAllTranscriptionStates(): Promise<Record<string, TranscriptionState>> {
+export async function getAllTranscriptionStates(): Promise<
+  Record<string, TranscriptionState>
+> {
   return window.electronAPI.getAllTranscriptionStates()
 }
 
 // Summary functions
-export async function generateVideoSummary(vlogId: string, transcription: string): Promise<string> {
+export async function generateVideoSummary(
+  vlogId: string,
+  transcription: string,
+): Promise<string> {
   return window.electronAPI.generateVideoSummary(vlogId, transcription)
 }
 
-export async function saveVideoSummary(vlogId: string, summary: string): Promise<void> {
+export async function saveVideoSummary(
+  vlogId: string,
+  summary: string,
+): Promise<void> {
   return window.electronAPI.saveVideoSummary(vlogId, summary)
 }
 
@@ -90,4 +112,3 @@ export async function saveVideoSummary(vlogId: string, summary: string): Promise
 export async function importVideoFile(filePath: string): Promise<RecordedFile> {
   return window.electronAPI.importVideoFile(filePath)
 }
-

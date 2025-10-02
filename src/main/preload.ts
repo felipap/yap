@@ -49,21 +49,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFileLocation: (vlogId: string): Promise<void> =>
     ipcRenderer.invoke('open-file-location', vlogId),
 
-  deleteFile: (vlogId: string): Promise<boolean> =>
-    ipcRenderer.invoke('delete-file', vlogId),
+  untrackVlog: (vlogId: string): Promise<boolean> =>
+    ipcRenderer.invoke('untrack-vlog', vlogId),
 
   saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> =>
     ipcRenderer.invoke('save-recording', filename, buffer),
 
   store: {
-    get: <T>(key: string): Promise<T> =>
-      ipcRenderer.invoke('store-get', key),
+    get: <T>(key: string): Promise<T> => ipcRenderer.invoke('store-get', key),
 
     set: (key: string, value: any): Promise<void> =>
       ipcRenderer.invoke('store-set', key, value),
 
     getAll: (): Promise<Record<string, any>> =>
-      ipcRenderer.invoke('store-get-all')
+      ipcRenderer.invoke('store-get-all'),
   },
 
   // Transcription functions
@@ -83,15 +82,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-all-transcription-states'),
   getVlog: (vlogId: string) => ipcRenderer.invoke('get-vlog', vlogId),
   getAllVlogs: () => ipcRenderer.invoke('get-all-vlogs'),
-  updateVlog: (vlogId: string, updates: any) => ipcRenderer.invoke('update-vlog', vlogId, updates),
-  getTranscriptionSpeedUp: () => ipcRenderer.invoke('get-transcription-speed-up'),
-  setTranscriptionSpeedUp: (speedUp: boolean) => ipcRenderer.invoke('set-transcription-speed-up', speedUp),
-  generateVideoSummary: (vlogId: string, transcription: string): Promise<string> =>
+  updateVlog: (vlogId: string, updates: any) =>
+    ipcRenderer.invoke('update-vlog', vlogId, updates),
+  getTranscriptionSpeedUp: () =>
+    ipcRenderer.invoke('get-transcription-speed-up'),
+  setTranscriptionSpeedUp: (speedUp: boolean) =>
+    ipcRenderer.invoke('set-transcription-speed-up', speedUp),
+  generateVideoSummary: (
+    vlogId: string,
+    transcription: string,
+  ): Promise<string> =>
     ipcRenderer.invoke('generate-video-summary', vlogId, transcription),
   saveVideoSummary: (vlogId: string, summary: string): Promise<void> =>
     ipcRenderer.invoke('save-video-summary', vlogId, summary),
   importVideoFile: (filePath: string): Promise<RecordedFile> =>
-    ipcRenderer.invoke('import-video-file', filePath)
+    ipcRenderer.invoke('import-video-file', filePath),
 })
 
 declare global {
@@ -100,7 +105,7 @@ declare global {
       getScreenSources: () => Promise<ScreenSource[]>
       getRecordedFiles: () => Promise<RecordedFile[]>
       openFileLocation: (vlogId: string) => Promise<void>
-      deleteFile: (vlogId: string) => Promise<boolean>
+      untrackVlog: (vlogId: string) => Promise<boolean>
       saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
       store: {
         get: <T>(key: string) => Promise<T>
@@ -111,13 +116,18 @@ declare global {
       getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
       getVideoDuration: (vlogId: string) => Promise<number>
       getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
-      getAllTranscriptionStates: () => Promise<Record<string, TranscriptionState>>
+      getAllTranscriptionStates: () => Promise<
+        Record<string, TranscriptionState>
+      >
       getVlog: (vlogId: string) => Promise<any>
       getAllVlogs: () => Promise<Record<string, any>>
       updateVlog: (vlogId: string, updates: any) => Promise<boolean>
       getTranscriptionSpeedUp: () => Promise<boolean>
       setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
-      generateVideoSummary: (vlogId: string, transcription: string) => Promise<string>
+      generateVideoSummary: (
+        vlogId: string,
+        transcription: string,
+      ) => Promise<string>
       saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
       importVideoFile: (filePath: string) => Promise<RecordedFile>
     }

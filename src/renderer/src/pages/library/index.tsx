@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Film } from 'lucide-react'
-import { deleteFile, openFileLocation, importVideoFile } from '../../ipc'
+import { importVideoFile } from '../../ipc'
 import { RecordedFile } from '../../types'
 import { DetailPage } from './detail'
 import { Sidebar } from './Sidebar'
 
 export default function Page() {
   const [selectedVlog, setSelectedVlog] = useState<RecordedFile | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
 
   useEffect(() => {
@@ -71,37 +70,6 @@ export default function Page() {
     }
   }, [selectedVlog])
 
-  const handleOpenLocation = async () => {
-    if (!selectedVlog) {
-      return
-    }
-    try {
-      await openFileLocation(selectedVlog.id)
-    } catch (error) {
-      console.error('Failed to open file location:', error)
-      alert('Failed to open file location')
-    }
-  }
-
-  const handleDelete = async () => {
-    if (
-      !selectedVlog ||
-      !confirm(`Are you sure you want to delete "${selectedVlog.name}"?`)
-    ) {
-      return
-    }
-
-    setIsDeleting(true)
-    try {
-      await deleteFile(selectedVlog.id)
-      setSelectedVlog(null)
-    } catch (error) {
-      console.error('Failed to delete vlog:', error)
-      alert('Failed to delete vlog')
-      setIsDeleting(false)
-    }
-  }
-
   return (
     <div className="flex h-screen bg-one overflow-hidden">
       <Sidebar
@@ -119,9 +87,6 @@ export default function Page() {
             onBack={() => {
               setSelectedVlog(null)
             }}
-            onOpenLocation={handleOpenLocation}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
           />
         ) : (
           <div

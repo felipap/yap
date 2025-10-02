@@ -41,9 +41,6 @@ importers:
       zod:
         specifier: ^4.1.11
         version: 4.1.11
-      zod-to-json-schema:
-        specifier: ^3.24.6
-        version: 3.24.6(zod@4.1.11)
     devDependencies:
       '@tailwindcss/forms':
         specifier: ^0.5.10
@@ -75,9 +72,6 @@ importers:
       electron-builder:
         specifier: ^24.9.1
         version: 24.13.3(electron-builder-squirrel-windows@24.13.3)
-      genai:
-        specifier: link:@types/@google/genai
-        version: link:@types/@google/genai
       nodemon:
         specifier: ^3.1.10
         version: 3.1.10
@@ -2304,11 +2298,6 @@ packages:
   zip-stream@4.1.1:
     resolution: {integrity: sha512-9qv4rlDiopXg4E69k+vMHjNN63YFMe9sZMrdlvKnCjlCRWeCBswPPMPUfx+ipsAWq1LXHe70RcbaHdJJpS6hyQ==}
     engines: {node: '>= 10'}
-
-  zod-to-json-schema@3.24.6:
-    resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
-    peerDependencies:
-      zod: ^3.24.1
 
   zod@4.1.11:
     resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
@@ -4590,9 +4579,5 @@ snapshots:
       archiver-utils: 3.0.4
       compress-commons: 4.1.2
       readable-stream: 3.6.2
-
-  zod-to-json-schema@3.24.6(zod@4.1.11):
-    dependencies:
-      zod: 4.1.11
 
   zod@4.1.11: {}

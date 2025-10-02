@@ -58,8 +58,7 @@
     "react-dom": "^18.2.0",
     "source-map-support": "^0.5.21",
     "whisper-node": "^1.1.1",
-    "zod": "^4.1.11",
-    "zod-to-json-schema": "^3.24.6"
+    "zod": "^4.1.11"
   },
   "build": {
     "appId": "com.felipe.vlog-electron",

@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 if (!GEMINI_API_KEY) {
@@ -10,83 +9,80 @@ if (!GEMINI_API_KEY) {
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 
 const Schema = z.object({
-  date: z.string().nullable().optional(),
-  day: z.number().min(1).max(31).nullable().optional(),
-  month: z.number().min(1).max(12).nullable().optional(),
-  year: z.number().min(1900).max(2100).nullable().optional(),
-  hour: z.number().min(0).max(23).nullable().optional(),
-  minute: z.number().min(0).max(59).nullable().optional(),
-  ampm: z.enum(['AM', 'PM']).nullable().optional(),
-  confidence: z.enum(['high', 'medium', 'low']).default('low'),
-  extractedText: z.string().nullable().optional(),
-  reasoning: z.string().nullable().optional()
+  day: z.number().min(1).max(31),
+  month: z.number().min(1).max(12),
+  year: z.number().min(1900).max(2100),
+  hour: z.number().min(0).max(23),
+  minute: z.number().min(0).max(59),
+  confidence: z.enum(['high', 'medium', 'low']),
 })
 
 export type Result = z.infer<typeof Schema>
 
-export async function extractDateFromTitle(title: string): Promise<Result> {
-  const prompt = `
-Extract date and time from this video title. Look for formats like:
-- "2024-01-15" (ISO format)
-- "2024-01-15T10-30-00" (ISO with time)
-- "2024_01_15" (underscore separated)
-- "20240115" (compact format)
-- "January 15, 2024" (natural language)
-- "15/01/2024" or "01/15/2024" (slash separated)
-- "8.07 PM" or "8:07 PM" (time formats)
-- "2024-01" (year-month only)
-`
+export async function extractDateFromTitle(
+  title: string,
+): Promise<Result | { error: string }> {
+  const prompt = `Extract date and time from this video title: "${title}"
 
+Look for these patterns:
+- ISO dates: "2024-01-15", "2025-01-12"
+- Times: "8.07 PM" (convert to 20:07), "8:07 PM" (convert to 20:07), "20:07" (keep as 20:07)
+- Combined: "2025-01-12 at 8.07 PM"
+
+Extract the date and time components separately.`
 
   let res
   try {
     res = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
-          type: "object",
+          type: 'object',
           properties: {
-            date: { type: "string", nullable: true },
-            day: { type: "integer", nullable: true },
-            month: { type: "integer", nullable: true },
-            year: { type: "integer", nullable: true },
-            hour: { type: "integer", nullable: true },
-            minute: { type: "integer", nullable: true },
-            ampm: { type: "string", enum: ["AM", "PM"], nullable: true },
-            confidence: { type: "string", enum: ["high", "medium", "low"] },
-            extractedText: { type: "string", nullable: true },
-            reasoning: { type: "string", nullable: true }
-          },
-          required: ["confidence"]
-            status: {
-              type: "string",
-              enum: ["active", "pending", "suspended"], // Enums actually work!
+            day: {
+              type: 'integer',
+              description: 'Day of month as integer (1-31)',
+            },
+            month: {
+              type: 'integer',
+              description: 'Month as integer (1-12, where 1=January)',
+            },
+            year: {
+              type: 'integer',
+              description: 'Year as 4-digit integer (e.g., 2025)',
+            },
+            hour: {
+              type: 'integer',
+              description: 'Hour as integer (0-23 for 24-hour format)',
+            },
+            minute: {
+              type: 'integer',
+              description: 'Minute as integer (0-59)',
+            },
+            confidence: {
+              type: 'string',
+              enum: ['high', 'medium', 'low'],
+              description: 'Confidence level of the extraction',
             },
           },
-          required: ["email", "status"],
-        }
+          required: ['day', 'month', 'year', 'hour', 'minute', 'confidence'],
+        },
       },
-      // response_format: { type: "json_object", schema: jsonSchema },
     })
   } catch (error) {
     return {
-      date: null,
-      confidence: 'low',
-      reasoning: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
     }
   }
-  console.log('res.text', res.text)
 
   const rawResponse = JSON.parse(res.text || '{}')
 
   // Validate with Zod
   const parsedResponse = Schema.parse(rawResponse)
 
-
   return {
     ...parsedResponse,
   }
 }
-

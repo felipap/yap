@@ -3,23 +3,19 @@ import { RecordedFile, TranscriptionResult } from '../../../types'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { VideoSummaryPanel } from './VideoSummaryPanel'
 import { useVideoShortcuts } from './useVideoShortcuts'
-import { getTranscription, transcribeVideo } from '../../../ipc'
+import {
+  getTranscription,
+  transcribeVideo,
+  untrackVlog,
+  openFileLocation,
+} from '../../../ipc'
 
 interface InnerProps {
   vlog: RecordedFile
   onBack: () => void
-  onOpenLocation: () => void
-  onDelete: () => void
-  isDeleting: boolean
 }
 
-export function DetailPage({
-  vlog,
-  onBack,
-  onOpenLocation,
-  onDelete,
-  isDeleting,
-}: InnerProps) {
+export function DetailPage({ vlog, onBack }: InnerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [transcription, setTranscription] =
     useState<TranscriptionResult | null>(null)
@@ -28,11 +24,10 @@ export function DetailPage({
     null,
   )
   const [showTranscription, setShowTranscription] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // Register video shortcuts
   useVideoShortcuts({ videoRef })
 
-  // Load existing transcription on mount
   useEffect(() => {
     const loadTranscription = async () => {
       try {
@@ -62,6 +57,35 @@ export function DetailPage({
       )
     } finally {
       setIsTranscribing(false)
+    }
+  }
+
+  const handleOpenLocation = async () => {
+    try {
+      await openFileLocation(vlog.id)
+    } catch (error) {
+      console.error('Failed to open file location:', error)
+      alert('Failed to open file location')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        `Are you sure you want to remove "${vlog.name}" from your library? The file will remain on your computer.`,
+      )
+    ) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await untrackVlog(vlog.id)
+      onBack()
+    } catch (error) {
+      console.error('Failed to remove vlog from library:', error)
+      alert('Failed to remove vlog from library')
+      setIsDeleting(false)
     }
   }
 
@@ -101,11 +125,11 @@ export function DetailPage({
               </HeaderButton>
             )}
 
-            <HeaderButton onClick={onOpenLocation} disabled={isDeleting}>
+            <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
               📁 Show in Finder
             </HeaderButton>
-            <HeaderButton onClick={onDelete} disabled={isDeleting}>
-              {isDeleting ? '⏳ Deleting...' : '🗑️ Delete'}
+            <HeaderButton onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
             </HeaderButton>
           </div>
         </header>

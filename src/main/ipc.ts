@@ -3,12 +3,20 @@ import { join } from 'path'
 import { readdir, stat, writeFile, mkdir, unlink, access } from 'fs/promises'
 import { homedir } from 'os'
 import { createHash } from 'crypto'
-import { store, Vlog, UserProfile, setVlog, getVlog, updateVlog, deleteVlog, getAllVlogs } from './store'
+import {
+  store,
+  Vlog,
+  UserProfile,
+  setVlog,
+  getVlog,
+  updateVlog,
+  deleteVlog,
+  getAllVlogs,
+} from './store'
 import { getThumbnailPath } from './lib/thumbnails'
 import { transcribeVideo, getVideoDuration } from './lib/transcription'
 import { generateVideoSummary } from './lib/videoSummary'
 import { extractDateFromTitle } from './ai/date-from-title'
-
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 if (!GEMINI_API_KEY) {
@@ -22,13 +30,12 @@ function generateVlogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
 }
 
-
 // IPC handlers
 export function setupIpcHandlers(mainWindow: BrowserWindow) {
   ipcMain.handle('get-screen-sources', async () => {
     try {
       const sources = await desktopCapturer.getSources({
-        types: ['screen', 'window']
+        types: ['screen', 'window'],
       })
       return sources
     } catch (error) {
@@ -70,14 +77,14 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
               modified: stats.mtime,
               thumbnailPath: `vlog-thumbnail://${id}.jpg`,
               summary: vlog.summary,
-              transcription: vlog.transcription?.result || undefined
+              transcription: vlog.transcription?.result || undefined,
             }
           } catch (error) {
             // File doesn't exist anymore, skip it
             console.log(`Skipping missing file: ${vlog.path} - Error: ${error}`)
             return null
           }
-        })
+        }),
       )
 
       // Filter out null entries (missing files) and sort by creation date
@@ -106,62 +113,49 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     }
   })
 
-  ipcMain.handle('delete-file', async (_, vlogId: string) => {
+  ipcMain.handle('untrack-vlog', async (_, vlogId: string) => {
     try {
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
-      }
-
-      // Delete the video file
-      await unlink(filePath)
-
-      // Delete the thumbnail file if it exists
-      const thumbnailPath = getThumbnailPath(filePath)
-      try {
-        await unlink(thumbnailPath)
-      } catch {
-        // Thumbnail might not exist, that's okay
-      }
-
-      // Remove from vlog store
+      // Remove from vlog store (but keep the file)
       deleteVlog(vlogId)
       vlogIdToPath.delete(vlogId)
       return true
     } catch (error) {
-      console.error('Error deleting vlog:', error)
+      console.error('Error untracking vlog:', error)
       throw error
     }
   })
 
-  ipcMain.handle('save-recording', async (_, filename: string, arrayBuffer: ArrayBuffer) => {
-    try {
-      const recordingsDir = join(homedir(), 'Documents', 'VlogRecordings')
-      await mkdir(recordingsDir, { recursive: true })
+  ipcMain.handle(
+    'save-recording',
+    async (_, filename: string, arrayBuffer: ArrayBuffer) => {
+      try {
+        const recordingsDir = join(homedir(), 'Documents', 'VlogRecordings')
+        await mkdir(recordingsDir, { recursive: true })
 
-      const filepath = join(recordingsDir, filename)
-      const buffer = Buffer.from(arrayBuffer)
-      await writeFile(filepath, buffer)
+        const filepath = join(recordingsDir, filename)
+        const buffer = Buffer.from(arrayBuffer)
+        await writeFile(filepath, buffer)
 
-      const id = generateVlogId(filepath)
-      vlogIdToPath.set(id, filepath)
+        const id = generateVlogId(filepath)
+        vlogIdToPath.set(id, filepath)
 
-      // Create and save vlog object
-      const vlog: Vlog = {
-        id,
-        name: filename,
-        path: filepath,
-        timestamp: new Date().toISOString()
+        // Create and save vlog object
+        const vlog: Vlog = {
+          id,
+          name: filename,
+          path: filepath,
+          timestamp: new Date().toISOString(),
+        }
+        setVlog(vlog)
+
+        console.log(`Recording saved: ${filepath}`)
+        return id
+      } catch (error) {
+        console.error('Error saving recording:', error)
+        throw error
       }
-      setVlog(vlog)
-
-      console.log(`Recording saved: ${filepath}`)
-      return id
-    } catch (error) {
-      console.error('Error saving recording:', error)
-      throw error
-    }
-  })
+    },
+  )
 
   // Store handlers
   ipcMain.handle('store-get', (_, key: string) => {
@@ -184,31 +178,38 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-
       // Set transcription state to transcribing
       const transcriptionState = {
         status: 'transcribing' as const,
-        startTime: Date.now()
+        startTime: Date.now(),
       }
       updateVlog(vlogId, { transcription: transcriptionState })
 
       // Notify renderer that transcription started
-      mainWindow?.webContents.send('transcription-status-changed', vlogId, transcriptionState)
+      mainWindow?.webContents.send(
+        'transcription-status-changed',
+        vlogId,
+        transcriptionState,
+      )
 
       // Get speed-up setting
       const speedUp = store.get('transcriptionSpeedUp') || false
-      const result = await transcribeVideo(filePath, GEMINI_API_KEY!, speedUp)
+      const result = await transcribeVideo(filePath, speedUp)
 
       // Update transcription state to completed
       const completedState = {
         status: 'completed' as const,
         result: result,
-        startTime: transcriptionState.startTime
+        startTime: transcriptionState.startTime,
       }
       updateVlog(vlogId, { transcription: completedState })
 
       // Notify renderer that transcription completed
-      mainWindow?.webContents.send('transcription-status-changed', vlogId, completedState)
+      mainWindow?.webContents.send(
+        'transcription-status-changed',
+        vlogId,
+        completedState,
+      )
 
       return result
     } catch (error) {
@@ -218,12 +219,16 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       const errorState = {
         status: 'error' as const,
         error: error instanceof Error ? error.message : 'Unknown error',
-        startTime: Date.now()
+        startTime: Date.now(),
       }
       updateVlog(vlogId, { transcription: errorState })
 
       // Notify renderer that transcription failed
-      mainWindow?.webContents.send('transcription-status-changed', vlogId, errorState)
+      mainWindow?.webContents.send(
+        'transcription-status-changed',
+        vlogId,
+        errorState,
+      )
 
       throw error
     }
@@ -301,15 +306,18 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     }
   })
 
-  ipcMain.handle('update-vlog', async (_, vlogId: string, updates: Partial<Vlog>) => {
-    try {
-      updateVlog(vlogId, updates)
-      return true
-    } catch (error) {
-      console.error('Error updating vlog:', error)
-      throw error
-    }
-  })
+  ipcMain.handle(
+    'update-vlog',
+    async (_, vlogId: string, updates: Partial<Vlog>) => {
+      try {
+        updateVlog(vlogId, updates)
+        return true
+      } catch (error) {
+        console.error('Error updating vlog:', error)
+        throw error
+      }
+    },
+  )
 
   // Transcription settings handlers
   ipcMain.handle('get-transcription-speed-up', async () => {
@@ -337,9 +345,15 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       const profile: UserProfile = store.get('userProfile') || {
         name: 'Felipe',
         role: 'Solo founder/entrepreneur',
-        interests: ['AI', 'tech projects', 'workflow automation', 'inbox agents'],
+        interests: [
+          'AI',
+          'tech projects',
+          'workflow automation',
+          'inbox agents',
+        ],
         languages: ['English', 'Portuguese'],
-        context: 'Working on AI and tech projects, exploring business ideas, considering co-founders for certain projects'
+        context:
+          'Working on AI and tech projects, exploring business ideas, considering co-founders for certain projects',
       }
       return profile
     } catch (error) {
@@ -360,28 +374,34 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
   // Summary handlers
 
-  ipcMain.handle('generate-video-summary', async (_, vlogId: string, transcription: string) => {
-    try {
-      const summary = await generateVideoSummary(vlogId, transcription)
+  ipcMain.handle(
+    'generate-video-summary',
+    async (_, vlogId: string, transcription: string) => {
+      try {
+        const summary = await generateVideoSummary(vlogId, transcription)
 
-      // Save the generated summary in the Vlog object
-      updateVlog(vlogId, { summary })
+        // Save the generated summary in the Vlog object
+        updateVlog(vlogId, { summary })
 
-      return summary
-    } catch (error) {
-      console.error('Error generating video summary:', error)
-      throw error
-    }
-  })
+        return summary
+      } catch (error) {
+        console.error('Error generating video summary:', error)
+        throw error
+      }
+    },
+  )
 
-  ipcMain.handle('save-video-summary', async (_, vlogId: string, summary: string) => {
-    try {
-      updateVlog(vlogId, { summary })
-    } catch (error) {
-      console.error('Error saving video summary:', error)
-      throw error
-    }
-  })
+  ipcMain.handle(
+    'save-video-summary',
+    async (_, vlogId: string, summary: string) => {
+      try {
+        updateVlog(vlogId, { summary })
+      } catch (error) {
+        console.error('Error saving video summary:', error)
+        throw error
+      }
+    },
+  )
 
   // Import external video file handler
   ipcMain.handle('import-video-file', async (_, filePath: string) => {
@@ -391,7 +411,8 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       // Get file stats
       const stats = await stat(filePath)
-      const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'
+      const fileName =
+        filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'
 
       // Generate unique ID for the file
       const id = generateVlogId(filePath)
@@ -401,17 +422,34 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       // Extract date from title using AI - fail if no date found
       const dateResult = await extractDateFromTitle(fileName)
-      if (!dateResult.date || dateResult.confidence === 'low') {
-        throw new Error(`Could not extract date from filename: "${fileName}". Please ensure the filename contains a date in a recognizable format.`)
+      if ('error' in dateResult) {
+        throw new Error(
+          `Could not extract date from filename: "${fileName}". Error: ${dateResult.error}`,
+        )
       }
-      const createdDate = dateResult.date
+      if (dateResult.confidence === 'low') {
+        throw new Error(
+          `Could not extract date from filename: "${fileName}". Please ensure the filename contains a date in a recognizable format.`,
+        )
+      }
+
+      // Create date from components (all required now)
+      const createdDate = new Date(
+        dateResult.year,
+        dateResult.month - 1,
+        dateResult.day,
+        dateResult.hour,
+        dateResult.minute,
+        0,
+        0,
+      )
 
       // Create vlog entry
       const vlog: Vlog = {
         id,
         name: fileName,
         path: filePath,
-        timestamp: createdDate.toISOString()
+        timestamp: createdDate.toISOString(),
       }
       setVlog(vlog)
 
@@ -425,7 +463,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         modified: stats.mtime,
         thumbnailPath: `vlog-thumbnail://${id}.jpg`,
         summary: vlog.summary,
-        transcription: vlog.transcription
+        transcription: vlog.transcription,
       }
     } catch (error) {
       console.error('Error importing video file:', error)
