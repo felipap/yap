@@ -7,9 +7,14 @@ import { store, Vlog, UserProfile, setVlog, getVlog, updateVlog, deleteVlog, get
 import { getThumbnailPath } from './lib/thumbnails'
 import { transcribeVideo, getVideoDuration } from './lib/transcription'
 import { generateVideoSummary } from './lib/videoSummary'
+import { extractDateFromTitle } from './ai/date-from-title'
 
 
-// Store mapping of vlog IDs to paths
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
+if (!GEMINI_API_KEY) {
+  throw new Error('!GEMINI_API_KEY')
+}
+
 export const vlogIdToPath = new Map<string, string>()
 
 // Helper function to generate a unique ID for a vlog
@@ -42,47 +47,46 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       // Get existing vlog data from store
       const storedVlogs = getAllVlogs()
 
-      // Scan filesystem for video files
-      const files = await readdir(documentsPath)
-      const videoFiles = files.filter(file => file.endsWith('.mp4') || file.endsWith('.webm'))
+      // Get all vlogs from store and check if files still exist
+      console.log(`Found ${Object.keys(storedVlogs).length} vlogs in store`)
+      const allVlogs = await Promise.all(
+        Object.entries(storedVlogs).map(async ([id, vlog]) => {
+          try {
+            console.log(`Checking file: ${vlog.path}`)
+            // Check if file still exists
+            await access(vlog.path)
+            const stats = await stat(vlog.path)
+            console.log(`File exists and accessible: ${vlog.name}`)
 
-      const fileStats = await Promise.all(
-        videoFiles.map(async (file) => {
-          const filePath = join(documentsPath, file)
-          const stats = await stat(filePath)
-          const id = generateVlogId(filePath)
+            // Update the mapping
+            vlogIdToPath.set(id, vlog.path)
 
-          // Store the mapping
-          vlogIdToPath.set(id, filePath)
-
-          // Get or create vlog data
-          let vlog = storedVlogs[id]
-          if (!vlog) {
-            // Create new vlog entry
-            vlog = {
-              id,
-              name: file,
-              path: filePath,
-              timestamp: stats.birthtime.toISOString()
+            return {
+              id: vlog.id,
+              name: vlog.name,
+              path: vlog.path,
+              size: stats.size,
+              created: new Date(vlog.timestamp), // Use stored timestamp
+              modified: stats.mtime,
+              thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+              summary: vlog.summary,
+              transcription: vlog.transcription?.result || undefined
             }
-            setVlog(vlog)
-          }
-
-          return {
-            id,
-            name: file,
-            path: filePath,
-            size: stats.size,
-            created: stats.birthtime,
-            modified: stats.mtime,
-            thumbnailPath: `vlog-thumbnail://${id}.jpg`,
-            summary: vlog.summary,
-            transcription: vlog.transcription
+          } catch (error) {
+            // File doesn't exist anymore, skip it
+            console.log(`Skipping missing file: ${vlog.path} - Error: ${error}`)
+            return null
           }
         })
       )
 
-      return fileStats.sort((a, b) => b.created.getTime() - a.created.getTime())
+      // Filter out null entries (missing files) and sort by creation date
+      const validVlogs = allVlogs
+        .filter((vlog): vlog is NonNullable<typeof vlog> => vlog !== null)
+        .sort((a, b) => b.created.getTime() - a.created.getTime())
+
+      console.log(`Returning ${validVlogs.length} valid vlogs`)
+      return validVlogs
     } catch (error) {
       console.error('Error getting recorded files:', error)
       return []
@@ -180,11 +184,6 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      // Get API key from environment variable
-      const apiKey = process.env.GEMINI_API_KEY
-      if (!apiKey) {
-        throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY environment variable.')
-      }
 
       // Set transcription state to transcribing
       const transcriptionState = {
@@ -198,7 +197,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       // Get speed-up setting
       const speedUp = store.get('transcriptionSpeedUp') || false
-      const result = await transcribeVideo(filePath, apiKey, speedUp)
+      const result = await transcribeVideo(filePath, GEMINI_API_KEY!, speedUp)
 
       // Update transcription state to completed
       const completedState = {
@@ -380,6 +379,56 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       updateVlog(vlogId, { summary })
     } catch (error) {
       console.error('Error saving video summary:', error)
+      throw error
+    }
+  })
+
+  // Import external video file handler
+  ipcMain.handle('import-video-file', async (_, filePath: string) => {
+    try {
+      // Check if file exists
+      await access(filePath)
+
+      // Get file stats
+      const stats = await stat(filePath)
+      const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'
+
+      // Generate unique ID for the file
+      const id = generateVlogId(filePath)
+
+      // Store the mapping
+      vlogIdToPath.set(id, filePath)
+
+      // Extract date from title using AI - fail if no date found
+      const dateResult = await extractDateFromTitle(fileName)
+      if (!dateResult.date || dateResult.confidence === 'low') {
+        throw new Error(`Could not extract date from filename: "${fileName}". Please ensure the filename contains a date in a recognizable format.`)
+      }
+      const createdDate = dateResult.date
+
+      // Create vlog entry
+      const vlog: Vlog = {
+        id,
+        name: fileName,
+        path: filePath,
+        timestamp: createdDate.toISOString()
+      }
+      setVlog(vlog)
+
+      console.log(`Imported video file: ${filePath}`)
+      return {
+        id,
+        name: fileName,
+        path: filePath,
+        size: stats.size,
+        created: createdDate,
+        modified: stats.mtime,
+        thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+        summary: vlog.summary,
+        transcription: vlog.transcription
+      }
+    } catch (error) {
+      console.error('Error importing video file:', error)
       throw error
     }
   })

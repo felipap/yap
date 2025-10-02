@@ -89,7 +89,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   generateVideoSummary: (vlogId: string, transcription: string): Promise<string> =>
     ipcRenderer.invoke('generate-video-summary', vlogId, transcription),
   saveVideoSummary: (vlogId: string, summary: string): Promise<void> =>
-    ipcRenderer.invoke('save-video-summary', vlogId, summary)
+    ipcRenderer.invoke('save-video-summary', vlogId, summary),
+  importVideoFile: (filePath: string): Promise<RecordedFile> =>
+    ipcRenderer.invoke('import-video-file', filePath)
 })
 
 declare global {
@@ -117,6 +119,7 @@ declare global {
       setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
       generateVideoSummary: (vlogId: string, transcription: string) => Promise<string>
       saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
+      importVideoFile: (filePath: string) => Promise<RecordedFile>
     }
   }
 }

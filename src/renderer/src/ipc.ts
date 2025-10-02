@@ -86,3 +86,8 @@ export async function saveVideoSummary(vlogId: string, summary: string): Promise
   return window.electronAPI.saveVideoSummary(vlogId, summary)
 }
 
+// Import functions
+export async function importVideoFile(filePath: string): Promise<RecordedFile> {
+  return window.electronAPI.importVideoFile(filePath)
+}
+
