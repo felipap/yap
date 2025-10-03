@@ -3,12 +3,12 @@ name: Run evals
 on:
   push:
     paths:
-      - 'src/ai/**'
+      - 'src/main/ai/**'
 
 jobs:
   eval:
     runs-on: macos-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       EVALS_OPENAI_API_KEY: ${{ secrets.EVALS_OPENAI_API_KEY }}
 
@@ -16,16 +16,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20.11' # Match the exact version from package.json
-
-      - name: Enable Corepack
-        run: corepack enable
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Run evals
-        run: pnpm run evals
+        run: bun run evals

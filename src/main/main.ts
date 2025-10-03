@@ -1,14 +1,10 @@
 import 'source-map-support/register'
-import { config } from 'dotenv'
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { store } from './store'
 import { setupIpcHandlers } from './ipc'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { ensureCacheDir } from './lib/thumbnails'
-
-// Load environment variables from .env file
-config()
 
 // Register the custom protocols
 registerProtocols()
@@ -39,9 +35,18 @@ function createWindow() {
     store.set('windowBounds', bounds)
   })
 
-  // Load from localhost in development
-  mainWindow.loadURL('http://localhost:3000')
-  mainWindow.webContents.openDevTools()
+  // Load the app
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.loadURL('http://localhost:3000')
+    mainWindow.webContents.openDevTools()
+  } else {
+    // In production, load from the app.asar bundle
+    // The renderer files are at /dist/renderer/index.html in the asar
+    const rendererPath = join(__dirname, '..', 'dist', 'renderer', 'index.html')
+    console.log('__dirname:', __dirname)
+    console.log('Renderer path:', rendererPath)
+    mainWindow.loadFile(rendererPath)
+  }
 
   // Setup IPC handlers after window is created
   setupIpcHandlers(mainWindow)

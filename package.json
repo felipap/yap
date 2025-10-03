@@ -61,8 +61,8 @@
     "zod": "^4.1.11"
   },
   "build": {
-    "appId": "com.felipe.vlog-electron",
-    "productName": "Vlog Electron",
+    "appId": "com.felipap.vlogger",
+    "productName": "Vlogger",
     "directories": {
       "output": "dist-electron"
     },
@@ -72,7 +72,8 @@
     ],
     "mac": {
       "category": "public.app-category.video",
-      "target": "dmg"
+      "target": "dir",
+      "identity": null
     }
   }
 }

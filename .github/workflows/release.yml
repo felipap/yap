@@ -5,13 +5,12 @@ permissions:
 on:
   push:
     tags:
-      # Do we need this?
       - '*.*.*' # Only trigger on version tags like 1.0.0
 
 jobs:
   release:
     runs-on: macos-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     env:
       CSC_IDENTITY: ${{ secrets.MACOS_CERTIFICATE_ID }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -22,16 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20.11' # Match the exact version from package.json
-
-      - name: Enable Corepack
-        run: corepack enable
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Import code signing certificate
         uses: apple-actions/import-codesign-certs@v1
@@ -47,32 +43,18 @@ jobs:
       - name: Install Xcode Command Line Tools
         run: xcode-select --install || true
 
-      - name: Rebuild native dependencies
-        run: pnpm rebuild
-
       - name: Build Electron app
-        run: IS_RELEASE=true pnpm run make
+        run: bun run build
 
-      # # For debugging
-      # - name: List Electron output
-      #   run: ls -R ./nudge/out/make
-
-      # - name: Upload ZIP artifact (fallback)
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: Nudge-macOS-arm64-zip
-      #     path: nudge/out/make/zip/darwin/arm64/*.zip
-      #     if-no-files-found: ignore
+      - name: Package Electron app
+        run: bun run electron:pack
 
       - name: Create Release
-        # Only create release on nudge-specific version tags
         uses: softprops/action-gh-release@v1
         with:
-          name: 'Nudge ${{ github.ref_name }}'
+          name: 'Vlogger ${{ github.ref_name }}'
           files: |
-            out/make/**/*.dmg
-            out/make/**/*.zip
+            dist-electron/**/*.dmg
+            dist-electron/**/*.app
           draft: false
-          # prerelease: false
           generate_release_notes: true
-          # body_path: CHANGELOG.md

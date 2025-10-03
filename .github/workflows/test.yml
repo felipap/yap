@@ -8,34 +8,25 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20.11' # Match the exact version from package.json
-
-      - name: Enable Corepack
-        run: corepack enable
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run lint
-        run: pnpm run lint
+        run: bun install --frozen-lockfile
 
       - name: Run TypeScript check for main
-        run: pnpm run ts-check-main
+        run: bun run build:main
 
-      - name: Run TypeScript check for windows
-        run: pnpm run ts-check-windows
-
-      - name: Rebuild native dependencies
-        run: pnpm rebuild
+      - name: Run TypeScript check for renderer
+        run: bun run build:renderer
 
       - name: Build Electron app
-        run: pnpm run make
+        run: bun run build

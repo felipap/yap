@@ -44,20 +44,18 @@ export interface AppSettings {
 const schema: Schema<AppSettings> = {
   selectedCameraId: {
     type: 'string',
-    default: ''
+    default: '',
   },
   recordingMode: {
     type: 'string',
     enum: ['camera', 'screen', 'both'],
-    default: 'camera'
+    default: 'camera',
   },
   openaiApiKey: {
     type: 'string',
-    default: ''
   },
   geminiApiKey: {
     type: 'string',
-    default: ''
   },
   windowBounds: {
     type: 'object',
@@ -65,22 +63,22 @@ const schema: Schema<AppSettings> = {
       width: { type: 'number' },
       height: { type: 'number' },
       x: { type: 'number' },
-      y: { type: 'number' }
-    }
+      y: { type: 'number' },
+    },
   },
   vlogs: {
     type: 'object',
-    default: {}
+    default: {},
   },
   transcriptionSpeedUp: {
     type: 'boolean',
-    default: false
-  }
+    default: false,
+  },
 }
 
 export const store = new Store<AppSettings>({
   schema,
-  name: 'vlog-settings'
+  name: 'vlog-settings',
 })
 
 // Vlog management functions
@@ -111,4 +109,3 @@ export function deleteVlog(vlogId: string): void {
 export function getAllVlogs(): Record<string, Vlog> {
   return store.get('vlogs') || {}
 }
-

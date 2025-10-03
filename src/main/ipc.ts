@@ -18,10 +18,7 @@ import { transcribeVideo, getVideoDuration } from './lib/transcription'
 import { generateVideoSummary } from './lib/videoSummary'
 import { extractDateFromTitle } from './ai/date-from-title'
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
-if (!GEMINI_API_KEY) {
-  throw new Error('!GEMINI_API_KEY')
-}
+const GEMINI_API_KEY = store.get('geminiApiKey') || ''
 
 export const vlogIdToPath = new Map<string, string>()
 

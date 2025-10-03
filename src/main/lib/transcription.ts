@@ -1,4 +1,3 @@
-import dotenv from 'dotenv'
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
 import { access, mkdir, readFile, unlink } from 'fs/promises'
@@ -6,10 +5,9 @@ import { createReadStream } from 'fs'
 import { OpenAI } from 'openai'
 import { homedir } from 'os'
 import { join } from 'path'
+import { store } from '../store'
 
-dotenv.config()
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
+const OPENAI_API_KEY = store.get('openaiApiKey') || ''
 if (!OPENAI_API_KEY) {
   throw new Error('!OPENAI_API_KEY')
 }
