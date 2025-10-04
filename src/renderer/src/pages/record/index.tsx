@@ -11,7 +11,8 @@ import { useRouter } from '../../shared/Router'
 import { RecordingMode } from '../../types'
 import { ScreenRecorder } from './ScreenRecorder'
 import { Button } from '../../shared/ui/Button'
-import { Select } from '../../shared/ui/Select'
+import { VolumeMeter } from './VolumeMeter'
+import { DeviceSelector } from './DeviceSelector'
 
 export default function Page() {
   const router = useRouter()
@@ -271,6 +272,17 @@ export default function Page() {
               <div className="text-[32px] font-bold text-contrast tabular-nums">
                 {formatTime(recordingTime)}
               </div>
+
+              {/* Recording Volume Meter */}
+              {selectedMicrophoneId && (
+                <div className="flex justify-center">
+                  <VolumeMeter
+                    microphoneId={selectedMicrophoneId}
+                    size="lg"
+                    showLabel={true}
+                  />
+                </div>
+              )}
             </>
           ) : null}
 
@@ -355,44 +367,17 @@ export default function Page() {
             </div>
           )}
 
-          {/* Camera Selection - Hidden when recording */}
-          {!isRecording &&
-            (recordingMode === 'camera' || recordingMode === 'both') &&
-            cameras.length > 0 && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <label className="text-sm font-semibold text-contrast flex-shrink-0">
-                  Camera
-                </label>
-                <Select value={selectedCameraId} onChange={setSelectedCameraId}>
-                  {cameras.map((camera) => (
-                    <option key={camera.deviceId} value={camera.deviceId}>
-                      {camera.label ||
-                        `Camera ${camera.deviceId.slice(0, 8)}...`}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
-
-          {/* Microphone Selection - Hidden when recording */}
-          {!isRecording && microphones.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <label className="text-sm font-semibold text-contrast flex-shrink-0">
-                Microphone
-              </label>
-              <Select
-                value={selectedMicrophoneId}
-                onChange={setSelectedMicrophoneId}
-              >
-                {microphones.map((microphone) => (
-                  <option key={microphone.deviceId} value={microphone.deviceId}>
-                    {microphone.label ||
-                      `Microphone ${microphone.deviceId.slice(0, 8)}...`}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
+          {/* Device Selection */}
+          <DeviceSelector
+            cameras={cameras}
+            microphones={microphones}
+            selectedCameraId={selectedCameraId}
+            selectedMicrophoneId={selectedMicrophoneId}
+            onCameraChange={setSelectedCameraId}
+            onMicrophoneChange={setSelectedMicrophoneId}
+            recordingMode={recordingMode}
+            isRecording={isRecording}
+          />
 
           {/* Recording Button */}
           {isRecording ? (

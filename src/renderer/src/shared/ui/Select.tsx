@@ -12,7 +12,7 @@ export function Select({
   className = '',
 }: SelectProps) {
   const baseClasses =
-    'px-3 h-12 rounded-md font-medium transition-all text-sm bg-two text-contrast hover:bg-three focus:outline-none'
+    'px-3 h-6 py-0 rounded-md font-medium transition-all text-sm bg-two text-contrast hover:bg-three focus:outline-none'
 
   return (
     <select
