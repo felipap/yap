@@ -65,6 +65,16 @@ export async function setRecordingMode(mode: RecordingMode): Promise<void> {
   return setStoredValue('recordingMode', mode)
 }
 
+export async function getSelectedMicrophoneId(): Promise<string | undefined> {
+  return getStoredValue<string>('selectedMicrophoneId')
+}
+
+export async function setSelectedMicrophoneId(
+  microphoneId: string,
+): Promise<void> {
+  return setStoredValue('selectedMicrophoneId', microphoneId)
+}
+
 // Transcription functions
 export async function transcribeVideo(
   vlogId: string,

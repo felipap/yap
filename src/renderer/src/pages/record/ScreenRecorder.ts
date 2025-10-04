@@ -9,10 +9,16 @@ export class ScreenRecorder {
   private cameraStream: MediaStream | null = null
   private mode: RecordingMode
   private cameraId: string
+  private microphoneId: string
 
-  constructor(mode: RecordingMode = 'screen', cameraId: string = '') {
+  constructor(
+    mode: RecordingMode = 'screen',
+    cameraId: string = '',
+    microphoneId: string = '',
+  ) {
     this.mode = mode
     this.cameraId = cameraId
+    this.microphoneId = microphoneId
   }
 
   getCameraStream(): MediaStream | null {
@@ -34,7 +40,7 @@ export class ScreenRecorder {
       // Set up MediaRecorder
       const options: MediaRecorderOptions = {
         mimeType: 'video/webm;codecs=vp9',
-        videoBitsPerSecond: 5000000
+        videoBitsPerSecond: 5000000,
       }
 
       // Fallback to VP8 if VP9 is not supported
@@ -54,7 +60,6 @@ export class ScreenRecorder {
 
       // Start recording - collect data every 100ms for smoother recording
       this.mediaRecorder.start(100)
-
     } catch (error) {
       console.error('Error starting screen recording:', error)
       throw error
@@ -73,12 +78,12 @@ export class ScreenRecorder {
           await this.saveRecording()
 
           if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop())
+            this.stream.getTracks().forEach((track) => track.stop())
             this.stream = null
           }
 
           if (this.cameraStream) {
-            this.cameraStream.getTracks().forEach(track => track.stop())
+            this.cameraStream.getTracks().forEach((track) => track.stop())
             this.cameraStream = null
           }
 
@@ -106,7 +111,9 @@ export class ScreenRecorder {
       const filename = `vlog-${timestamp}.webm`
 
       // Create blob from recorded chunks with proper MIME type
-      const blob = new Blob(this.recordedChunks, { type: 'video/webm;codecs=vp9' })
+      const blob = new Blob(this.recordedChunks, {
+        type: 'video/webm;codecs=vp9',
+      })
       console.log(`Total blob size: ${blob.size} bytes`)
 
       const arrayBuffer = await blob.arrayBuffer()
@@ -115,7 +122,6 @@ export class ScreenRecorder {
       await saveRecording(filename, arrayBuffer)
 
       console.log(`Recording saved: ${filename}`)
-
     } catch (error) {
       console.error('Error saving recording:', error)
       throw error
@@ -126,10 +132,13 @@ export class ScreenRecorder {
     const sources = await getScreenSources()
 
     if (sources.length === 0) {
-      throw new Error('No screen sources available. Please check screen recording permissions.')
+      throw new Error(
+        'No screen sources available. Please check screen recording permissions.',
+      )
     }
 
-    const screenSource = sources.find(source => source.name.includes('Screen')) || sources[0]
+    const screenSource =
+      sources.find((source) => source.name.includes('Screen')) || sources[0]
     console.log('Starting screen recording with source:', screenSource.name)
 
     return navigator.mediaDevices.getUserMedia({
@@ -142,9 +151,9 @@ export class ScreenRecorder {
           minWidth: 1280,
           maxWidth: 1920,
           minHeight: 720,
-          maxHeight: 1080
-        }
-      }
+          maxHeight: 1080,
+        },
+      },
     })
   }
 
@@ -153,7 +162,7 @@ export class ScreenRecorder {
 
     const videoConstraints: MediaTrackConstraints = {
       width: { ideal: 1920 },
-      height: { ideal: 1080 }
+      height: { ideal: 1080 },
     }
 
     // If a specific camera is selected, use it
@@ -164,9 +173,16 @@ export class ScreenRecorder {
       videoConstraints.facingMode = 'user'
     }
 
+    const audioConstraints: MediaTrackConstraints = {}
+
+    // If a specific microphone is selected, use it
+    if (this.microphoneId) {
+      audioConstraints.deviceId = { exact: this.microphoneId }
+    }
+
     const constraints: MediaStreamConstraints = {
-      audio: true,
-      video: videoConstraints
+      audio: audioConstraints,
+      video: videoConstraints,
     }
 
     return navigator.mediaDevices.getUserMedia(constraints)
@@ -185,16 +201,15 @@ export class ScreenRecorder {
     const combinedStream = new MediaStream()
 
     // Add screen video track
-    screenStream.getVideoTracks().forEach(track => {
+    screenStream.getVideoTracks().forEach((track) => {
       combinedStream.addTrack(track)
     })
 
     // Add camera audio track
-    this.cameraStream.getAudioTracks().forEach(track => {
+    this.cameraStream.getAudioTracks().forEach((track) => {
       combinedStream.addTrack(track)
     })
 
     return combinedStream
   }
 }
-

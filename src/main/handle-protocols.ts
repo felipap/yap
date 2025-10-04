@@ -1,8 +1,8 @@
 import { protocol } from 'electron'
-import { readFile, stat } from 'fs/promises'
 import { createReadStream } from 'fs'
+import { readFile, stat } from 'fs/promises'
 import { vlogIdToPath } from './ipc'
-
+import { debug } from './lib/logger'
 
 // Register custom protocols
 export function registerProtocols() {
@@ -42,24 +42,24 @@ export function setupProtocolHandlers() {
         .replace('/', '')
         .replace(/(\.mp4)|(\.webm)/, '')
 
-      console.log('Video request URL:', request.url)
-      console.log('Vlog ID:', vlogId)
-      console.log('Request headers:', Object.fromEntries(request.headers.entries()))
+      debug('Video request URL:', request.url)
+      debug('Vlog ID:', vlogId)
+      debug('Request headers:', Object.fromEntries(request.headers.entries()))
 
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
         console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        console.log('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
+        debug('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
         return new Response('Vlog not found', { status: 404 })
       }
 
-      console.log('Resolved file path:', filePath)
+      debug('Resolved file path:', filePath)
 
       // Check if file exists and get stats
       let stats
       try {
         stats = await stat(filePath)
-        console.log('File stats:', { size: stats.size, isFile: stats.isFile() })
+        debug('File stats:', { size: stats.size, isFile: stats.isFile() })
 
         if (!stats.isFile()) {
           console.error('Path is not a file:', filePath)
@@ -72,12 +72,12 @@ export function setupProtocolHandlers() {
 
       // Determine MIME type based on file extension
       const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
-      console.log('MIME type:', mimeType)
+      debug('MIME type:', mimeType)
 
       // Handle range requests for video seeking
       const range = request.headers.get('range')
       if (range) {
-        console.log('Range request:', range)
+        debug('Range request:', range)
 
         const match = range.match(/bytes=(\d+)-(\d*)/)
         if (match) {
@@ -85,7 +85,7 @@ export function setupProtocolHandlers() {
           const end = match[2] ? parseInt(match[2], 10) : stats.size - 1
           const chunkSize = end - start + 1
 
-          console.log(`Serving range: ${start}-${end} (${chunkSize} bytes)`)
+          debug(`Serving range: ${start}-${end} (${chunkSize} bytes)`)
 
           const stream = createReadStream(filePath, { start, end })
 
@@ -105,7 +105,7 @@ export function setupProtocolHandlers() {
       }
 
       // Full file request (no range)
-      console.log('Full file request')
+      debug('Full file request')
       const stream = createReadStream(filePath)
 
       return new Response(stream as any, {
@@ -123,7 +123,7 @@ export function setupProtocolHandlers() {
       console.error('Request URL:', request.url)
       console.error('Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       })
       return new Response('Internal server error', { status: 500 })
     }
@@ -138,8 +138,8 @@ export function setupProtocolHandlers() {
         .replace('/', '')
         .replace('.jpg', '')
 
-      console.log('Thumbnail request URL:', request.url)
-      console.log('Vlog ID:', vlogId)
+      debug('Thumbnail request URL:', request.url)
+      debug('Vlog ID:', vlogId)
 
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
@@ -156,11 +156,11 @@ export function setupProtocolHandlers() {
         return new Response('Thumbnail generation failed', { status: 500 })
       }
 
-      console.log('Resolved thumbnail path:', thumbnailPath)
+      debug('Resolved thumbnail path:', thumbnailPath)
 
       const data = await readFile(thumbnailPath)
 
-      console.log(
+      debug(
         'Successfully loaded thumbnail:',
         thumbnailPath,
         'Size:',

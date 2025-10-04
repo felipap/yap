@@ -1,22 +1,22 @@
-import { ipcMain, desktopCapturer, shell, BrowserWindow } from 'electron'
-import { join } from 'path'
-import { readdir, stat, writeFile, mkdir, unlink, access } from 'fs/promises'
-import { homedir } from 'os'
 import { createHash } from 'crypto'
+import { BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
+import { access, mkdir, stat, writeFile } from 'fs/promises'
+import { homedir } from 'os'
+import { join } from 'path'
+import { extractDateFromTitle } from './ai/date-from-title'
+import { debug } from './lib/logger'
+import { getVideoDuration, transcribeVideo } from './lib/transcription'
+import { generateVideoSummary } from './lib/videoSummary'
 import {
-  store,
-  Vlog,
-  UserProfile,
-  setVlog,
-  getVlog,
-  updateVlog,
   deleteVlog,
   getAllVlogs,
+  getVlog,
+  setVlog,
+  store,
+  updateVlog,
+  UserProfile,
+  Vlog,
 } from './store'
-import { getThumbnailPath } from './lib/thumbnails'
-import { transcribeVideo, getVideoDuration } from './lib/transcription'
-import { generateVideoSummary } from './lib/videoSummary'
-import { extractDateFromTitle } from './ai/date-from-title'
 
 const GEMINI_API_KEY = store.get('geminiApiKey') || ''
 
@@ -52,15 +52,15 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       const storedVlogs = getAllVlogs()
 
       // Get all vlogs from store and check if files still exist
-      console.log(`Found ${Object.keys(storedVlogs).length} vlogs in store`)
+      debug(`Found ${Object.keys(storedVlogs).length} vlogs in store`)
       const allVlogs = await Promise.all(
         Object.entries(storedVlogs).map(async ([id, vlog]) => {
           try {
-            console.log(`Checking file: ${vlog.path}`)
+            debug(`Checking file: ${vlog.path}`)
             // Check if file still exists
             await access(vlog.path)
             const stats = await stat(vlog.path)
-            console.log(`File exists and accessible: ${vlog.name}`)
+            debug(`File exists and accessible: ${vlog.name}`)
 
             // Update the mapping
             vlogIdToPath.set(id, vlog.path)
@@ -78,7 +78,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
             }
           } catch (error) {
             // File doesn't exist anymore, skip it
-            console.log(`Skipping missing file: ${vlog.path} - Error: ${error}`)
+            debug(`Skipping missing file: ${vlog.path} - Error: ${error}`)
             return null
           }
         }),
@@ -89,7 +89,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         .filter((vlog): vlog is NonNullable<typeof vlog> => vlog !== null)
         .sort((a, b) => b.created.getTime() - a.created.getTime())
 
-      console.log(`Returning ${validVlogs.length} valid vlogs`)
+      debug(`Returning ${validVlogs.length} valid vlogs`)
       return validVlogs
     } catch (error) {
       console.error('Error getting recorded files:', error)
@@ -145,7 +145,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         }
         setVlog(vlog)
 
-        console.log(`Recording saved: ${filepath}`)
+        debug(`Recording saved: ${filepath}`)
         return id
       } catch (error) {
         console.error('Error saving recording:', error)
@@ -471,7 +471,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       }
       setVlog(vlog)
 
-      console.log(`Imported video file: ${filePath}`)
+      debug(`Imported video file: ${filePath}`)
       return {
         success: true,
         isDuplicate: false,

@@ -4,13 +4,18 @@
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "bun run build:main && concurrently -n tsc,vite,electron \"tsc -p tsconfig.main.json --watch\" \"vite dev\" \"nodemon --watch dist --ext js --exec \\\"bun run electron:dev\\\"\"",
+    "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "bun run build:main && bun run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
-    "electron:dev": "sleep 1 && wait-on http://localhost:3000 && electron .",
-    "electron:pack": "electron-builder",
-    "start": "bun run build && electron ."
+    "dev:renderer": "vite",
+    "watch:main": "tsc -p tsconfig.main.json --watch",
+    "watch:renderer": "vite build --watch",
+    "electron:dev": "bun run build && electron .",
+    "electron:pack": "bun run build && electron-builder",
+    "electron:dist": "bun run build && electron-builder --publish=never",
+    "start": "electron .",
+    "clean": "rm -rf dist dist-electron"
   },
   "keywords": [
     "electron",
