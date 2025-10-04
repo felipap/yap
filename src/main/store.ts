@@ -15,6 +15,8 @@ export interface Vlog {
   timestamp: string
   transcription?: TranscriptionState
   summary?: string
+  lastPosition?: number
+  lastPositionTimestamp?: string
 }
 
 export interface UserProfile {
@@ -28,6 +30,8 @@ export interface UserProfile {
 export interface AppSettings {
   selectedCameraId: string
   recordingMode: 'camera' | 'screen' | 'both'
+  globalVideoMute: boolean
+  globalPlaybackSpeed: number
   openaiApiKey?: string
   geminiApiKey?: string
   windowBounds?: {
@@ -51,6 +55,14 @@ const schema: Schema<AppSettings> = {
     enum: ['camera', 'screen', 'both'],
     default: 'camera',
   },
+  globalVideoMute: {
+    type: 'boolean',
+    default: false,
+  },
+  globalPlaybackSpeed: {
+    type: 'number',
+    default: 1.0,
+  },
   openaiApiKey: {
     type: 'string',
   },
@@ -69,6 +81,22 @@ const schema: Schema<AppSettings> = {
   vlogs: {
     type: 'object',
     default: {},
+    patternProperties: {
+      '^[a-f0-9]{16}$': {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          path: { type: 'string' },
+          timestamp: { type: 'string' },
+          transcription: { type: 'object' },
+          summary: { type: 'string' },
+          lastPosition: { type: 'number' },
+          lastPositionTimestamp: { type: 'string' },
+        },
+        required: ['id', 'name', 'path', 'timestamp'],
+      },
+    },
   },
   transcriptionSpeedUp: {
     type: 'boolean',

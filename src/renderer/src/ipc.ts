@@ -75,6 +75,22 @@ export async function setSelectedMicrophoneId(
   return setStoredValue('selectedMicrophoneId', microphoneId)
 }
 
+export async function getGlobalVideoMute(): Promise<boolean> {
+  return getStoredValue<boolean>('globalVideoMute') || false
+}
+
+export async function setGlobalVideoMute(muted: boolean): Promise<void> {
+  return setStoredValue('globalVideoMute', muted)
+}
+
+export async function getGlobalPlaybackSpeed(): Promise<number> {
+  return getStoredValue<number>('globalPlaybackSpeed') || 1.0
+}
+
+export async function setGlobalPlaybackSpeed(speed: number): Promise<void> {
+  return setStoredValue('globalPlaybackSpeed', speed)
+}
+
 // Transcription functions
 export async function transcribeVideo(
   vlogId: string,
@@ -122,4 +138,22 @@ export async function saveVideoSummary(
 // Import functions
 export async function importVideoFile(filePath: string): Promise<ImportResult> {
   return window.electronAPI.importVideoFile(filePath)
+}
+
+// Video position functions
+export async function saveVideoPosition(
+  vlogId: string,
+  position: number,
+): Promise<boolean> {
+  return window.electronAPI.saveVideoPosition(vlogId, position)
+}
+
+export async function getVideoPosition(
+  vlogId: string,
+): Promise<{ position: number; timestamp: string } | null> {
+  return window.electronAPI.getVideoPosition(vlogId)
+}
+
+export async function getVlog(vlogId: string): Promise<any> {
+  return window.electronAPI.getVlog(vlogId)
 }

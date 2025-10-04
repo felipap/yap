@@ -16,7 +16,7 @@ export function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen text-[14px]">
+    <div className="flex flex-col h-screen text-[14px] track-10">
       <TopNav currentTab={currentRoute.name} />
       {inner}
     </div>

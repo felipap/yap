@@ -179,6 +179,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       const transcriptionState = {
         status: 'transcribing' as const,
         startTime: Date.now(),
+        progress: 0,
       }
       updateVlog(vlogId, { transcription: transcriptionState })
 
@@ -191,7 +192,21 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       // Get speed-up setting
       const speedUp = store.get('transcriptionSpeedUp') || false
-      const result = await transcribeVideo(filePath, speedUp)
+      const result = await transcribeVideo(filePath, speedUp, (progress) => {
+        // Update progress in store
+        const updatedState = {
+          ...transcriptionState,
+          progress: Math.round(progress),
+        }
+        updateVlog(vlogId, { transcription: updatedState })
+
+        // Notify renderer of progress update
+        mainWindow?.webContents.send(
+          'transcription-progress-updated',
+          vlogId,
+          Math.round(progress),
+        )
+      })
 
       // Update transcription state to completed
       const completedState = {
@@ -207,6 +222,21 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         vlogId,
         completedState,
       )
+
+      // Automatically generate summary if transcription was successful
+      try {
+        console.log(`Auto-generating summary for vlog ${vlogId}`)
+        const summary = await generateVideoSummary(vlogId, result.text)
+        updateVlog(vlogId, { summary })
+
+        // Notify renderer that summary was generated
+        mainWindow?.webContents.send('summary-generated', vlogId, summary)
+        console.log(`Summary generated and saved for vlog ${vlogId}`)
+      } catch (summaryError) {
+        console.error('Error generating automatic summary:', summaryError)
+        // Don't fail the transcription if summary generation fails
+        // Just log the error and continue
+      }
 
       return result
     } catch (error) {
@@ -491,6 +521,53 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     } catch (error) {
       console.error('Error importing video file:', error)
       throw error
+    }
+  })
+
+  // Video position handlers
+  ipcMain.handle(
+    'save-video-position',
+    async (_, vlogId: string, position: number) => {
+      try {
+        const now = new Date().toISOString()
+        updateVlog(vlogId, {
+          lastPosition: position,
+          lastPositionTimestamp: now,
+        })
+        return true
+      } catch (error) {
+        console.error('Error saving video position:', error)
+        throw error
+      }
+    },
+  )
+
+  ipcMain.handle('get-video-position', async (_, vlogId: string) => {
+    try {
+      const vlog = getVlog(vlogId)
+      if (!vlog) {
+        return null
+      }
+
+      // Check if position is less than 30 minutes old
+      if (vlog.lastPositionTimestamp) {
+        const lastPositionTime = new Date(vlog.lastPositionTimestamp)
+        const now = new Date()
+        const timeDiff = now.getTime() - lastPositionTime.getTime()
+        const thirtyMinutes = 30 * 60 * 1000 // 30 minutes in milliseconds
+
+        if (timeDiff < thirtyMinutes && vlog.lastPosition !== undefined) {
+          return {
+            position: vlog.lastPosition,
+            timestamp: vlog.lastPositionTimestamp,
+          }
+        }
+      }
+
+      return null
+    } catch (error) {
+      console.error('Error getting video position:', error)
+      return null
     }
   })
 }

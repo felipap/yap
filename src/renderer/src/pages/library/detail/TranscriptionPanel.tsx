@@ -2,10 +2,11 @@ import { useEffect, useState, useRef } from 'react'
 import { getTranscription, transcribeVideo } from '../../../ipc'
 import { withBoundary } from '../../../shared/withBoundary'
 import { TranscriptionResult } from '../../../types'
+import { VideoRef } from './Video'
 
 interface Props {
   vlogId: string
-  videoRef: React.RefObject<HTMLVideoElement>
+  videoRef: React.RefObject<VideoRef>
   onTranscribe?: () => void
   isTranscribing?: boolean
   transcriptionError?: string | null
@@ -38,7 +39,7 @@ export const TranscriptionPanel = withBoundary(function ({
 
   const handleSegmentClick = (startTime: number) => {
     if (videoRef.current) {
-      videoRef.current.currentTime = startTime
+      videoRef.current.seekTo(startTime)
     }
   }
 

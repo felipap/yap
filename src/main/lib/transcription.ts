@@ -36,6 +36,7 @@ export async function checkFFmpegAvailable(): Promise<boolean> {
 export async function extractAudioFromVideo(
   videoPath: string,
   speedUp: boolean = false,
+  onProgress?: (progress: number) => void,
 ): Promise<string> {
   const isAvailable = await checkFFmpegAvailable()
   if (!isAvailable) {
@@ -81,13 +82,40 @@ export async function extractAudioFromVideo(
     const ffmpeg = spawn('ffmpeg', args)
 
     let errorOutput = ''
+    let duration = 0
 
     ffmpeg.stderr.on('data', (data) => {
-      errorOutput += data.toString()
+      const output = data.toString()
+      errorOutput += output
+
+      // Parse duration from FFmpeg output
+      if (!duration) {
+        const durationMatch = output.match(
+          /Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/,
+        )
+        if (durationMatch) {
+          const hours = parseInt(durationMatch[1], 10)
+          const minutes = parseInt(durationMatch[2], 10)
+          const seconds = parseFloat(durationMatch[3])
+          duration = hours * 3600 + minutes * 60 + seconds
+        }
+      }
+
+      // Parse progress from FFmpeg output
+      const progressMatch = output.match(/time=(\d{2}):(\d{2}):(\d{2}\.\d{2})/)
+      if (progressMatch && duration > 0) {
+        const hours = parseInt(progressMatch[1], 10)
+        const minutes = parseInt(progressMatch[2], 10)
+        const seconds = parseFloat(progressMatch[3])
+        const currentTime = hours * 3600 + minutes * 60 + seconds
+        const progress = Math.min((currentTime / duration) * 100, 100)
+        onProgress?.(progress)
+      }
     })
 
     ffmpeg.on('close', (code) => {
       if (code === 0) {
+        onProgress?.(100)
         resolve(audioPath)
       } else {
         reject(new Error(`FFmpeg audio extraction failed: ${errorOutput}`))
@@ -103,18 +131,41 @@ export async function extractAudioFromVideo(
 export async function transcribeAudio(
   audioPath: string,
   speedUp: boolean = false,
+  onProgress?: (progress: number) => void,
 ): Promise<TranscriptionResult> {
   const openai = new OpenAI({
     apiKey: OPENAI_API_KEY,
   })
 
   try {
+    // Get file size for progress estimation
+    const { stat } = await import('fs/promises')
+    const stats = await stat(audioPath)
+    const fileSizeMB = stats.size / (1024 * 1024)
+
+    // Estimate processing time (roughly 1 second per MB for Whisper)
+    const estimatedProcessingTime = fileSizeMB * 1000
+
+    // Start progress simulation
+    let progress = 0
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 10 // Random progress increment
+      if (progress < 90) {
+        // Don't go above 90% until actual completion
+        onProgress?.(progress)
+      }
+    }, 500)
+
     const transcription = await openai.audio.transcriptions.create({
       file: createReadStream(audioPath),
       model: 'whisper-1',
       response_format: 'verbose_json',
       timestamp_granularities: ['segment'],
     })
+
+    // Clear progress interval and set to 100%
+    clearInterval(progressInterval)
+    onProgress?.(100)
 
     const segments =
       transcription.segments?.map((segment) => ({
@@ -140,13 +191,22 @@ export async function transcribeAudio(
 export async function transcribeVideo(
   videoPath: string,
   speedUp: boolean = false,
+  onProgress?: (progress: number) => void,
 ): Promise<TranscriptionResult> {
   try {
-    // Extract audio from video
-    const audioPath = await extractAudioFromVideo(videoPath, speedUp)
+    // Extract audio from video (0-50% progress)
+    const audioPath = await extractAudioFromVideo(
+      videoPath,
+      speedUp,
+      (progress) => {
+        onProgress?.(progress * 0.5) // Audio extraction is 50% of total progress
+      },
+    )
 
-    // Transcribe the audio
-    const result = await transcribeAudio(audioPath, speedUp)
+    // Transcribe the audio (50-100% progress)
+    const result = await transcribeAudio(audioPath, speedUp, (progress) => {
+      onProgress?.(50 + progress * 0.5) // Audio transcription is remaining 50%
+    })
 
     // Clean up temporary audio file
     try {

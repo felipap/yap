@@ -97,6 +97,37 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('save-video-summary', vlogId, summary),
   importVideoFile: (filePath: string): Promise<any> =>
     ipcRenderer.invoke('import-video-file', filePath),
+
+  // Video position functions
+  saveVideoPosition: (vlogId: string, position: number): Promise<boolean> =>
+    ipcRenderer.invoke('save-video-position', vlogId, position),
+
+  getVideoPosition: (
+    vlogId: string,
+  ): Promise<{ position: number; timestamp: string } | null> =>
+    ipcRenderer.invoke('get-video-position', vlogId),
+
+  // Event listeners for real-time updates
+  onSummaryGenerated: (callback: (vlogId: string, summary: string) => void) => {
+    ipcRenderer.on('summary-generated', (_, vlogId, summary) =>
+      callback(vlogId, summary),
+    )
+  },
+
+  removeSummaryGeneratedListener: (
+    callback: (vlogId: string, summary: string) => void,
+  ) => {
+    ipcRenderer.removeAllListeners('summary-generated')
+  },
+
+  // Transcription progress events
+  onTranscriptionProgressUpdated: (callback: (vlogId: string, progress: number) => void) => {
+    ipcRenderer.on('transcription-progress-updated', (_, vlogId, progress) => callback(vlogId, progress))
+  },
+
+  removeTranscriptionProgressListener: (callback: (vlogId: string, progress: number) => void) => {
+    ipcRenderer.removeAllListeners('transcription-progress-updated')
+  },
 })
 
 declare global {
@@ -130,6 +161,22 @@ declare global {
       ) => Promise<string>
       saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
       importVideoFile: (filePath: string) => Promise<any>
+      saveVideoPosition: (vlogId: string, position: number) => Promise<boolean>
+      getVideoPosition: (
+        vlogId: string,
+      ) => Promise<{ position: number; timestamp: string } | null>
+      onSummaryGenerated: (
+        callback: (vlogId: string, summary: string) => void,
+      ) => void
+      removeSummaryGeneratedListener: (
+        callback: (vlogId: string, summary: string) => void,
+      ) => void
+      onTranscriptionProgressUpdated: (
+        callback: (vlogId: string, progress: number) => void,
+      ) => void
+      removeTranscriptionProgressListener: (
+        callback: (vlogId: string, progress: number) => void,
+      ) => void
     }
   }
 }

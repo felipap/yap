@@ -1,10 +1,15 @@
 import { useEffect, useCallback } from 'react'
+import { VideoRef } from './Video'
+import { usePlaybackPreferences } from '../../../shared/PlaybackPreferencesProvider'
 
-interface UseVideoShortcutsProps {
-  videoRef: React.RefObject<HTMLVideoElement>
+interface Args {
+  videoRef: React.RefObject<VideoRef>
 }
 
-export function useVideoShortcuts({ videoRef }: UseVideoShortcutsProps) {
+export function useVideoShortcuts({ videoRef }: Args) {
+  const { toggleMute, playbackSpeed, setPlaybackSpeed } =
+    usePlaybackPreferences()
+
   const togglePlayPause = useCallback(() => {
     if (!videoRef.current) {
       return
@@ -17,13 +22,30 @@ export function useVideoShortcuts({ videoRef }: UseVideoShortcutsProps) {
     }
   }, [videoRef])
 
-  const toggleMute = useCallback(() => {
-    if (!videoRef.current) {
-      return
-    }
+  const cyclePlaybackSpeed = useCallback(() => {
+    const speeds = [1.0, 1.5, 2.0, 3.0]
+    const currentIndex = speeds.indexOf(playbackSpeed)
+    const nextIndex = (currentIndex + 1) % speeds.length
+    const nextSpeed = speeds[nextIndex]
 
-    videoRef.current.muted = !videoRef.current.muted
-  }, [videoRef])
+    setPlaybackSpeed(nextSpeed)
+  }, [playbackSpeed, setPlaybackSpeed])
+
+  const increasePlaybackSpeed = useCallback(() => {
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0]
+    const currentIndex = speeds.indexOf(playbackSpeed)
+    if (currentIndex < speeds.length - 1) {
+      setPlaybackSpeed(speeds[currentIndex + 1])
+    }
+  }, [playbackSpeed, setPlaybackSpeed])
+
+  const decreasePlaybackSpeed = useCallback(() => {
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0]
+    const currentIndex = speeds.indexOf(playbackSpeed)
+    if (currentIndex > 0) {
+      setPlaybackSpeed(speeds[currentIndex - 1])
+    }
+  }, [playbackSpeed, setPlaybackSpeed])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -38,14 +60,43 @@ export function useVideoShortcuts({ videoRef }: UseVideoShortcutsProps) {
 
       // Prevent default behavior for space key to avoid page scrolling
       if (event.code === 'Space') {
+        console.log('space pressed => togglePlayPause')
         event.preventDefault()
         togglePlayPause()
       }
 
       // Handle 'm' key for mute/unmute
       if (event.key.toLowerCase() === 'm') {
+        console.log('m pressed => toggleMute')
         event.preventDefault()
         toggleMute()
+      }
+
+      // Handle 's' key for cycling playback speed
+      if (event.key.toLowerCase() === 's') {
+        if (event.shiftKey) {
+          console.log('shift+s pressed => decreasePlaybackSpeed')
+          event.preventDefault()
+          decreasePlaybackSpeed()
+        } else {
+          console.log('s pressed => cyclePlaybackSpeed')
+          event.preventDefault()
+          cyclePlaybackSpeed()
+        }
+      }
+
+      // Handle '>' key for increasing playback speed
+      if (event.key === '>') {
+        console.log('> pressed => increasePlaybackSpeed')
+        event.preventDefault()
+        increasePlaybackSpeed()
+      }
+
+      // Handle '<' key for decreasing playback speed
+      if (event.key === '<') {
+        console.log('< pressed => decreasePlaybackSpeed')
+        event.preventDefault()
+        decreasePlaybackSpeed()
       }
     }
 
@@ -56,5 +107,11 @@ export function useVideoShortcuts({ videoRef }: UseVideoShortcutsProps) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [togglePlayPause, toggleMute])
+  }, [
+    togglePlayPause,
+    toggleMute,
+    cyclePlaybackSpeed,
+    increasePlaybackSpeed,
+    decreasePlaybackSpeed,
+  ])
 }

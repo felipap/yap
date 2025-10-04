@@ -1,68 +1,74 @@
-import { useRef, useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { openFileLocation, untrackVlog } from '../../../ipc'
+import { withBoundary } from '../../../shared/withBoundary'
 import { RecordedFile, TranscriptionResult } from '../../../types'
 import { TranscriptionPanel } from './TranscriptionPanel'
-import { VideoSummaryPanel } from './VideoSummaryPanel'
+import { Video, VideoRef } from './Video'
+import { Summary } from './Summary'
+import { TranscribeButton } from './transcription/TranscribeButton'
+import { useTranscriptionState } from './transcription/useTranscriptionState'
 import { useVideoShortcuts } from './useVideoShortcuts'
-import {
-  getTranscription,
-  transcribeVideo,
-  untrackVlog,
-  openFileLocation,
-} from '../../../ipc'
 
 interface InnerProps {
   vlog: RecordedFile
   onBack: () => void
 }
 
-export function DetailPage({ vlog, onBack }: InnerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [transcription, setTranscription] =
-    useState<TranscriptionResult | null>(null)
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const [transcriptionError, setTranscriptionError] = useState<string | null>(
-    null,
-  )
+export const DetailPage = withBoundary(function ({ vlog, onBack }: InnerProps) {
+  const videoRef = useRef<VideoRef>(null)
+  const [currentVlog, setCurrentVlog] = useState<RecordedFile>(vlog)
   const [showTranscription, setShowTranscription] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const {
+    transcription,
+    isTranscribing,
+    transcriptionError,
+    hasTranscription,
+    transcribe,
+    clearError,
+  } = useTranscriptionState({ vlogId: currentVlog.id })
+
   useVideoShortcuts({ videoRef })
 
+  // Listen for summary-generated events
   useEffect(() => {
-    const loadTranscription = async () => {
-      try {
-        const existingTranscription = await getTranscription(vlog.id)
-        if (existingTranscription) {
-          setTranscription(existingTranscription)
-        }
-      } catch (error) {
-        console.error('Failed to load transcription:', error)
+    const handleSummaryGenerated = async (vlogId: string, summary: string) => {
+      console.log(`Received summary-generated event for vlog ${vlogId}`)
+      if (vlogId === currentVlog.id) {
+        console.log(`Updating summary for current vlog ${currentVlog.id}`)
+        // Update the current vlog with the new summary
+        setCurrentVlog((prev) => ({ ...prev, summary }))
       }
     }
 
-    loadTranscription()
-  }, [vlog.id])
-
-  const handleTranscribe = async () => {
-    setIsTranscribing(true)
-    setTranscriptionError(null)
-
-    try {
-      const result = await transcribeVideo(vlog.id)
-      setTranscription(result)
-    } catch (error) {
-      console.error('Transcription failed:', error)
-      setTranscriptionError(
-        error instanceof Error ? error.message : 'Transcription failed',
-      )
-    } finally {
-      setIsTranscribing(false)
+    // Listen for the summary-generated event from the main process
+    if (window.electronAPI.onSummaryGenerated) {
+      window.electronAPI.onSummaryGenerated(handleSummaryGenerated)
     }
+
+    return () => {
+      // Cleanup listener if needed
+      if (window.electronAPI.removeSummaryGeneratedListener) {
+        window.electronAPI.removeSummaryGeneratedListener(
+          handleSummaryGenerated,
+        )
+      }
+    }
+  }, [currentVlog.id])
+
+  const handleTranscriptionComplete = (transcription: TranscriptionResult) => {
+    // This will be called by TranscribeButton when transcription completes
+    // The transcription state is already managed by the hook
+  }
+
+  const handleVlogUpdate = (updatedVlog: any) => {
+    setCurrentVlog(updatedVlog)
   }
 
   const handleOpenLocation = async () => {
     try {
-      await openFileLocation(vlog.id)
+      await openFileLocation(currentVlog.id)
     } catch (error) {
       console.error('Failed to open file location:', error)
       alert('Failed to open file location')
@@ -72,7 +78,7 @@ export function DetailPage({ vlog, onBack }: InnerProps) {
   const handleDelete = async () => {
     if (
       !confirm(
-        `Are you sure you want to remove "${vlog.name}" from your library? The file will remain on your computer.`,
+        `Are you sure you want to remove "${currentVlog.name}" from your library? The file will remain on your computer.`,
       )
     ) {
       return
@@ -80,7 +86,7 @@ export function DetailPage({ vlog, onBack }: InnerProps) {
 
     setIsDeleting(true)
     try {
-      await untrackVlog(vlog.id)
+      await untrackVlog(currentVlog.id)
       onBack()
     } catch (error) {
       console.error('Failed to remove vlog from library:', error)
@@ -91,29 +97,24 @@ export function DetailPage({ vlog, onBack }: InnerProps) {
 
   return (
     <div className="flex flex-col gap-4 h-screen bg-one overflow-scroll py-4">
-      <main className="flex flex-col items-center gap-4 justify-center px-4 bg-one">
-        <video
-          ref={videoRef}
-          controls
-          autoPlay
-          muted
-          className="max-w-full max-h-full rounded-lg shadow-lg"
-          src={`vlog-video://${vlog.id}`}
-        >
-          Your browser does not support the video tag.
-        </video>
+      <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen">
+        <div className="w-full max-w-5xl">
+          <Video
+            ref={videoRef}
+            vlogId={currentVlog.id}
+            src={`vlog-video://${currentVlog.id}`}
+          />
+        </div>
 
         <header className="flex flex-row items-center justify-between w-full">
           <div />
           <div className="no-drag-region flex gap-3">
-            {!transcription && (
-              <HeaderButton
-                onClick={handleTranscribe}
-                disabled={isTranscribing || isDeleting}
-              >
-                {isTranscribing ? '⏳ Transcribing...' : '🎤 Transcribe'}
-              </HeaderButton>
-            )}
+            <TranscribeButton
+              vlogId={currentVlog.id}
+              onTranscriptionComplete={handleTranscriptionComplete}
+              onVlogUpdate={handleVlogUpdate}
+              disabled={isDeleting}
+            />
 
             {transcription && (
               <HeaderButton
@@ -129,46 +130,31 @@ export function DetailPage({ vlog, onBack }: InnerProps) {
               📁 Show in Finder
             </HeaderButton>
             <HeaderButton onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
+              {isDeleting ? '⏳ Removing...' : '🗑️ Remove'}
             </HeaderButton>
           </div>
         </header>
 
         <div className="flex flex-col gap-4 w-full">
-          <VideoSummaryPanel vlog={vlog} transcription={transcription?.text} />
+          <Summary vlog={currentVlog} transcription={transcription?.text} />
         </div>
 
         {showTranscription && (
           <div className="flex flex-col gap-4 w-full">
             <TranscriptionPanel
-              vlogId={vlog.id}
+              vlogId={currentVlog.id}
               videoRef={videoRef}
-              onTranscribe={handleTranscribe}
+              onTranscribe={transcribe}
               isTranscribing={isTranscribing}
               transcriptionError={transcriptionError}
               transcription={transcription}
             />
           </div>
         )}
-
-        {/* Error message */}
-        {transcriptionError && (
-          <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
-            <div className="flex justify-between items-center">
-              <span>{transcriptionError}</span>
-              <button
-                onClick={() => setTranscriptionError(null)}
-                className="ml-4 text-white hover:text-gray-200"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   )
-}
+})
 
 function HeaderButton({
   children,

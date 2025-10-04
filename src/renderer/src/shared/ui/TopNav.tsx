@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
-import { Library, Video } from 'lucide-react'
+import { Library, Video, Volume2, VolumeX } from 'lucide-react'
+import { usePlaybackPreferences } from '../PlaybackPreferencesProvider'
 
 interface TopNavProps {
   currentTab: 'library' | 'record'
@@ -30,29 +31,29 @@ function useTabShortcuts() {
 
 export function TopNav({ currentTab }: TopNavProps) {
   const router = useRouter()
-  useTabShortcuts()
-
   return (
     <div className="drag-region">
-      <div className="flex flex-row justify-start w-full select-none items-center gap-3 py-1.5 px-2 bg-four pl-20 border-b">
-        <TabButton
-          active={currentTab === 'library'}
-          onClick={() => {
-            router.navigate({ name: 'library' })
-          }}
-        >
-          <Library className="w-4 h-4" />
-          Library
-        </TabButton>
-        <TabButton
-          active={currentTab === 'record'}
-          onClick={() => {
-            router.navigate({ name: 'record' })
-          }}
-        >
-          <Video className="w-4 h-4" />
-          Record
-        </TabButton>
+      <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-four border-b">
+        <div className="flex items-center gap-3 pl-20">
+          <TabButton
+            active={currentTab === 'library'}
+            onClick={() => {
+              router.navigate({ name: 'library' })
+            }}
+          >
+            <Library className="w-4 h-4" />
+            Library
+          </TabButton>
+          <TabButton
+            active={currentTab === 'record'}
+            onClick={() => {
+              router.navigate({ name: 'record' })
+            }}
+          >
+            <Video className="w-4 h-4" />
+            Record
+          </TabButton>
+        </div>
       </div>
     </div>
   )

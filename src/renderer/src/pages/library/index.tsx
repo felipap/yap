@@ -4,6 +4,7 @@ import { importVideoFile } from '../../ipc'
 import { RecordedFile } from '../../types'
 import { DetailPage } from './detail'
 import { Sidebar } from './Sidebar'
+import { PlaybackPreferencesProvider } from '../../shared/PlaybackPreferencesProvider'
 
 export default function Page() {
   const [selectedVlog, setSelectedVlog] = useState<RecordedFile | null>(null)
@@ -109,44 +110,46 @@ export default function Page() {
   }, [selectedVlog])
 
   return (
-    <div className="flex h-screen bg-one overflow-hidden">
-      <Sidebar
-        selectedVlog={selectedVlog}
-        onVideoSelect={setSelectedVlog}
-        onClose={() => setSelectedVlog(null)}
-      />
+    <PlaybackPreferencesProvider>
+      <div className="flex h-screen bg-one overflow-hidden">
+        <Sidebar
+          selectedVlog={selectedVlog}
+          onVideoSelect={setSelectedVlog}
+          onClose={() => setSelectedVlog(null)}
+        />
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col h-full">
-        {selectedVlog ? (
-          <DetailPage
-            key={selectedVlog?.id}
-            vlog={selectedVlog}
-            onBack={() => {
-              setSelectedVlog(null)
-            }}
-          />
-        ) : (
-          <div
-            className={`flex-1 flex items-center justify-center transition-colors duration-200 ${
-              isDragOver
-                ? 'bg-blue-500/10 border-2 border-dashed border-blue-500'
-                : ''
-            }`}
-          >
-            <div className="text-center flex flex-col gap-2">
-              <div className=" flex justify-center">
-                <Film size={40} className="text-secondary" />
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col h-full">
+          {selectedVlog ? (
+            <DetailPage
+              key={selectedVlog?.id}
+              vlog={selectedVlog}
+              onBack={() => {
+                setSelectedVlog(null)
+              }}
+            />
+          ) : (
+            <div
+              className={`flex-1 flex items-center justify-center transition-colors duration-200 ${
+                isDragOver
+                  ? 'bg-blue-500/10 border-2 border-dashed border-blue-500'
+                  : ''
+              }`}
+            >
+              <div className="text-center flex flex-col gap-2">
+                <div className=" flex justify-center">
+                  <Film size={40} className="text-secondary" />
+                </div>
+                <h3 className="text-[15px] font-medium text-secondary mb-2">
+                  {isDragOver
+                    ? 'Drop video files here'
+                    : 'Select a vlog or drag video files here'}
+                </h3>
               </div>
-              <h3 className="text-[15px] font-medium text-secondary mb-2">
-                {isDragOver
-                  ? 'Drop video files here'
-                  : 'Select a vlog or drag video files here'}
-              </h3>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </PlaybackPreferencesProvider>
   )
 }
