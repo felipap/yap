@@ -13,10 +13,36 @@ import { ScreenRecorder } from './ScreenRecorder'
 import { Button } from '../../shared/ui/Button'
 import { VolumeMeter } from './VolumeMeter'
 import { DeviceSelector } from './DeviceSelector'
+import { RecordingModeSelector } from './RecordingModeSelector'
+import { Square } from 'lucide-react'
+
+const getModeLabel = (recordingMode: RecordingMode) => {
+  switch (recordingMode) {
+    case 'screen':
+      return 'Screen'
+    case 'camera':
+      return 'Camera'
+    case 'both':
+      return 'Screen + Camera'
+    default:
+      return ''
+  }
+}
+
+const formatTime = (seconds: number): string => {
+  const hrs = Math.floor(seconds / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
 
 export default function Page() {
   const router = useRouter()
-  const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
+  const [recordingMode] = useState<RecordingMode>('camera')
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
@@ -67,9 +93,7 @@ export default function Page() {
       if (savedMicrophoneId) {
         setSelectedMicrophoneId(savedMicrophoneId)
       }
-      if (savedMode) {
-        setRecordingMode(savedMode)
-      }
+      // Recording mode is always 'camera' for now
     } catch (error) {
       console.error('Failed to load settings:', error)
     }
@@ -178,8 +202,8 @@ export default function Page() {
   }, [selectedMicrophoneId])
 
   useEffect(() => {
-    saveRecordingMode(recordingMode)
-  }, [recordingMode])
+    saveRecordingMode('camera')
+  }, [])
 
   const handleStartRecording = async () => {
     try {
@@ -232,66 +256,20 @@ export default function Page() {
     }
   }
 
-  const getModeLabel = () => {
-    switch (recordingMode) {
-      case 'screen':
-        return 'Screen'
-      case 'camera':
-        return 'Camera'
-      case 'both':
-        return 'Screen + Camera'
-      default:
-        return ''
-    }
-  }
-
-  const formatTime = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600)
-    const mins = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
   return (
-    <div className="flex flex-col h-screen bg-one">
+    <div className="flex flex-col h-full overflow-hidden bg-one">
       <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 min-h-0">
         {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">
           {isRecording ? (
-            <>
-              <div className="flex items-center gap-3 px-5 py-3 bg-red-500/10 border-2 border-red-500 rounded-xl">
-                <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-lg font-semibold text-contrast">
-                  Recording {getModeLabel()}
-                </span>
-              </div>
-              <div className="text-[32px] font-bold text-contrast tabular-nums">
-                {formatTime(recordingTime)}
-              </div>
-
-              {/* Recording Volume Meter */}
-              {selectedMicrophoneId && (
-                <div className="flex justify-center">
-                  <VolumeMeter
-                    microphoneId={selectedMicrophoneId}
-                    size="lg"
-                    showLabel={true}
-                  />
-                </div>
-              )}
-            </>
+            <div className="text-[32px] font-bold text-contrast tabular-nums">
+              {formatTime(recordingTime)}
+            </div>
           ) : null}
 
           {/* Camera Preview - Dynamic sizing */}
           {(recordingMode === 'camera' || recordingMode === 'both') && (
-            <div
-              className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl"
-              style={{ maxHeight: 'calc(100vh - 400px)' }}
-            >
+            <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
               {previewStream || videoRef.current?.srcObject ? (
                 <video
                   ref={videoRef}
@@ -306,14 +284,23 @@ export default function Page() {
                   <div className="text-8xl">📹</div>
                 </div>
               )}
+
+              {/* Volume Meter during recording */}
+              {isRecording && selectedMicrophoneId && (
+                <div className="absolute top-4 right-4 z-10">
+                  <VolumeMeter
+                    microphoneId={selectedMicrophoneId}
+                    size="sm"
+                    showLabel={false}
+                    className="w-[20px]"
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {recordingMode === 'screen' && (
-            <div
-              className="w-full flex-1 min-h-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-one flex items-center justify-center"
-              style={{ maxHeight: 'calc(100vh - 400px)' }}
-            >
+            <div className="w-full flex-1 min-h-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-one flex items-center justify-center">
               <div className="text-center">
                 <div className="text-8xl mb-4">🖥️</div>
                 <p className="text-xl text-contrast font-semibold">
@@ -326,46 +313,12 @@ export default function Page() {
 
         {/* Controls */}
         <div className="flex flex-col gap-4 w-full max-w-2xl flex-shrink-0">
-          {/* Recording Mode - Hidden when recording */}
-          {!isRecording && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <label className="text-sm font-semibold text-contrast flex-shrink-0">
-                Recording Mode
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  isActive={recordingMode === 'camera'}
-                  onClick={() => {
-                    setRecordingMode('camera')
-                  }}
-                  className="flex-1"
-                >
-                  📹 Camera
-                </Button>
-                <Button
-                  variant="secondary"
-                  isActive={recordingMode === 'screen'}
-                  onClick={() => {
-                    setRecordingMode('screen')
-                  }}
-                  className="flex-1"
-                >
-                  🖥️ Screen
-                </Button>
-                <Button
-                  variant="secondary"
-                  isActive={recordingMode === 'both'}
-                  onClick={() => {
-                    setRecordingMode('both')
-                  }}
-                  className="flex-1"
-                >
-                  🎬 Both
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Recording Mode Selection */}
+          <RecordingModeSelector
+            recordingMode={recordingMode}
+            onModeChange={() => {}} // No-op since mode is fixed
+            isRecording={isRecording}
+          />
 
           {/* Device Selection */}
           <DeviceSelector
@@ -382,13 +335,16 @@ export default function Page() {
           {/* Recording Button */}
           {isRecording ? (
             <Button variant="stop" onClick={handleStopRecording}>
-              ⏹️ Stop Recording
+              <div className="flex items-center justify-center gap-3">
+                <Square size={16} />
+                Stop Recording
+              </div>
             </Button>
           ) : (
             <Button variant="recording" onClick={handleStartRecording}>
               <div className="flex items-center justify-center gap-3">
                 <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
-                Start Recording
+                Record
               </div>
             </Button>
           )}

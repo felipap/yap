@@ -19,6 +19,8 @@ function createWindow() {
     height: windowBounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
+    minWidth: 800,
+    minHeight: 500,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
