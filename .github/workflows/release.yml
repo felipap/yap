@@ -47,7 +47,7 @@ jobs:
         run: bun run build
 
       - name: Package Electron app
-        run: bun run electron:pack
+        run: bun run pack
 
       - name: Create Release
         # Only create release on nudge-specific version tags
