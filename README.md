@@ -66,6 +66,10 @@ _Demo coming soon..._
   </p>
 </details>
 
+## Contributing
+
+See [CONTRIBUTE.md](CONTRIBUTE.md) for details.
+
 ## License
 
 MIT
