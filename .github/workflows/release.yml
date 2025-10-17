@@ -49,12 +49,26 @@ jobs:
       - name: Package Electron app
         run: bun run electron:pack
 
+      - name: Generate Changelog
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, generating full changelog"
+            git log --oneline --pretty=format:"- %s (%h)" > CHANGELOG.md
+          else
+            echo "Generating changelog from $PREV_TAG to ${{ github.ref_name }}"
+            git log --oneline --pretty=format:"- %s (%h)" $PREV_TAG..HEAD > CHANGELOG.md
+          fi
+          echo "" >> CHANGELOG.md
+          echo "Full changelog: https://github.com/felipap/vlogger/compare/$PREV_TAG...${{ github.ref_name }}" >> CHANGELOG.md
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: 'Vlogger ${{ github.ref_name }}'
+          body_path: CHANGELOG.md
           files: |
             dist-electron/**/*.dmg
             dist-electron/**/*.app
           draft: false
-          generate_release_notes: true
