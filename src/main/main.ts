@@ -1,20 +1,26 @@
 import 'source-map-support/register'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'fs'
+import { autoUpdater } from 'electron-updater'
 import { store } from './store'
 import { setupIpcHandlers } from './ipc'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { ensureCacheDir } from './lib/thumbnails'
+import assert from 'assert'
 
 // Register the custom protocols
 registerProtocols()
+
+// Configure auto-updater
+autoUpdater.checkForUpdatesAndNotify()
 
 let mainWindow: BrowserWindow
 
 function createWindow() {
   const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
 
-  mainWindow = new BrowserWindow({
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: windowBounds.width,
     height: windowBounds.height,
     x: windowBounds.x,
@@ -29,7 +35,16 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
     visualEffectState: 'active',
-  })
+  }
+
+  const iconPath = join(__dirname, '../assets', 'icon.png')
+  assert(existsSync(iconPath), 'Icon does not exist')
+  windowOptions.icon = iconPath
+
+  mainWindow = new BrowserWindow(windowOptions)
+
+  // app.dock?.setIcon(iconPath)
+  // mainWindow.setIcon(iconPath)
 
   // Save window bounds on close
   mainWindow.on('close', () => {
@@ -40,7 +55,7 @@ function createWindow() {
   // Load the app
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:3000')
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
   } else {
     // In production, load from the app.asar bundle
     // The renderer files are at /dist/renderer/index.html in the asar
@@ -52,6 +67,66 @@ function createWindow() {
 
   // Setup IPC handlers after window is created
   setupIpcHandlers(mainWindow)
+
+  // Setup auto-updater event handlers
+  setupAutoUpdater()
+}
+
+function setupAutoUpdater() {
+  // Only check for updates in production
+  if (process.env.NODE_ENV === 'development') {
+    return
+  }
+
+  // Check for updates on startup
+  autoUpdater.checkForUpdatesAndNotify()
+
+  // Check for updates every 4 hours
+  setInterval(
+    () => {
+      autoUpdater.checkForUpdatesAndNotify()
+    },
+    4 * 60 * 60 * 1000,
+  )
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...')
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version)
+    if (mainWindow) {
+      mainWindow.webContents.send('update-available', info)
+    }
+  })
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available:', info.version)
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('Update error:', err)
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    let logMessage = `Download speed: ${progressObj.bytesPerSecond}`
+    logMessage = logMessage + ` - Downloaded ${progressObj.percent}%`
+    logMessage =
+      logMessage + ` (${progressObj.transferred}/${progressObj.total})`
+    console.log(logMessage)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('download-progress', progressObj)
+    }
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info.version)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('update-downloaded', info)
+    }
+  })
 }
 
 app.whenReady().then(async () => {

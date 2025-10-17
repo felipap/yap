@@ -4,7 +4,8 @@
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer\" \"wait-on http://localhost:3000 && NODE_ENV=development electron .\"",
+    "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer\" \"bun run dev:electron\"",
+    "dev:electron": "wait-on http://localhost:3000 && NODE_ENV=development nodemon --watch dist --exec \"electron .\" --ext js --ignore dist/renderer",
     "build": "bun run build:main && bun run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
@@ -58,6 +59,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.6.2",
     "lucide-react": "^0.544.0",
     "openai": "^4.20.1",
     "react": "^18.2.0",
@@ -70,6 +72,7 @@
   "build": {
     "appId": "com.felipap.vlogger",
     "productName": "Vlogger",
+    "icon": "assets/icon",
     "directories": {
       "output": "dist-electron"
     },
@@ -77,10 +80,47 @@
       "dist/**/*",
       "node_modules/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "felipap",
+      "repo": "vlogger"
+    },
     "mac": {
       "category": "public.app-category.video",
-      "target": "dir",
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
       "identity": null
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "target": "AppImage"
+    },
+    "dmg": {
+      "title": "Vlogger",
+      "artifactName": "Vlogger-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }

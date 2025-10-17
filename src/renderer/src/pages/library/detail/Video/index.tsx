@@ -46,6 +46,7 @@ export const Video = withBoundary(
     ) => {
       const videoRef = useRef<HTMLVideoElement>(null)
       const [hasRestoredPosition, setHasRestoredPosition] = useState(false)
+      const [isBuffering, setIsBuffering] = useState(false)
       const { isMuted, toggleMute, setMuted, playbackSpeed, setPlaybackSpeed } =
         usePlaybackPreferences()
 
@@ -214,6 +215,47 @@ export const Video = withBoundary(
         }
       }, [isMuted, setMuted])
 
+      // Handle buffering state
+      useEffect(() => {
+        const video = videoRef.current
+        if (!video) {
+          return
+        }
+
+        const handleWaiting = () => {
+          setIsBuffering(true)
+        }
+
+        const handleCanPlay = () => {
+          setIsBuffering(false)
+        }
+
+        const handleLoadStart = () => {
+          setIsBuffering(true)
+        }
+
+        const handleLoadedData = () => {
+          setIsBuffering(false)
+        }
+
+        video.addEventListener('waiting', handleWaiting)
+        video.addEventListener('canplay', handleCanPlay)
+        video.addEventListener('loadstart', handleLoadStart)
+        video.addEventListener('loadeddata', handleLoadedData)
+
+        return () => {
+          video.removeEventListener('waiting', handleWaiting)
+          video.removeEventListener('canplay', handleCanPlay)
+          video.removeEventListener('loadstart', handleLoadStart)
+          video.removeEventListener('loadeddata', handleLoadedData)
+        }
+      }, [])
+
+      // Determine video className based on buffering state
+      const videoClassName = isBuffering
+        ? 'w-full max-w-6xl h-auto rounded-lg shadow-lg'
+        : className
+
       return (
         <div className="relative">
           <video
@@ -221,7 +263,7 @@ export const Video = withBoundary(
             controls={controls}
             autoPlay={autoPlay}
             muted={isMuted}
-            className={className}
+            className={videoClassName}
             src={src}
           >
             Your browser does not support the video tag.

@@ -1,5 +1,6 @@
 import { createHash } from 'crypto'
-import { BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { access, mkdir, stat, writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
@@ -568,6 +569,58 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     } catch (error) {
       console.error('Error getting video position:', error)
       return null
+    }
+  })
+
+  // Auto-updater handlers
+  ipcMain.handle('check-for-updates', async () => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        return { available: false, message: 'Updates disabled in development' }
+      }
+      
+      const result = await autoUpdater.checkForUpdates()
+      return { available: !!result, message: 'Update check completed' }
+    } catch (error) {
+      console.error('Error checking for updates:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('download-update', async () => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error('Updates disabled in development')
+      }
+      
+      autoUpdater.downloadUpdate()
+      return { success: true, message: 'Download started' }
+    } catch (error) {
+      console.error('Error downloading update:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('install-update', async () => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error('Updates disabled in development')
+      }
+      
+      autoUpdater.quitAndInstall()
+      return { success: true, message: 'Installing update...' }
+    } catch (error) {
+      console.error('Error installing update:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('get-app-version', async () => {
+    try {
+      return app.getVersion()
+    } catch (error) {
+      console.error('Error getting app version:', error)
+      throw error
     }
   })
 }

@@ -128,6 +128,38 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeTranscriptionProgressListener: (callback: (vlogId: string, progress: number) => void) => {
     ipcRenderer.removeAllListeners('transcription-progress-updated')
   },
+
+  // Auto-updater functions
+  checkForUpdates: (): Promise<{ available: boolean; message: string }> =>
+    ipcRenderer.invoke('check-for-updates'),
+
+  downloadUpdate: (): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('download-update'),
+
+  installUpdate: (): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('install-update'),
+
+  getAppVersion: (): Promise<string> =>
+    ipcRenderer.invoke('get-app-version'),
+
+  // Auto-updater event listeners
+  onUpdateAvailable: (callback: (info: any) => void) => {
+    ipcRenderer.on('update-available', (_, info) => callback(info))
+  },
+
+  onDownloadProgress: (callback: (progress: any) => void) => {
+    ipcRenderer.on('download-progress', (_, progress) => callback(progress))
+  },
+
+  onUpdateDownloaded: (callback: (info: any) => void) => {
+    ipcRenderer.on('update-downloaded', (_, info) => callback(info))
+  },
+
+  removeUpdateListeners: () => {
+    ipcRenderer.removeAllListeners('update-available')
+    ipcRenderer.removeAllListeners('download-progress')
+    ipcRenderer.removeAllListeners('update-downloaded')
+  },
 })
 
 declare global {
@@ -177,6 +209,14 @@ declare global {
       removeTranscriptionProgressListener: (
         callback: (vlogId: string, progress: number) => void,
       ) => void
+      checkForUpdates: () => Promise<{ available: boolean; message: string }>
+      downloadUpdate: () => Promise<{ success: boolean; message: string }>
+      installUpdate: () => Promise<{ success: boolean; message: string }>
+      getAppVersion: () => Promise<string>
+      onUpdateAvailable: (callback: (info: any) => void) => void
+      onDownloadProgress: (callback: (progress: any) => void) => void
+      onUpdateDownloaded: (callback: (info: any) => void) => void
+      removeUpdateListeners: () => void
     }
   }
 }

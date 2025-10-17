@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { openFileLocation, untrackVlog } from '../../../ipc'
 import { withBoundary } from '../../../shared/withBoundary'
 import { RecordedFile, TranscriptionResult } from '../../../types'
-import { TranscriptionPanel } from './TranscriptionPanel'
-import { Video, VideoRef } from './Video'
 import { Summary } from './Summary'
 import { TranscribeButton } from './transcription/TranscribeButton'
 import { useTranscriptionState } from './transcription/useTranscriptionState'
+import { TranscriptionPanel } from './TranscriptionPanel'
 import { useVideoShortcuts } from './useVideoShortcuts'
+import { Video, VideoRef } from './Video'
+import { twMerge } from 'tailwind-merge'
 
 interface InnerProps {
   vlog: RecordedFile
@@ -107,7 +108,9 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: InnerProps) {
         </div>
 
         <header className="flex flex-row items-center justify-between w-full">
-          <div />
+          <div className="flex items-center gap-2">
+            <VideoExtensionTag currentVlog={currentVlog} />
+          </div>
           <div className="no-drag-region flex gap-3">
             <TranscribeButton
               vlogId={currentVlog.id}
@@ -173,5 +176,33 @@ function HeaderButton({
     >
       {children}
     </button>
+  )
+}
+
+function VideoExtensionTag({ currentVlog }: { currentVlog: RecordedFile }) {
+  let color = 'bg-blue-100 text-blue-800'
+  let inner
+  if (currentVlog.path.endsWith('.webm')) {
+    inner = 'webm'
+    color = 'bg-green-100 text-green-800'
+  } else if (currentVlog.path.endsWith('.mp4')) {
+    inner = 'mp4'
+    color = 'bg-yellow-100 text-yellow-800'
+  } else if (currentVlog.path.endsWith('.mov')) {
+    inner = 'mov'
+    color = 'bg-purple-100 text-purple-800'
+  } else {
+    return null
+  }
+
+  return (
+    <span
+      className={twMerge(
+        'px-2 py-1 text-xs font-medium rounded-md border',
+        color,
+      )}
+    >
+      {inner}
+    </span>
   )
 }
