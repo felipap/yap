@@ -37,14 +37,34 @@ function createWindow() {
     visualEffectState: 'active',
   }
 
-  const iconPath = join(__dirname, '../assets', 'icon.png')
-  assert(existsSync(iconPath), 'Icon does not exist')
-  windowOptions.icon = iconPath
+  // Try multiple possible icon paths for both dev and production
+  const possibleIconPaths = [
+    join(__dirname, '../assets', 'icon.png'),
+    join(__dirname, '../assets', 'icon.icns'),
+    join(process.resourcesPath, 'assets', 'icon.png'),
+    join(process.resourcesPath, 'assets', 'icon.icns'),
+    join(process.cwd(), 'assets', 'icon.png'),
+    join(process.cwd(), 'assets', 'icon.icns'),
+  ]
+
+  let iconPath = null
+  for (const path of possibleIconPaths) {
+    if (existsSync(path)) {
+      iconPath = path
+      break
+    }
+  }
+
+  if (iconPath) {
+    windowOptions.icon = iconPath
+  }
 
   mainWindow = new BrowserWindow(windowOptions)
 
-  // app.dock?.setIcon(iconPath)
-  // mainWindow.setIcon(iconPath)
+  if (iconPath) {
+    app.dock?.setIcon(iconPath)
+    mainWindow.setIcon(iconPath)
+  }
 
   // Save window bounds on close
   mainWindow.on('close', () => {
