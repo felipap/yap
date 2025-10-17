@@ -13,6 +13,7 @@ export interface Vlog {
   name: string
   path: string
   timestamp: string
+  title?: string
   transcription?: TranscriptionState
   summary?: string
   lastPosition?: number
@@ -90,6 +91,7 @@ const schema: Schema<AppSettings> = {
           name: { type: 'string' },
           path: { type: 'string' },
           timestamp: { type: 'string' },
+          title: { type: 'string' },
           transcription: { type: 'object' },
           summary: { type: 'string' },
           lastPosition: { type: 'number' },

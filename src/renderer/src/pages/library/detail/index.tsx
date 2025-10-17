@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { loadVideoDuration, openFileLocation, untrackVlog } from '../../../ipc'
+import { TitleInput } from './TitleInput'
 import { useVlog } from '../../../shared/useVlogData'
 import { withBoundary } from '../../../shared/withBoundary'
 import { RecordedFile, TranscriptionResult } from '../../../types'
@@ -22,7 +23,7 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
   const [showTranscription, setShowTranscription] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  useMaybeCalculateDurationOnce(currentVlog.id, !!currentVlog.duration)
+  useMaybeCalculateDurationOnce(currentVlog.id)
 
   const {
     transcription,
@@ -112,7 +113,13 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
 
         <header className="flex flex-row items-center justify-between w-full">
           <div className="flex items-center gap-2">
-            <VideoExtensionTag currentVlog={currentVlog} />
+            <TitleInput
+              vlogId={currentVlog.id}
+              title={currentVlog.title || ''}
+              onLocalTitleChange={(value) =>
+                setCurrentVlog((prev) => ({ ...prev, title: value }))
+              }
+            />
           </div>
           <div className="no-drag-region flex gap-3">
             <TranscribeButton

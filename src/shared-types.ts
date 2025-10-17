@@ -25,6 +25,7 @@ export interface RecordedFile {
   path: string
   size: number
   created: Date
+  title?: string
   modified: Date
   thumbnailPath?: string
   duration?: number

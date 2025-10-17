@@ -104,10 +104,6 @@ export async function getTranscription(
   return window.electronAPI.getTranscription(vlogId)
 }
 
-export async function getVideoDuration(vlogId: string): Promise<number> {
-  return window.electronAPI.getVideoDuration(vlogId)
-}
-
 export async function loadVideoDuration(vlogId: string): Promise<number> {
   return window.electronAPI.loadVideoDuration(vlogId)
 }
@@ -160,4 +156,11 @@ export async function getVideoPosition(
 
 export async function getVlog(vlogId: string): Promise<any> {
   return window.electronAPI.getVlog(vlogId)
+}
+
+export async function setVlogTitle(
+  vlogId: string,
+  title: string,
+): Promise<boolean> {
+  return window.electronAPI.updateVlog(vlogId, { title })
 }

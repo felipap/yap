@@ -228,39 +228,179 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
   }
 
-  return new Promise((resolve, reject) => {
-    const ffprobe = spawn('ffprobe', [
+  // Helper: run ffprobe and parse JSON
+  const runProbe = (args: string[]): Promise<any> =>
+    new Promise((resolve, reject) => {
+      const child = spawn('ffprobe', args)
+      let out = ''
+      child.stdout.on('data', (d) => {
+        out += d.toString()
+      })
+      child.on('close', (code) => {
+        if (code === 0) {
+          try {
+            resolve(JSON.parse(out))
+          } catch {
+            reject(new Error('Failed to parse ffprobe JSON'))
+          }
+        } else {
+          reject(new Error('ffprobe exited with error'))
+        }
+      })
+      child.on('error', (err) => reject(err))
+    })
+
+  const parseHms = (hms: string): number => {
+    const parts = hms.split(':')
+    if (parts.length === 3) {
+      const [hh, mm, ss] = parts
+      return parseInt(hh, 10) * 3600 + parseInt(mm, 10) * 60 + parseFloat(ss)
+    }
+    if (parts.length === 2) {
+      const [mm, ss] = parts
+      return parseInt(mm, 10) * 60 + parseFloat(ss)
+    }
+    const asNum = parseFloat(hms)
+    return isFinite(asNum) ? asNum : 0
+  }
+
+  const parseFromFormat = (data: any): number => {
+    const d = Number.parseFloat(data?.format?.duration)
+    if (Number.isFinite(d) && d > 0) {
+      return d
+    }
+    const tag = data?.format?.tags?.DURATION || data?.format?.tags?.duration
+    if (typeof tag === 'string') {
+      const d2 = parseHms(tag)
+      if (Number.isFinite(d2) && d2 > 0) {
+        return d2
+      }
+    }
+    return 0
+  }
+
+  const parseFromStreams = (data: any): number => {
+    let best = 0
+    const streams = Array.isArray(data?.streams) ? data.streams : []
+    for (const s of streams) {
+      const d1 = Number.parseFloat(s?.duration)
+      if (Number.isFinite(d1) && d1 > best) {
+        best = d1
+      }
+      const tagDur = s?.tags?.DURATION || s?.tags?.duration
+      if (typeof tagDur === 'string') {
+        const d2 = parseHms(tagDur)
+        if (Number.isFinite(d2) && d2 > best) {
+          best = d2
+        }
+      }
+      if (
+        typeof s?.duration_ts === 'number' &&
+        typeof s?.time_base === 'string'
+      ) {
+        const [num, den] = s.time_base.split('/').map((x: string) => Number(x))
+        if (num && den) {
+          const d3 = (s.duration_ts * num) / den
+          if (Number.isFinite(d3) && d3 > best) {
+            best = d3
+          }
+        }
+      }
+      if (
+        typeof s?.nb_frames !== 'undefined' &&
+        typeof s?.avg_frame_rate === 'string' &&
+        s.avg_frame_rate !== '0/0'
+      ) {
+        const frames = Number(s.nb_frames)
+        const [n, d] = s.avg_frame_rate.split('/').map((x: string) => Number(x))
+        if (Number.isFinite(frames) && n && d) {
+          const fps = n / d
+          if (fps > 0) {
+            const d4 = frames / fps
+            if (Number.isFinite(d4) && d4 > best) {
+              best = d4
+            }
+          }
+        }
+      }
+    }
+    return best
+  }
+
+  const computeFromPackets = async (): Promise<number> => {
+    try {
+      // Try audio first (more continuous timestamps)
+      const audio = await runProbe([
+        '-v',
+        'error',
+        '-show_packets',
+        '-select_streams',
+        'a:0',
+        '-print_format',
+        'json',
+        '-read_intervals',
+        '%+#999999',
+        videoPath,
+      ])
+      const aPackets = Array.isArray(audio?.packets) ? audio.packets : []
+      let aMax = 0
+      for (const p of aPackets) {
+        const t = Number.parseFloat(p?.pts_time)
+        if (Number.isFinite(t) && t > aMax) {
+          aMax = t
+        }
+      }
+      if (aMax > 0) {
+        return aMax
+      }
+    } catch {}
+    try {
+      // Fallback to video stream packets
+      const video = await runProbe([
+        '-v',
+        'error',
+        '-show_packets',
+        '-select_streams',
+        'v:0',
+        '-print_format',
+        'json',
+        '-read_intervals',
+        '%+#999999',
+        videoPath,
+      ])
+      const vPackets = Array.isArray(video?.packets) ? video.packets : []
+      let vMax = 0
+      for (const p of vPackets) {
+        const t = Number.parseFloat(p?.pts_time)
+        if (Number.isFinite(t) && t > vMax) {
+          vMax = t
+        }
+      }
+      return vMax > 0 ? vMax : 0
+    } catch {
+      return 0
+    }
+  }
+
+  try {
+    const data = await runProbe([
       '-v',
       'quiet',
       '-print_format',
       'json',
       '-show_format',
+      '-show_streams',
       videoPath,
     ])
+    let duration = parseFromFormat(data)
+    if (!Number.isFinite(duration) || duration <= 0) {
+      duration = parseFromStreams(data)
+    }
+    if (Number.isFinite(duration) && duration > 0) {
+      return duration
+    }
+  } catch {}
 
-    let output = ''
-
-    ffprobe.stdout.on('data', (data) => {
-      output += data.toString()
-    })
-
-    ffprobe.on('close', (code) => {
-      if (code === 0) {
-        try {
-          const data = JSON.parse(output)
-          console.log('data', data)
-          const duration = parseFloat(data.format.duration)
-          resolve(duration)
-        } catch (error) {
-          reject(new Error('Failed to parse video duration'))
-        }
-      } else {
-        reject(new Error('Failed to get video duration'))
-      }
-    })
-
-    ffprobe.on('error', (error) => {
-      reject(new Error(`Failed to start ffprobe: ${error.message}`))
-    })
-  })
+  const tsDuration = await computeFromPackets()
+  return Number.isFinite(tsDuration) ? tsDuration : 0
 }

@@ -69,6 +69,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
             return {
               id: vlog.id,
               name: vlog.name,
+              title: (vlog as any).title,
               path: vlog.path,
               size: stats.size,
               created: new Date(vlog.timestamp), // Use stored timestamp
@@ -302,53 +303,52 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     }
   })
 
-  ipcMain.handle('get-video-duration', async (_, vlogId: string) => {
-    try {
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
-      }
-
-      return await getVideoDuration(filePath)
-    } catch (error) {
-      console.error('Error getting video duration:', error)
-      throw error
-    }
-  })
-
   // Load and cache video duration on demand (performance optimization)
   // This avoids calculating duration for all videos on load, which would be very slow
   // Duration is only calculated when the user actually opens/selects a video
-  ipcMain.handle('loadVideoDuration', async (_, vlogId: string) => {
-    try {
-      const vlog = getVlog(vlogId)
-      if (!vlog) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
+  ipcMain.handle(
+    'loadVideoDuration',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      console.log('loadVideoDuration', vlogId)
+
+      try {
+        const vlog = getVlog(vlogId)
+        if (!vlog) {
+          console.log('vlog not found for vlog', vlogId)
+          throw new Error(`Vlog with ID ${vlogId} not found`)
+        }
+
+        console.log('vlog', vlog)
+
+        // Return cached duration if available
+        if (vlog.duration !== undefined) {
+          return vlog.duration
+        }
+
+        // Calculate and cache duration
+        const filePath = vlogIdToPath.get(vlogId)
+        if (!filePath) {
+          console.log('filePath not found for vlog', vlogId)
+          throw new Error(`File path not found for vlog ${vlogId}`)
+        }
+
+        console.log('filePath', filePath)
+
+        const duration = await getVideoDuration(filePath)
+        console.log('duration', duration)
+
+        // Cache the duration in the store
+        if (duration) {
+          updateVlog(vlogId, { duration })
+        }
+
+        return duration
+      } catch (error) {
+        console.error('Error loading video duration:', error)
+        throw error
       }
-
-      // Return cached duration if available
-      if (vlog.duration !== undefined) {
-        return vlog.duration
-      }
-
-      // Calculate and cache duration
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        throw new Error(`File path not found for vlog ${vlogId}`)
-      }
-
-      const duration = await getVideoDuration(filePath)
-      console.log('duration', duration)
-
-      // Cache the duration in the store
-      updateVlog(vlogId, { duration })
-
-      return duration
-    } catch (error) {
-      console.error('Error loading video duration:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
   // Vlog management handlers
   ipcMain.handle('get-vlog', async (_, vlogId: string) => {
@@ -490,6 +490,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
           existingVlog: {
             id: existingVlog.id,
             name: existingVlog.name,
+            title: (existingVlog as any).title,
             path: existingVlog.path,
             size: stats.size,
             created: new Date(existingVlog.timestamp),
@@ -545,6 +546,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         vlog: {
           id,
           name: fileName,
+          title: (vlog as any).title,
           path: filePath,
           size: stats.size,
           created: createdDate,
@@ -658,4 +660,15 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       throw error
     }
   })
+}
+
+function tryCatchIpcMain(handler: (...args: any[]) => Promise<any>) {
+  return async (...args: any[]) => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      console.error('Error in IPC handler:', error)
+      throw error
+    }
+  }
 }

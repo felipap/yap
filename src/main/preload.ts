@@ -44,9 +44,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getTranscription: (vlogId: string): Promise<TranscriptionResult | null> =>
     ipcRenderer.invoke('get-transcription', vlogId),
 
-  getVideoDuration: (vlogId: string): Promise<number> =>
-    ipcRenderer.invoke('get-video-duration', vlogId),
-
   loadVideoDuration: (vlogId: string): Promise<number> =>
     ipcRenderer.invoke('loadVideoDuration', vlogId),
 
@@ -157,7 +154,6 @@ declare global {
       }
       transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
       getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
-      getVideoDuration: (vlogId: string) => Promise<number>
       loadVideoDuration: (vlogId: string) => Promise<number>
       getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
       getAllTranscriptionStates: () => Promise<
