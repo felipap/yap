@@ -1,0 +1,51 @@
+{
+  "types": {
+    "feat": {
+      "section": "Features"
+    },
+    "fix": {
+      "section": "Bug Fixes"
+    },
+    "chore": {
+      "section": "Maintenance"
+    },
+    "docs": {
+      "section": "Documentation"
+    },
+    "style": {
+      "section": "Styling"
+    },
+    "refactor": {
+      "section": "Code Refactoring"
+    },
+    "perf": {
+      "section": "Performance Improvements"
+    },
+    "test": {
+      "section": "Tests"
+    },
+    "build": {
+      "section": "Build System"
+    },
+    "ci": {
+      "section": "Continuous Integration"
+    }
+  },
+  "commitUrlFormat": "https://github.com/felipap/vlogger/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/felipap/vlogger/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/felipap/vlogger/issues/{{id}}",
+  "userUrlFormat": "https://github.com/{{user}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    }
+  ],
+  "packageFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    }
+  ]
+}

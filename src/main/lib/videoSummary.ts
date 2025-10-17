@@ -1,6 +1,10 @@
-import { store, UserProfile } from '../store'
+import { UserProfile } from '../../shared-types'
+import { store } from '../store'
 
 const GEMINI_API_KEY = store.get('geminiApiKey') || ''
+if (!GEMINI_API_KEY) {
+  throw new Error('Gemini API key is not set')
+}
 
 // Gemini API response types
 interface GeminiError {

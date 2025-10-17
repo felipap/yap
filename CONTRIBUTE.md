@@ -140,6 +140,19 @@ bun run dist
 - **Windows**: NSIS installer
 - **Linux**: AppImage
 
+## Releases
+
+Create releases with conventional commits:
+
+```bash
+bun run release:patch  # 1.0.0 -> 1.0.1 (bug fixes)
+bun run release:minor  # 1.0.0 -> 1.1.0 (new features)
+bun run release:major  # 1.0.0 -> 2.0.0 (breaking changes)
+git push origin main --tags
+```
+
+Use commit prefixes: `feat:`, `fix:`, `docs:`, `chore:`, etc.
+
 ## Debugging
 
 ### Logs

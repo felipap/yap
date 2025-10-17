@@ -4,6 +4,7 @@ import { autoUpdater } from 'electron-updater'
 import { access, mkdir, stat, writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
+import { State, UserProfile, Vlog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
@@ -15,12 +16,7 @@ import {
   setVlog,
   store,
   updateVlog,
-  UserProfile,
-  Vlog,
 } from './store'
-import { State } from '../shared-types'
-
-const GEMINI_API_KEY = store.get('geminiApiKey') || ''
 
 export const vlogIdToPath = new Map<string, string>()
 
