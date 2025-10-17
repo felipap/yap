@@ -1,6 +1,6 @@
 {
   "name": "vlogger",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
