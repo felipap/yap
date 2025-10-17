@@ -75,15 +75,15 @@
       "dist/**/*",
       "assets/**/*",
       "node_modules/**/*",
-      "build/**/*"
+      "entitlements.mac.plist"
     ],
     "mac": {
       "category": "public.app-category.video",
       "icon": "assets/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
       "target": [
         {
           "target": "dmg",
