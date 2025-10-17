@@ -13,8 +13,8 @@ export function TitleInput({
 }: TitleInputProps) {
   return (
     <input
-      className="bg-two text-primary border rounded px-2 py-1 text-[14px] h-7"
-      placeholder="Add a title"
+      className="bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-2 ml-[-5px] py-1 text-[20px] h-7 placeholder:opacity-10 font-bold focus:placeholder:opacity-60 !transition"
+      placeholder="Name your vlog"
       value={title}
       onChange={(e) => onLocalTitleChange(e.target.value)}
       onBlur={async (e) => {

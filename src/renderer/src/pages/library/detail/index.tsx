@@ -7,6 +7,7 @@ import { withBoundary } from '../../../shared/withBoundary'
 import { RecordedFile, TranscriptionResult } from '../../../types'
 import { Summary } from './Summary'
 import { TranscribeButton } from './transcription/TranscribeButton'
+import { Toolbar } from './Toolbar'
 import { useTranscriptionState } from './transcription/useTranscriptionState'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { useVideoShortcuts } from './useVideoShortcuts'
@@ -36,72 +37,10 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
 
   useVideoShortcuts({ videoRef })
 
-  // Listen for summary-generated events
-  useEffect(() => {
-    const handleSummaryGenerated = async (vlogId: string, summary: string) => {
-      console.log(`Received summary-generated event for vlog ${vlogId}`)
-      if (vlogId === currentVlog.id) {
-        console.log(`Updating summary for current vlog ${currentVlog.id}`)
-        // Update the current vlog with the new summary
-        setCurrentVlog((prev) => ({ ...prev, summary }))
-      }
-    }
-
-    // Listen for the summary-generated event from the main process
-    if (window.electronAPI.onSummaryGenerated) {
-      window.electronAPI.onSummaryGenerated(handleSummaryGenerated)
-    }
-
-    return () => {
-      // Cleanup listener if needed
-      if (window.electronAPI.removeSummaryGeneratedListener) {
-        window.electronAPI.removeSummaryGeneratedListener(
-          handleSummaryGenerated,
-        )
-      }
-    }
-  }, [currentVlog.id])
-
-  const handleTranscriptionComplete = (transcription: TranscriptionResult) => {
-    // This will be called by TranscribeButton when transcription completes
-    // The transcription state is already managed by the hook
-  }
-
-  const handleVlogUpdate = (updatedVlog: any) => {
-    setCurrentVlog(updatedVlog)
-  }
-
-  const handleOpenLocation = async () => {
-    try {
-      await openFileLocation(currentVlog.id)
-    } catch (error) {
-      console.error('Failed to open file location:', error)
-      alert('Failed to open file location')
-    }
-  }
-
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        `Are you sure you want to remove "${currentVlog.name}" from your library? The file will remain on your computer.`,
-      )
-    ) {
-      return
-    }
-
-    setIsDeleting(true)
-    try {
-      await untrackVlog(currentVlog.id)
-      onBack()
-    } catch (error) {
-      console.error('Failed to remove vlog from library:', error)
-      alert('Failed to remove vlog from library')
-      setIsDeleting(false)
-    }
-  }
+  // actions moved into Toolbar
 
   return (
-    <div className="flex flex-col gap-4 h-screen bg-one overflow-scroll py-4">
+    <div className="flex flex-col gap-4 h-screen bg-one overflow-x-hidden overflow-y-scroll w-full py-4">
       <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen">
         <div className="w-full max-w-5xl">
           <Video
@@ -121,31 +60,15 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
               }
             />
           </div>
-          <div className="no-drag-region flex gap-3">
-            <TranscribeButton
-              vlogId={currentVlog.id}
-              onTranscriptionComplete={handleTranscriptionComplete}
-              onVlogUpdate={handleVlogUpdate}
-              disabled={isDeleting}
-            />
-
-            {transcription && (
-              <HeaderButton
-                onClick={() => setShowTranscription(!showTranscription)}
-              >
-                {showTranscription
-                  ? '📝 Hide Transcript'
-                  : '📝 Show Transcript'}
-              </HeaderButton>
-            )}
-
-            <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
-              📁 Show in Finder
-            </HeaderButton>
-            <HeaderButton onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? '⏳ Removing...' : '🗑️ Remove'}
-            </HeaderButton>
-          </div>
+          <Toolbar
+            vlogId={currentVlog.id}
+            canToggleTranscription={!!transcription}
+            showTranscription={showTranscription}
+            onToggleTranscription={() =>
+              setShowTranscription(!showTranscription)
+            }
+            onBack={onBack}
+          />
         </header>
 
         <div className="flex flex-col gap-4 w-full">
@@ -169,25 +92,7 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
   )
 })
 
-function HeaderButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <button
-      className="btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2"
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  )
-}
+// HeaderButton moved into Toolbar
 
 function VideoExtensionTag({ currentVlog }: { currentVlog: RecordedFile }) {
   let color = 'bg-blue-100 text-blue-800'

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { RecordedFile } from '../../../types'
 import { useVlogData } from '../../../shared/useVlogData'
 import { Item } from './Item'
+import { useSidebarShortcuts } from './useSidebarShortcuts'
 
 export type SidebarItem = RecordedFile & { dayIndex?: number }
 
@@ -14,8 +15,10 @@ interface Props {
 export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   const { displayVlogs } = useIndexedVlogData()
 
+  useSidebarShortcuts({ displayVlogs, onVideoSelect, selectedVlog })
+
   return (
-    <div className="w-[280px] flex-shrink-0 border-r border-one bg-two overflow-y-auto">
+    <div className="w-[280px] flex-shrink-0 border-r border-one bg-two  pb-5">
       <div className="flex flex-col gap-0">
         {displayVlogs.map((vlog) => (
           <Item

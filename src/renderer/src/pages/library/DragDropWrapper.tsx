@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { importVideoFile } from '../../ipc'
+import { twMerge } from 'tailwind-merge'
 
 interface DragDropWrapperProps {
   children: React.ReactNode
@@ -116,11 +117,12 @@ export function DragDropWrapper({
 
   return (
     <div
-      className={`transition-colors duration-200 ${
+      className={twMerge(
+        'h-full w-full transition-colors duration-200',
         isDragOver
           ? 'bg-blue-500/10 border-2 border-dashed border-blue-500'
-          : ''
-      }`}
+          : '',
+      )}
     >
       {children}
     </div>

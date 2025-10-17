@@ -9,6 +9,10 @@ import { DragDropWrapper } from './DragDropWrapper'
 export default function Page() {
   const [selectedVlog, setSelectedVlog] = useState<RecordedFile | null>(null)
 
+  function handleSelectVlog(next: RecordedFile) {
+    setSelectedVlog(next)
+  }
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && selectedVlog) {
@@ -26,15 +30,17 @@ export default function Page() {
   return (
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
-        <div className="flex h-screen bg-one overflow-hidden">
-          <Sidebar
-            selectedVlog={selectedVlog}
-            onVideoSelect={setSelectedVlog}
-            onClose={() => setSelectedVlog(null)}
-          />
+        <div className="flex h-full w-screen overflow-hidden">
+          <div className="overflow-y-auto">
+            <Sidebar
+              selectedVlog={selectedVlog}
+              onVideoSelect={handleSelectVlog}
+              onClose={() => setSelectedVlog(null)}
+            />
+          </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
             {selectedVlog ? (
               <DetailPage
                 key={selectedVlog?.id}

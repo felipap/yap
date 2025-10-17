@@ -50,6 +50,7 @@
     "@google/generative-ai": "^0.24.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.18",
     "dotenv": "^17.2.3",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.6.2",

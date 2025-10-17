@@ -32,22 +32,11 @@ export function useVlog(vlogId: string) {
   const [vlog, setVlog] = useState<Vlog | undefined>(undefined)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    load()
-
-    // Refresh file list periodically
-    const intervalId = setInterval(load, 2000)
-
-    return () => {
-      clearInterval(intervalId)
-    }
-  }, [])
-
   const load = async () => {
     setLoading(true)
     try {
-      const vlog = await getVlog(vlogId)
-      setVlog(vlog)
+      const fresh = await getVlog(vlogId)
+      setVlog(fresh)
     } catch (error) {
       console.error('Failed to load vlog:', error)
     } finally {
@@ -55,5 +44,39 @@ export function useVlog(vlogId: string) {
     }
   }
 
-  return { vlog, loading }
+  useEffect(() => {
+    load()
+
+    // Refresh periodically as a fallback
+    const intervalId = setInterval(load, 2000)
+
+    // React to main-process events that can change vlog data (generic ones)
+    const handleTranscriptionProgress = (eventVlogId: string) => {
+      if (eventVlogId === vlogId) {
+        load()
+      }
+    }
+
+    if (window.electronAPI.onTranscriptionProgressUpdated) {
+      window.electronAPI.onTranscriptionProgressUpdated((id: string) =>
+        handleTranscriptionProgress(id),
+      )
+    }
+
+    return () => {
+      clearInterval(intervalId)
+      if (window.electronAPI.removeTranscriptionProgressListener) {
+        window.electronAPI.removeTranscriptionProgressListener(
+          handleTranscriptionProgress as any,
+        )
+      }
+    }
+  }, [vlogId])
+
+  // Expose manual refresh for generic external updates
+  const refresh = () => {
+    void load()
+  }
+
+  return { vlog, loading, refresh }
 }

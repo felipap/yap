@@ -1,4 +1,6 @@
+import { twMerge } from 'tailwind-merge'
 import { SidebarItem } from '.'
+import dayjs from 'dayjs'
 
 interface Props {
   data: SidebarItem
@@ -10,11 +12,13 @@ export function Item({ data, selected, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`text-left px-2 py-1.5 mx-1 my-1 rounded-lg transition-colors ${
+      className={twMerge(
+        `text-left px-2 py-1.5 transition-colors`,
+        'bg-transparent hover:bg-one hover:dark:bg-one',
         selected
-          ? 'bg-blue-500 text-white'
-          : 'bg-transparent text-contrast hover:bg-one'
-      }`}
+          ? '!bg-blue-500 dark:!bg-blue-500/20 hover:dark:!bg-blue-500/25 text-white'
+          : 'text-contrast',
+      )}
     >
       <div className="flex items-center gap-3">
         {/* Thumbnail */}
@@ -53,8 +57,10 @@ export function Item({ data, selected, onClick }: Props) {
               )}
             </div>
             {data.title && (
-              <div className="text-xs text-secondary truncate flex items-center gap-1">
-                <span className="truncate">{formatDate(data.created)}</span>
+              <div className="text-xs opacity-50 truncate flex items-center gap-1">
+                <span className="truncate">
+                  {formatDateOrRelative(data.created)}
+                </span>
               </div>
             )}
           </div>
@@ -83,6 +89,15 @@ const formatDateOrRelative = (date: Date) => {
   const diffInDays = Math.floor(
     (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
   )
+
+  const isToday = dayjs().isSame(date, 'day')
+  if (isToday) {
+    return 'Today'
+  }
+  const isYesterday = dayjs().subtract(1, 'day').isSame(date, 'day')
+  if (isYesterday) {
+    return 'Yesterday'
+  }
 
   if (diffInDays <= 7) {
     return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date)

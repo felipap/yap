@@ -14,10 +14,10 @@ function useTabShortcuts() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === '1') {
+      if (e.metaKey && e.key === 'L') {
         e.preventDefault()
         router.navigate({ name: 'library' })
-      } else if (e.metaKey && e.key === '2') {
+      } else if (e.metaKey && e.key === 'R') {
         e.preventDefault()
         router.navigate({ name: 'record' })
       }

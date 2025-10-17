@@ -97,19 +97,29 @@ export const TranscriptionPanel = withBoundary(function ({
             <h3 className="text-lg font-semibold text-contrast m-0">
               Transcript
             </h3>
-            <button
-              onClick={handleSyncToVideo}
-              className="btn-secondary text-sm"
-              title="Sync transcript to current video position"
-            >
-              ⏯️ Sync to Video
-            </button>
-            <button
-              onClick={() => setShowTranscription(false)}
-              className="text-[var(--text-secondary)] hover:text-contrast"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onTranscribe?.()}
+                disabled={!!isTranscribing}
+                className="btn-secondary text-sm"
+                title="Retranscribe"
+              >
+                ↻
+              </button>
+              <button
+                onClick={handleSyncToVideo}
+                className="btn-secondary text-sm"
+                title="Sync transcript to current video position"
+              >
+                ⏯️ Sync to Video
+              </button>
+              <button
+                onClick={() => setShowTranscription(false)}
+                className="text-[var(--text-secondary)] hover:text-contrast"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           <div
