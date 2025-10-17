@@ -38,6 +38,7 @@
     "conventional-changelog-cli": "^5.0.0",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
+    "electron-notarize": "^1.2.1",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "standard-version": "9.5.0",
@@ -75,7 +76,8 @@
       "dist/**/*",
       "assets/**/*",
       "node_modules/**/*",
-      "entitlements.mac.plist"
+      "entitlements.mac.plist",
+      "scripts/**/*"
     ],
     "mac": {
       "category": "public.app-category.video",
@@ -101,6 +103,12 @@
         }
       ]
     },
+    "dmg": {
+      "title": "Vlogger",
+      "artifactName": "Vlogger-${version}-${arch}.${ext}",
+      "sign": false
+    },
+    "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icon.ico",
       "target": "nsis"
@@ -108,10 +116,6 @@
     "linux": {
       "icon": "assets/icon.png",
       "target": "AppImage"
-    },
-    "dmg": {
-      "title": "Vlogger",
-      "artifactName": "Vlogger-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
