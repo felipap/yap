@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
-import { getRecordedFiles, getVlog } from '../ipc'
-import { RecordedFile, Vlog } from '../types'
+import {
+  getRecordedFiles,
+  getVlog,
+  onVlogRemoved,
+  onVlogUpdated,
+  removeVlogRemovedListener,
+  removeVlogUpdatedListener,
+} from '../ipc'
+import { RecordedFile } from '../types'
 
 export function useVlogData() {
   const [vlogs, setVlogs] = useState<RecordedFile[]>([])
@@ -11,8 +18,17 @@ export function useVlogData() {
     // Refresh file list periodically
     const intervalId = setInterval(loadVlogs, 2000)
 
+    // Subscribe to general vlog changes
+    const handleVlogListChange = () => {
+      void loadVlogs()
+    }
+    onVlogUpdated(handleVlogListChange)
+    onVlogRemoved(handleVlogListChange)
+
     return () => {
       clearInterval(intervalId)
+      removeVlogUpdatedListener()
+      removeVlogRemovedListener()
     }
   }, [])
 
@@ -28,11 +44,14 @@ export function useVlogData() {
   return { vlogs }
 }
 
-export function useVlog(vlogId: string) {
-  const [vlog, setVlog] = useState<Vlog | undefined>(undefined)
+export function useVlog(vlogId: string | null) {
+  const [vlog, setVlog] = useState<RecordedFile | undefined>(undefined)
   const [loading, setLoading] = useState(false)
 
   const load = async () => {
+    if (!vlogId) {
+      return
+    }
     setLoading(true)
     try {
       const fresh = await getVlog(vlogId)
@@ -50,26 +69,19 @@ export function useVlog(vlogId: string) {
     // Refresh periodically as a fallback
     const intervalId = setInterval(load, 2000)
 
-    // React to main-process events that can change vlog data (generic ones)
-    const handleTranscriptionProgress = (eventVlogId: string) => {
+    // React to general vlog updated/removed events
+    const handleGeneralVlogEvent = (eventVlogId: string) => {
       if (eventVlogId === vlogId) {
-        load()
+        void load()
       }
     }
-
-    if (window.electronAPI.onTranscriptionProgressUpdated) {
-      window.electronAPI.onTranscriptionProgressUpdated((id: string) =>
-        handleTranscriptionProgress(id),
-      )
-    }
+    onVlogUpdated(handleGeneralVlogEvent)
+    onVlogRemoved(handleGeneralVlogEvent)
 
     return () => {
       clearInterval(intervalId)
-      if (window.electronAPI.removeTranscriptionProgressListener) {
-        window.electronAPI.removeTranscriptionProgressListener(
-          handleTranscriptionProgress as any,
-        )
-      }
+      removeVlogUpdatedListener()
+      removeVlogRemovedListener()
     }
   }, [vlogId])
 

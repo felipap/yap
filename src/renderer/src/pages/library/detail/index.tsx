@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { loadVideoDuration, openFileLocation, untrackVlog } from '../../../ipc'
-import { TitleInput } from './TitleInput'
+import { loadVideoDuration } from '../../../ipc'
 import { useVlog } from '../../../shared/useVlogData'
 import { withBoundary } from '../../../shared/withBoundary'
-import { RecordedFile, TranscriptionResult } from '../../../types'
+import { RecordedFile } from '../../../types'
 import { Summary } from './Summary'
-import { TranscribeButton } from './transcription/TranscribeButton'
+import { TitleInput } from './TitleInput'
 import { Toolbar } from './Toolbar'
-import { useTranscriptionState } from './transcription/useTranscriptionState'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { useVideoShortcuts } from './useVideoShortcuts'
 import { Video, VideoRef } from './Video'
@@ -21,27 +19,24 @@ interface Props {
 export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
   const videoRef = useRef<VideoRef>(null)
   const [currentVlog, setCurrentVlog] = useState<RecordedFile>(vlog)
-  const [showTranscription, setShowTranscription] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useMaybeCalculateDurationOnce(currentVlog.id)
 
-  const {
-    transcription,
-    isTranscribing,
-    transcriptionError,
-    hasTranscription,
-    transcribe,
-    clearError,
-  } = useTranscriptionState({ vlogId: currentVlog.id })
+  // Transcription state now lives inside TranscriptionPanel
 
   useVideoShortcuts({ videoRef })
 
   // actions moved into Toolbar
 
   return (
-    <div className="flex flex-col gap-4 h-screen bg-one overflow-x-hidden overflow-y-scroll w-full py-4">
-      <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen">
+    <div
+      className={twMerge(
+        ' gap-4 overflow-x-hidden overflow-y-scroll w-full py-4',
+        'bg-one',
+      )}
+    >
+      <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen pb-5">
         <div className="w-full max-w-5xl">
           <Video
             ref={videoRef}
@@ -60,33 +55,19 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
               }
             />
           </div>
-          <Toolbar
-            vlogId={currentVlog.id}
-            canToggleTranscription={!!transcription}
-            showTranscription={showTranscription}
-            onToggleTranscription={() =>
-              setShowTranscription(!showTranscription)
-            }
-            onBack={onBack}
-          />
+          <Toolbar vlogId={currentVlog.id} onBack={onBack} />
         </header>
 
-        <div className="flex flex-col gap-4 w-full">
-          <Summary vlog={currentVlog} transcription={transcription?.text} />
+        <div className="gap-4 w-full">
+          <Summary
+            vlog={currentVlog}
+            transcription={currentVlog.summary ? '' : undefined}
+          />
         </div>
 
-        {showTranscription && (
-          <div className="flex flex-col gap-4 w-full">
-            <TranscriptionPanel
-              vlogId={currentVlog.id}
-              videoRef={videoRef}
-              onTranscribe={transcribe}
-              isTranscribing={isTranscribing}
-              transcriptionError={transcriptionError}
-              transcription={transcription}
-            />
-          </div>
-        )}
+        <div className="flex flex-col gap-4 w-full">
+          <TranscriptionPanel vlogId={currentVlog.id} videoRef={videoRef} />
+        </div>
       </main>
     </div>
   )

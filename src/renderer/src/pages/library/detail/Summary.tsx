@@ -75,7 +75,7 @@ export const Summary = withBoundary(function ({ vlog, transcription }: Props) {
       </header>
 
       {summary ? (
-        <div className="w-full max-h-[300px] rounded text-sm text-contrast bg-transparent border border-transparent overflow-y-auto leading-[1.4]  tracking-15">
+        <div className="w-full max-h-[300px] rounded text-sm text-contrast bg-transparent border border-transparent leading-[1.4]  tracking-15">
           {summary}
         </div>
       ) : (

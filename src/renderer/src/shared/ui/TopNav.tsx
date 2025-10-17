@@ -3,7 +3,6 @@ import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
 import { Library, Video, Volume2, VolumeX } from 'lucide-react'
 import { usePlaybackPreferences } from '../PlaybackPreferencesProvider'
-import { UpdateNotification } from './UpdateNotification'
 
 interface TopNavProps {
   currentTab: 'library' | 'record'
@@ -35,33 +34,30 @@ export function TopNav({ currentTab }: TopNavProps) {
   useTabShortcuts()
 
   return (
-    <>
-      <UpdateNotification />
-      <div className="drag-region">
-        <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-four border-b">
-          <div className="flex items-center gap-3 pl-20">
-            <TabButton
-              active={currentTab === 'library'}
-              onClick={() => {
-                router.navigate({ name: 'library' })
-              }}
-            >
-              <Library className="w-4 h-4" />
-              Library
-            </TabButton>
-            <TabButton
-              active={currentTab === 'record'}
-              onClick={() => {
-                router.navigate({ name: 'record' })
-              }}
-            >
-              <Video className="w-4 h-4" />
-              Record
-            </TabButton>
-          </div>
+    <div className="drag-region">
+      <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-three border-b">
+        <div className="flex items-center gap-3 pl-20">
+          <TabButton
+            active={currentTab === 'library'}
+            onClick={() => {
+              router.navigate({ name: 'library' })
+            }}
+          >
+            <Library className="w-4 h-4" />
+            Library
+          </TabButton>
+          <TabButton
+            active={currentTab === 'record'}
+            onClick={() => {
+              router.navigate({ name: 'record' })
+            }}
+          >
+            <Video className="w-4 h-4" />
+            Record
+          </TabButton>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

@@ -164,3 +164,28 @@ export async function setVlogTitle(
 ): Promise<boolean> {
   return window.electronAPI.updateVlog(vlogId, { title })
 }
+
+// General vlog events
+export function onVlogUpdated(callback: (vlogId: string) => void) {
+  if (window.electronAPI.onVlogUpdated) {
+    window.electronAPI.onVlogUpdated(callback)
+  }
+}
+
+export function removeVlogUpdatedListener() {
+  if (window.electronAPI.removeVlogUpdatedListener) {
+    window.electronAPI.removeVlogUpdatedListener()
+  }
+}
+
+export function onVlogRemoved(callback: (vlogId: string) => void) {
+  if (window.electronAPI.onVlogRemoved) {
+    window.electronAPI.onVlogRemoved(callback)
+  }
+}
+
+export function removeVlogRemovedListener() {
+  if (window.electronAPI.removeVlogRemovedListener) {
+    window.electronAPI.removeVlogRemovedListener()
+  }
+}

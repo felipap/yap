@@ -1,23 +1,13 @@
 import { useState } from 'react'
 import { openFileLocation, untrackVlog } from '../../../ipc'
-import { TranscribeButton } from './transcription/TranscribeButton'
 import { useVlog } from '../../../shared/useVlogData'
 
 interface ToolbarProps {
   vlogId: string
-  canToggleTranscription: boolean
-  showTranscription: boolean
-  onToggleTranscription: () => void
   onBack: () => void
 }
 
-export function Toolbar({
-  vlogId,
-  canToggleTranscription,
-  showTranscription,
-  onToggleTranscription,
-  onBack,
-}: ToolbarProps) {
+export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const { vlog } = useVlog(vlogId)
 
@@ -52,14 +42,6 @@ export function Toolbar({
 
   return (
     <div className="no-drag-region flex gap-3">
-      <TranscribeButton vlogId={vlogId} disabled={isDeleting} />
-
-      {canToggleTranscription && (
-        <HeaderButton onClick={onToggleTranscription}>
-          {showTranscription ? '📝 Hide Transcript' : '📝 Show Transcript'}
-        </HeaderButton>
-      )}
-
       <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
         📁 Show in Finder
       </HeaderButton>

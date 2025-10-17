@@ -80,6 +80,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-video-position', vlogId),
 
   // Event listeners for real-time updates
+  onVlogUpdated: (callback: (vlogId: string) => void) => {
+    ipcRenderer.on('vlog-updated', (_, vlogId) => callback(vlogId))
+  },
+
+  removeVlogUpdatedListener: () => {
+    ipcRenderer.removeAllListeners('vlog-updated')
+  },
+
+  onVlogRemoved: (callback: (vlogId: string) => void) => {
+    ipcRenderer.on('vlog-removed', (_, vlogId) => callback(vlogId))
+  },
+
+  removeVlogRemovedListener: () => {
+    ipcRenderer.removeAllListeners('vlog-removed')
+  },
   onSummaryGenerated: (callback: (vlogId: string, summary: string) => void) => {
     ipcRenderer.on('summary-generated', (_, vlogId, summary) =>
       callback(vlogId, summary),
@@ -186,6 +201,10 @@ declare global {
       removeTranscriptionProgressListener: (
         callback: (vlogId: string, progress: number) => void,
       ) => void
+      onVlogUpdated: (callback: (vlogId: string) => void) => void
+      removeVlogUpdatedListener: () => void
+      onVlogRemoved: (callback: (vlogId: string) => void) => void
+      removeVlogRemovedListener: () => void
       checkForUpdates: () => Promise<{ available: boolean; message: string }>
       downloadUpdate: () => Promise<{ success: boolean; message: string }>
       installUpdate: () => Promise<{ success: boolean; message: string }>

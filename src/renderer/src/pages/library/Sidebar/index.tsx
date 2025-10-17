@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { RecordedFile } from '../../../types'
+import { RecordedFile, Vlog as VlogType } from '../../../types'
 import { useVlogData } from '../../../shared/useVlogData'
 import { Item } from './Item'
 import { useSidebarShortcuts } from './useSidebarShortcuts'

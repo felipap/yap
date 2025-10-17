@@ -5,18 +5,24 @@ import { DetailPage } from './detail'
 import { Sidebar } from './Sidebar'
 import { PlaybackPreferencesProvider } from '../../shared/PlaybackPreferencesProvider'
 import { DragDropWrapper } from './DragDropWrapper'
+import { useVlog, useVlogData } from '../../shared/useVlogData'
 
 export default function Page() {
-  const [selectedVlog, setSelectedVlog] = useState<RecordedFile | null>(null)
+  const [selectedVlogId, setSelectedVlogId] = useState<string | null>(null)
+  const { vlog } = useVlog(selectedVlogId)
+
+  useEffect(() => {
+    console.log('vlog name changed', vlog?.name)
+  }, [vlog?.name])
 
   function handleSelectVlog(next: RecordedFile) {
-    setSelectedVlog(next)
+    setSelectedVlogId(next.id)
   }
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedVlog) {
-        setSelectedVlog(null)
+      if (e.key === 'Escape' && selectedVlogId) {
+        setSelectedVlogId(null)
       }
     }
 
@@ -25,7 +31,7 @@ export default function Page() {
     return () => {
       window.removeEventListener('keydown', handleEscape)
     }
-  }, [selectedVlog])
+  }, [selectedVlogId])
 
   return (
     <PlaybackPreferencesProvider>
@@ -33,20 +39,20 @@ export default function Page() {
         <div className="flex h-full w-screen overflow-hidden">
           <div className="overflow-y-auto">
             <Sidebar
-              selectedVlog={selectedVlog}
+              selectedVlog={vlog ?? null}
               onVideoSelect={handleSelectVlog}
-              onClose={() => setSelectedVlog(null)}
+              onClose={() => setSelectedVlogId(null)}
             />
           </div>
 
           {/* Main content area */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
-            {selectedVlog ? (
+            {vlog ? (
               <DetailPage
-                key={selectedVlog?.id}
-                vlog={selectedVlog}
+                key={vlog.id}
+                vlog={vlog}
                 onBack={() => {
-                  setSelectedVlog(null)
+                  setSelectedVlogId(null)
                 }}
               />
             ) : (
