@@ -15,7 +15,3 @@ All notable changes to this project will be documented in this file. See [standa
 ### Bug Fixes
 
 * not hot reloading ([9cc30a2](https://github.com/felipap/vlogger/commit/9cc30a2a9bd272345582a011b8dee37d3c2acf23))
-
-# Changelog
-
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
