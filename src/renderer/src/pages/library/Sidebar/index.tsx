@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
-import { RecordedFile, Vlog as VlogType } from '../../../types'
+import { useEffect, useMemo } from 'react'
 import { useVlogData } from '../../../shared/useVlogData'
+import { RecordedFile } from '../../../types'
 import { Item } from './Item'
 import { useSidebarShortcuts } from './useSidebarShortcuts'
 
@@ -75,7 +75,7 @@ function useIndexedVlogData() {
       ...file,
       dayIndex: idToDayIndex.get(file.id),
     }))
-  }, [vlogs.length])
+  }, [vlogs])
 
   return { displayVlogs }
 }

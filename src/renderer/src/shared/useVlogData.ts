@@ -1,36 +1,78 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   getRecordedFiles,
   getVlog,
-  onVlogRemoved,
+  onStateChange,
   onVlogUpdated,
-  removeVlogRemovedListener,
   removeVlogUpdatedListener,
 } from '../ipc'
-import { RecordedFile } from '../types'
+import { RecordedFile, State } from '../types'
+
+export async function setPartialState(state: Partial<State>) {
+  return await window.electronAPI.setPartialState(state)
+}
+
+export function useBackendState() {
+  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState<State | null>(null)
+  const stateRef = useRef<State | null>(null)
+  const stateCount = useRef(0)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const state = await window.electronAPI.getState()
+      stateRef.current = state
+      stateCount.current++
+      setState(state)
+      setLoading(false)
+    }
+    load()
+
+    // Subscribe to state changes
+    const unsubscribe = window.electronAPI.onStateChange((newState) => {
+      stateRef.current = newState
+      setState(newState)
+      stateCount.current++
+    })
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  return {
+    state,
+    stateRef,
+    setPartialState,
+    loading,
+    stateCount: stateCount.current,
+  }
+}
 
 export function useVlogData() {
+  const { stateCount } = useBackendState()
+
   const [vlogs, setVlogs] = useState<RecordedFile[]>([])
 
   useEffect(() => {
     loadVlogs()
 
-    // Refresh file list periodically
-    const intervalId = setInterval(loadVlogs, 2000)
+    // // Refresh file list periodically
+    // // const intervalId = setInterval(loadVlogs, 2000)
 
-    // Subscribe to general vlog changes
-    const handleVlogListChange = () => {
-      void loadVlogs()
-    }
-    onVlogUpdated(handleVlogListChange)
-    onVlogRemoved(handleVlogListChange)
+    // // Subscribe to general vlog changes
+    // const handleStateChange = () => {
+    //   void loadVlogs()
+    // }
+    // onStateChange(handleStateChange)
 
-    return () => {
-      clearInterval(intervalId)
-      removeVlogUpdatedListener()
-      removeVlogRemovedListener()
-    }
-  }, [])
+    // return () => {
+    //   // clearInterval(intervalId)
+    //   removeVlogUpdatedListener()
+    // }
+  }, [stateCount])
 
   const loadVlogs = async () => {
     try {
@@ -64,10 +106,12 @@ export function useVlog(vlogId: string | null) {
   }
 
   useEffect(() => {
-    load()
+    if (!vlogId) {
+      return
+    }
 
     // Refresh periodically as a fallback
-    const intervalId = setInterval(load, 2000)
+    const intervalId = setInterval(load, 1000)
 
     // React to general vlog updated/removed events
     const handleGeneralVlogEvent = (eventVlogId: string) => {
@@ -76,12 +120,10 @@ export function useVlog(vlogId: string | null) {
       }
     }
     onVlogUpdated(handleGeneralVlogEvent)
-    onVlogRemoved(handleGeneralVlogEvent)
 
     return () => {
       clearInterval(intervalId)
       removeVlogUpdatedListener()
-      removeVlogRemovedListener()
     }
   }, [vlogId])
 

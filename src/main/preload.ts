@@ -1,17 +1,36 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import {
+  ExposedElectronAPI,
   RecordedFile,
+  ScreenSource,
+  SharedIpcMethods,
+  State,
   TranscriptionResult,
   TranscriptionState,
 } from '../shared-types'
 
-export interface ScreenSource {
-  id: string
-  name: string
-  thumbnail: string
-}
-
 contextBridge.exposeInMainWorld('electronAPI', {
+  onIpcEvent: (channel: string, callback: (...args: any[]) => void) => {
+    const listener = (_event: any, ...args: any[]) => callback(...args)
+    ipcRenderer.on(channel, listener)
+    return () => {
+      ipcRenderer.removeListener(channel, listener)
+    }
+  },
+
+  getState: (): Promise<State> => ipcRenderer.invoke('getState'),
+
+  setPartialState: (state: Partial<State>): Promise<void> =>
+    ipcRenderer.invoke('setPartialState', state),
+
+  onStateChange: (callback: (state: any) => void) => {
+    const listener = (_event: any, state: any) => callback(state)
+    ipcRenderer.on('state-changed', listener)
+    return () => {
+      ipcRenderer.removeListener('state-changed', listener)
+    }
+  },
+
   getScreenSources: (): Promise<ScreenSource[]> =>
     ipcRenderer.invoke('get-screen-sources'),
 
@@ -88,13 +107,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('vlog-updated')
   },
 
-  onVlogRemoved: (callback: (vlogId: string) => void) => {
-    ipcRenderer.on('vlog-removed', (_, vlogId) => callback(vlogId))
-  },
-
-  removeVlogRemovedListener: () => {
-    ipcRenderer.removeAllListeners('vlog-removed')
-  },
   onSummaryGenerated: (callback: (vlogId: string, summary: string) => void) => {
     ipcRenderer.on('summary-generated', (_, vlogId, summary) =>
       callback(vlogId, summary),
@@ -152,67 +164,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('download-progress')
     ipcRenderer.removeAllListeners('update-downloaded')
   },
-})
+} satisfies ExposedElectronAPI)
 
 declare global {
   interface Window {
-    electronAPI: {
-      getScreenSources: () => Promise<ScreenSource[]>
-      getRecordedFiles: () => Promise<RecordedFile[]>
-      openFileLocation: (vlogId: string) => Promise<void>
-      untrackVlog: (vlogId: string) => Promise<boolean>
-      saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
-      store: {
-        get: <T>(key: string) => Promise<T>
-        set: (key: string, value: any) => Promise<void>
-        getAll: () => Promise<Record<string, any>>
-      }
-      transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
-      getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
-      loadVideoDuration: (vlogId: string) => Promise<number>
-      getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
-      getAllTranscriptionStates: () => Promise<
-        Record<string, TranscriptionState>
-      >
-      getVlog: (vlogId: string) => Promise<any>
-      getAllVlogs: () => Promise<Record<string, any>>
-      updateVlog: (vlogId: string, updates: any) => Promise<boolean>
-      getTranscriptionSpeedUp: () => Promise<boolean>
-      setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
-      generateVideoSummary: (
-        vlogId: string,
-        transcription: string,
-      ) => Promise<string>
-      saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
-      importVideoFile: (filePath: string) => Promise<any>
-      saveVideoPosition: (vlogId: string, position: number) => Promise<boolean>
-      getVideoPosition: (
-        vlogId: string,
-      ) => Promise<{ position: number; timestamp: string } | null>
-      onSummaryGenerated: (
-        callback: (vlogId: string, summary: string) => void,
-      ) => void
-      removeSummaryGeneratedListener: (
-        callback: (vlogId: string, summary: string) => void,
-      ) => void
-      onTranscriptionProgressUpdated: (
-        callback: (vlogId: string, progress: number) => void,
-      ) => void
-      removeTranscriptionProgressListener: (
-        callback: (vlogId: string, progress: number) => void,
-      ) => void
-      onVlogUpdated: (callback: (vlogId: string) => void) => void
-      removeVlogUpdatedListener: () => void
-      onVlogRemoved: (callback: (vlogId: string) => void) => void
-      removeVlogRemovedListener: () => void
-      checkForUpdates: () => Promise<{ available: boolean; message: string }>
-      downloadUpdate: () => Promise<{ success: boolean; message: string }>
-      installUpdate: () => Promise<{ success: boolean; message: string }>
-      getAppVersion: () => Promise<string>
-      onUpdateAvailable: (callback: (info: any) => void) => void
-      onDownloadProgress: (callback: (progress: any) => void) => void
-      onUpdateDownloaded: (callback: (info: any) => void) => void
-      removeUpdateListeners: () => void
-    }
+    electronAPI: SharedIpcMethods
   }
 }

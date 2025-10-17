@@ -18,6 +18,7 @@ import {
   UserProfile,
   Vlog,
 } from './store'
+import { State } from '../shared-types'
 
 const GEMINI_API_KEY = store.get('geminiApiKey') || ''
 
@@ -40,6 +41,14 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       console.error('Error getting screen sources:', error)
       throw error
     }
+  })
+
+  ipcMain.handle('getState', async () => {
+    return store.store
+  })
+
+  ipcMain.handle('setPartialState', async (_, state: Partial<State>) => {
+    store.set(state)
   })
 
   ipcMain.handle('get-recorded-files', async () => {
@@ -660,6 +669,51 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       throw error
     }
   })
+
+  // Set up state change listener
+  store.onDidAnyChange((state) => {
+    mainWindow?.webContents.send('state-changed', state)
+  })
+
+  // Broadcast electron-store vlog changes to all renderer windows
+  store.onDidChange(
+    'vlogs',
+    (
+      newVlogs: Record<string, any> = {},
+      oldVlogs: Record<string, any> = {},
+    ) => {
+      console.log('vlogs changed')
+
+      try {
+        const changedIds = new Set<string>()
+        for (const id of Object.keys(newVlogs || {})) {
+          const before = oldVlogs ? oldVlogs[id] : undefined
+          const after = newVlogs[id]
+          if (!before || JSON.stringify(before) !== JSON.stringify(after)) {
+            changedIds.add(id)
+          }
+        }
+        // Also include ids that were removed if needed in future
+        // for now, we only emit updates for added/modified vlogs as requested
+
+        if (changedIds.size === 0) {
+          return
+        }
+
+        BrowserWindow.getAllWindows().forEach((window) => {
+          if (!window.isDestroyed()) {
+            changedIds.forEach((id) => {
+              console.log('sending vlog-updated', id)
+
+              window.webContents.send('vlog-updated', id)
+            })
+          }
+        })
+      } catch (error) {
+        console.error('Error broadcasting vlog-updated:', error)
+      }
+    },
+  )
 }
 
 function tryCatchIpcMain(handler: (...args: any[]) => Promise<any>) {

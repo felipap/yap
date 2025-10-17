@@ -1,6 +1,6 @@
+import dayjs from 'dayjs'
 import { twMerge } from 'tailwind-merge'
 import { SidebarItem } from '.'
-import dayjs from 'dayjs'
 
 interface Props {
   data: SidebarItem

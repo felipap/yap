@@ -1,53 +1,9 @@
 import Store, { Schema } from 'electron-store'
+import { State, Vlog } from '../shared-types'
 
-export interface TranscriptionState {
-  status: 'idle' | 'transcribing' | 'completed' | 'error'
-  progress?: number
-  error?: string
-  result?: any
-  startTime?: number
-}
+export type { State } from '../shared-types'
 
-export interface Vlog {
-  id: string
-  name: string
-  path: string
-  timestamp: string
-  title?: string
-  transcription?: TranscriptionState
-  summary?: string
-  lastPosition?: number
-  lastPositionTimestamp?: string
-  duration?: number // Cached video duration in seconds
-}
-
-export interface UserProfile {
-  name: string
-  role: string
-  interests: string[]
-  languages: string[]
-  context: string
-}
-
-export interface AppSettings {
-  selectedCameraId: string
-  recordingMode: 'camera' | 'screen' | 'both'
-  globalVideoMute: boolean
-  globalPlaybackSpeed: number
-  openaiApiKey?: string
-  geminiApiKey?: string
-  windowBounds?: {
-    width: number
-    height: number
-    x?: number
-    y?: number
-  }
-  vlogs?: Record<string, Vlog>
-  transcriptionSpeedUp?: boolean
-  userProfile?: UserProfile
-}
-
-const schema: Schema<AppSettings> = {
+const schema: Schema<State> = {
   selectedCameraId: {
     type: 'string',
     default: '',
@@ -110,7 +66,7 @@ const schema: Schema<AppSettings> = {
   },
 }
 
-export const store = new Store<AppSettings>({
+export const store = new Store<State>({
   schema,
   name: 'vlog-settings',
 })

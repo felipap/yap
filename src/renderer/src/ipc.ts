@@ -172,20 +172,14 @@ export function onVlogUpdated(callback: (vlogId: string) => void) {
   }
 }
 
+export function onStateChange(callback: () => void) {
+  if (window.electronAPI.onStateChange) {
+    window.electronAPI.onStateChange(callback)
+  }
+}
+
 export function removeVlogUpdatedListener() {
   if (window.electronAPI.removeVlogUpdatedListener) {
     window.electronAPI.removeVlogUpdatedListener()
-  }
-}
-
-export function onVlogRemoved(callback: (vlogId: string) => void) {
-  if (window.electronAPI.onVlogRemoved) {
-    window.electronAPI.onVlogRemoved(callback)
-  }
-}
-
-export function removeVlogRemovedListener() {
-  if (window.electronAPI.removeVlogRemovedListener) {
-    window.electronAPI.removeVlogRemovedListener()
   }
 }

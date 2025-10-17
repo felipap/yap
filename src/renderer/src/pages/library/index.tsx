@@ -1,19 +1,15 @@
-import { useEffect, useState } from 'react'
 import { Film } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { PlaybackPreferencesProvider } from '../../shared/PlaybackPreferencesProvider'
+import { useVlog } from '../../shared/useVlogData'
 import { RecordedFile } from '../../types'
 import { DetailPage } from './detail'
-import { Sidebar } from './Sidebar'
-import { PlaybackPreferencesProvider } from '../../shared/PlaybackPreferencesProvider'
 import { DragDropWrapper } from './DragDropWrapper'
-import { useVlog, useVlogData } from '../../shared/useVlogData'
+import { Sidebar } from './Sidebar'
 
 export default function Page() {
   const [selectedVlogId, setSelectedVlogId] = useState<string | null>(null)
   const { vlog } = useVlog(selectedVlogId)
-
-  useEffect(() => {
-    console.log('vlog name changed', vlog?.name)
-  }, [vlog?.name])
 
   function handleSelectVlog(next: RecordedFile) {
     setSelectedVlogId(next.id)
