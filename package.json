@@ -1,6 +1,6 @@
 {
-  "name": "vlog-electron",
-  "version": "1.0.14",
+  "name": "vlogger",
+  "version": "1.0.0",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {

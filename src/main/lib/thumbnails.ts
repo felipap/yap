@@ -8,7 +8,7 @@ import { homedir } from 'os'
 const execAsync = promisify(exec)
 
 // Cache directory for thumbnails
-const CACHE_DIR = join(homedir(), '.vlog-electron', 'thumbnails')
+const CACHE_DIR = join(homedir(), '.vlogger', 'thumbnails')
 
 // Ensure cache directory exists
 export async function ensureCacheDir(): Promise<void> {
