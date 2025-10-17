@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { openFileLocation, untrackVlog } from '../../../ipc'
+import { twMerge } from 'tailwind-merge'
+import { loadVideoDuration, openFileLocation, untrackVlog } from '../../../ipc'
+import { useVlog } from '../../../shared/useVlogData'
 import { withBoundary } from '../../../shared/withBoundary'
 import { RecordedFile, TranscriptionResult } from '../../../types'
 import { Summary } from './Summary'
@@ -8,18 +10,19 @@ import { useTranscriptionState } from './transcription/useTranscriptionState'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { useVideoShortcuts } from './useVideoShortcuts'
 import { Video, VideoRef } from './Video'
-import { twMerge } from 'tailwind-merge'
 
-interface InnerProps {
+interface Props {
   vlog: RecordedFile
   onBack: () => void
 }
 
-export const DetailPage = withBoundary(function ({ vlog, onBack }: InnerProps) {
+export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
   const videoRef = useRef<VideoRef>(null)
   const [currentVlog, setCurrentVlog] = useState<RecordedFile>(vlog)
   const [showTranscription, setShowTranscription] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  useMaybeCalculateDurationOnce(currentVlog.id, !!currentVlog.duration)
 
   const {
     transcription,
@@ -205,4 +208,14 @@ function VideoExtensionTag({ currentVlog }: { currentVlog: RecordedFile }) {
       {inner}
     </span>
   )
+}
+
+// If the video duration is not known, calculate it once and save it.
+function useMaybeCalculateDurationOnce(vlogId: string) {
+  const { vlog } = useVlog(vlogId)
+  useEffect(() => {
+    if (!vlog?.duration) {
+      loadVideoDuration(vlogId)
+    }
+  }, [vlogId, !!vlog])
 }

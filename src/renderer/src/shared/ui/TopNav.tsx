@@ -32,6 +32,8 @@ function useTabShortcuts() {
 
 export function TopNav({ currentTab }: TopNavProps) {
   const router = useRouter()
+  useTabShortcuts()
+
   return (
     <>
       <UpdateNotification />

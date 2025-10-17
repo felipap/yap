@@ -16,19 +16,6 @@ import { DeviceSelector } from './DeviceSelector'
 import { RecordingModeSelector } from './RecordingModeSelector'
 import { Square } from 'lucide-react'
 
-const getModeLabel = (recordingMode: RecordingMode) => {
-  switch (recordingMode) {
-    case 'screen':
-      return 'Screen'
-    case 'camera':
-      return 'Camera'
-    case 'both':
-      return 'Screen + Camera'
-    default:
-      return ''
-  }
-}
-
 const formatTime = (seconds: number): string => {
   const hrs = Math.floor(seconds / 3600)
   const mins = Math.floor((seconds % 3600) / 60)

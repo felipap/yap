@@ -2,15 +2,15 @@
   "name": "vlog-electron",
   "version": "1.0.0",
   "description": "A seamless vlogging app with screen recording capabilities",
-  "main": "dist/main.js",
+  "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer\" \"bun run dev:electron\"",
-    "dev:electron": "wait-on http://localhost:3000 && NODE_ENV=development nodemon --watch dist --exec \"electron .\" --ext js --ignore dist/renderer",
+    "dev:electron": "wait-on http://localhost:3000 dist/main/main.js && NODE_ENV=development nodemon --watch dist/main --ext js --exec \"electron .\"",
     "build": "bun run build:main && bun run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
     "dev:renderer": "vite",
-    "watch:main": "tsc -p tsconfig.main.json --watch",
+    "watch:main": "tsc -p tsconfig.main.json --watch --preserveWatchOutput",
     "watch:renderer": "vite build --watch",
     "electron:dev": "bun run build && electron .",
     "electron:pack": "bun run build && electron-builder",
@@ -18,13 +18,6 @@
     "start": "electron .",
     "generate-icon": "mkdir -p assets/icon.iconset && sips -z 16 16 assets/icon.png --out assets/icon.iconset/icon_16x16.png && sips -z 32 32 assets/icon.png --out assets/icon.iconset/icon_16x16@2x.png && sips -z 32 32 assets/icon.png --out assets/icon.iconset/icon_32x32.png && sips -z 64 64 assets/icon.png --out assets/icon.iconset/icon_32x32@2x.png && sips -z 128 128 assets/icon.png --out assets/icon.iconset/icon_128x128.png && sips -z 256 256 assets/icon.png --out assets/icon.iconset/icon_128x128@2x.png && sips -z 256 256 assets/icon.png --out assets/icon.iconset/icon_256x256.png && sips -z 512 512 assets/icon.png --out assets/icon.iconset/icon_256x256@2x.png && sips -z 512 512 assets/icon.png --out assets/icon.iconset/icon_512x512.png && sips -z 1024 1024 assets/icon.png --out assets/icon.iconset/icon_512x512@2x.png && iconutil -c icns assets/icon.iconset -o assets/icon.icns && rm -rf assets/icon.iconset"
   },
-  "keywords": [
-    "electron",
-    "vlog",
-    "screen-recording",
-    "typescript",
-    "react"
-  ],
   "author": "Felipe",
   "license": "MIT",
   "prettier": {

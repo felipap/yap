@@ -248,6 +248,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
       if (code === 0) {
         try {
           const data = JSON.parse(output)
+          console.log('data', data)
           const duration = parseFloat(data.format.duration)
           resolve(duration)
         } catch (error) {

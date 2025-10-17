@@ -1,42 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import {
+  RecordedFile,
+  TranscriptionResult,
+  TranscriptionState,
+} from '../shared-types'
 
 export interface ScreenSource {
   id: string
   name: string
   thumbnail: string
-}
-
-export interface TranscriptionSegment {
-  start: number
-  end: number
-  text: string
-}
-
-export interface TranscriptionResult {
-  text: string
-  segments: TranscriptionSegment[]
-  language?: string
-  duration: number
-}
-
-export interface TranscriptionState {
-  status: 'idle' | 'transcribing' | 'completed' | 'error'
-  progress?: number
-  error?: string
-  result?: TranscriptionResult
-  startTime?: number
-}
-
-export interface RecordedFile {
-  id: string
-  name: string
-  path: string
-  size: number
-  created: Date
-  modified: Date
-  thumbnailPath?: string
-  transcription?: TranscriptionResult
-  summary?: string
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -74,6 +46,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getVideoDuration: (vlogId: string): Promise<number> =>
     ipcRenderer.invoke('get-video-duration', vlogId),
+
+  loadVideoDuration: (vlogId: string): Promise<number> =>
+    ipcRenderer.invoke('loadVideoDuration', vlogId),
 
   getTranscriptionState: (vlogId: string): Promise<TranscriptionState> =>
     ipcRenderer.invoke('get-transcription-state', vlogId),
@@ -121,11 +96,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Transcription progress events
-  onTranscriptionProgressUpdated: (callback: (vlogId: string, progress: number) => void) => {
-    ipcRenderer.on('transcription-progress-updated', (_, vlogId, progress) => callback(vlogId, progress))
+  onTranscriptionProgressUpdated: (
+    callback: (vlogId: string, progress: number) => void,
+  ) => {
+    ipcRenderer.on('transcription-progress-updated', (_, vlogId, progress) =>
+      callback(vlogId, progress),
+    )
   },
 
-  removeTranscriptionProgressListener: (callback: (vlogId: string, progress: number) => void) => {
+  removeTranscriptionProgressListener: (
+    callback: (vlogId: string, progress: number) => void,
+  ) => {
     ipcRenderer.removeAllListeners('transcription-progress-updated')
   },
 
@@ -139,8 +120,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   installUpdate: (): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('install-update'),
 
-  getAppVersion: (): Promise<string> =>
-    ipcRenderer.invoke('get-app-version'),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
 
   // Auto-updater event listeners
   onUpdateAvailable: (callback: (info: any) => void) => {
@@ -178,6 +158,7 @@ declare global {
       transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
       getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
       getVideoDuration: (vlogId: string) => Promise<number>
+      loadVideoDuration: (vlogId: string) => Promise<number>
       getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
       getAllTranscriptionStates: () => Promise<
         Record<string, TranscriptionState>

@@ -17,6 +17,7 @@ export interface Vlog {
   summary?: string
   lastPosition?: number
   lastPositionTimestamp?: string
+  duration?: number // Cached video duration in seconds
 }
 
 export interface UserProfile {
@@ -93,6 +94,9 @@ const schema: Schema<AppSettings> = {
           summary: { type: 'string' },
           lastPosition: { type: 'number' },
           lastPositionTimestamp: { type: 'string' },
+          // Cached video duration in seconds. Optional because it depends on a
+          // heavy operation on the file, and we want the option to not do it.
+          duration: { type: 'number' },
         },
         required: ['id', 'name', 'path', 'timestamp'],
       },

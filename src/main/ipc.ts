@@ -74,6 +74,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
               created: new Date(vlog.timestamp), // Use stored timestamp
               modified: stats.mtime,
               thumbnailPath: `vlog-thumbnail://${id}.jpg`,
+              duration: vlog.duration, // Use cached duration if available
               summary: vlog.summary,
               transcription: vlog.transcription?.result || undefined,
             }
@@ -311,6 +312,40 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       return await getVideoDuration(filePath)
     } catch (error) {
       console.error('Error getting video duration:', error)
+      throw error
+    }
+  })
+
+  // Load and cache video duration on demand (performance optimization)
+  // This avoids calculating duration for all videos on load, which would be very slow
+  // Duration is only calculated when the user actually opens/selects a video
+  ipcMain.handle('loadVideoDuration', async (_, vlogId: string) => {
+    try {
+      const vlog = getVlog(vlogId)
+      if (!vlog) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      // Return cached duration if available
+      if (vlog.duration !== undefined) {
+        return vlog.duration
+      }
+
+      // Calculate and cache duration
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`File path not found for vlog ${vlogId}`)
+      }
+
+      const duration = await getVideoDuration(filePath)
+      console.log('duration', duration)
+
+      // Cache the duration in the store
+      updateVlog(vlogId, { duration })
+
+      return duration
+    } catch (error) {
+      console.error('Error loading video duration:', error)
       throw error
     }
   })
@@ -578,7 +613,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       if (process.env.NODE_ENV === 'development') {
         return { available: false, message: 'Updates disabled in development' }
       }
-      
+
       const result = await autoUpdater.checkForUpdates()
       return { available: !!result, message: 'Update check completed' }
     } catch (error) {
@@ -592,7 +627,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       if (process.env.NODE_ENV === 'development') {
         throw new Error('Updates disabled in development')
       }
-      
+
       autoUpdater.downloadUpdate()
       return { success: true, message: 'Download started' }
     } catch (error) {
@@ -606,7 +641,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       if (process.env.NODE_ENV === 'development') {
         throw new Error('Updates disabled in development')
       }
-      
+
       autoUpdater.quitAndInstall()
       return { success: true, message: 'Installing update...' }
     } catch (error) {

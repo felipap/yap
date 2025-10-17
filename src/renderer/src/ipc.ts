@@ -108,6 +108,10 @@ export async function getVideoDuration(vlogId: string): Promise<number> {
   return window.electronAPI.getVideoDuration(vlogId)
 }
 
+export async function loadVideoDuration(vlogId: string): Promise<number> {
+  return window.electronAPI.loadVideoDuration(vlogId)
+}
+
 export async function getTranscriptionState(
   vlogId: string,
 ): Promise<TranscriptionState> {
