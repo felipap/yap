@@ -4,8 +4,8 @@ permissions:
 
 on:
   push:
-    tags:
-      - '*.*.*' # Only trigger on version tags like 1.0.0
+    # tags:
+    #   - '*.*.*' # Only trigger on version tags like 1.0.0
 
 jobs:
   release:
