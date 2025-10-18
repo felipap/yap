@@ -146,6 +146,9 @@ export type SharedIpcMethods = {
   downloadUpdate: () => Promise<{ success: boolean; message: string }>
   installUpdate: () => Promise<{ success: boolean; message: string }>
   getAppVersion: () => Promise<string>
+  openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
+  getGeminiApiKey: () => Promise<string>
+  setGeminiApiKey: (apiKey: string) => Promise<boolean>
   onUpdateAvailable: (callback: (info: any) => void) => void
   onDownloadProgress: (callback: (progress: any) => void) => void
   onUpdateDownloaded: (callback: (info: any) => void) => void

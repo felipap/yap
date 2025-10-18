@@ -7,10 +7,7 @@ import { homedir } from 'os'
 import { join } from 'path'
 import { store } from '../store'
 
-const OPENAI_API_KEY = store.get('openaiApiKey') || ''
-if (!OPENAI_API_KEY) {
-  throw new Error('!OPENAI_API_KEY')
-}
+const OPENAI_API_KEY = store.get('openaiApiKey') || null
 
 export interface TranscriptionSegment {
   start: number
@@ -133,6 +130,10 @@ export async function transcribeAudio(
   speedUp: boolean = false,
   onProgress?: (progress: number) => void,
 ): Promise<TranscriptionResult> {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not set')
+  }
+
   const openai = new OpenAI({
     apiKey: OPENAI_API_KEY,
   })

@@ -17,6 +17,7 @@ import {
   store,
   updateVlog,
 } from './store'
+import { createSettingsWindow } from './window'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -662,6 +663,37 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       return app.getVersion()
     } catch (error) {
       console.error('Error getting app version:', error)
+      throw error
+    }
+  })
+
+  // Settings window handlers
+  ipcMain.handle('open-settings-window', async () => {
+    try {
+      const settingsWindow = createSettingsWindow()
+      return { success: true, windowId: settingsWindow.id }
+    } catch (error) {
+      console.error('Error opening settings window:', error)
+      throw error
+    }
+  })
+
+  // Gemini API key handlers
+  ipcMain.handle('get-gemini-api-key', async () => {
+    try {
+      return store.get('geminiApiKey') || ''
+    } catch (error) {
+      console.error('Error getting Gemini API key:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('set-gemini-api-key', async (_, apiKey: string) => {
+    try {
+      store.set('geminiApiKey', apiKey)
+      return true
+    } catch (error) {
+      console.error('Error setting Gemini API key:', error)
       throw error
     }
   })

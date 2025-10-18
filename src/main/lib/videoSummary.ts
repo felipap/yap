@@ -1,10 +1,7 @@
 import { UserProfile } from '../../shared-types'
 import { store } from '../store'
 
-const GEMINI_API_KEY = store.get('geminiApiKey') || ''
-if (!GEMINI_API_KEY) {
-  throw new Error('Gemini API key is not set')
-}
+const GEMINI_API_KEY = store.get('geminiApiKey') || null
 
 // Gemini API response types
 interface GeminiError {
@@ -29,6 +26,10 @@ export async function generateVideoSummary(
   vlogId: string,
   transcription: string,
 ): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key is not set')
+  }
+
   // Get user profile for personalized context
   const userProfile: UserProfile = store.get('userProfile') || {
     name: 'Felipe',

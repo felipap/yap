@@ -183,3 +183,19 @@ export function removeVlogUpdatedListener() {
     window.electronAPI.removeVlogUpdatedListener()
   }
 }
+
+// Settings functions
+export async function openSettingsWindow(): Promise<{
+  success: boolean
+  windowId: number
+}> {
+  return window.electronAPI.openSettingsWindow()
+}
+
+export async function getGeminiApiKey(): Promise<string> {
+  return window.electronAPI.getGeminiApiKey()
+}
+
+export async function setGeminiApiKey(apiKey: string): Promise<boolean> {
+  return window.electronAPI.setGeminiApiKey(apiKey)
+}

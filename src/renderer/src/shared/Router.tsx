@@ -1,8 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-type Route =
-  | { name: 'library' }
-  | { name: 'record' }
+type Route = { name: 'library' } | { name: 'record' }
 
 interface RouterContextType {
   currentRoute: Route
@@ -17,7 +15,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<Route[]>([{ name: 'library' }])
 
   const navigate = (route: Route) => {
-    setHistory(prev => [...prev, route])
+    setHistory((prev) => [...prev, route])
     setCurrentRoute(route)
   }
 
@@ -43,4 +41,3 @@ export function useRouter() {
   }
   return context
 }
-

@@ -5,6 +5,7 @@ import { store } from './store'
 import { setupIpcHandlers } from './ipc'
 
 let mainWindow: BrowserWindow
+let settingsWindow: BrowserWindow | null = null
 
 export function createWindow(): BrowserWindow {
   const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
@@ -100,4 +101,73 @@ function loadApp(window: BrowserWindow): void {
 
 export function getMainWindow(): BrowserWindow | undefined {
   return mainWindow
+}
+
+export function createSettingsWindow(): BrowserWindow {
+  // Don't create multiple settings windows
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.focus()
+    return settingsWindow
+  }
+
+  const settingsWindowOptions: Electron.BrowserWindowConstructorOptions = {
+    width: 500,
+    height: 400,
+    minWidth: 400,
+    minHeight: 300,
+    center: true,
+    resizable: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: join(__dirname, 'preload.js'),
+    },
+    titleBarStyle: 'hiddenInset',
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    parent: mainWindow,
+    modal: false,
+  }
+
+  // Try multiple possible icon paths for both dev and production
+  const iconPath = findIconPath()
+  if (iconPath) {
+    settingsWindowOptions.icon = iconPath
+  }
+
+  settingsWindow = new BrowserWindow(settingsWindowOptions)
+
+  if (iconPath) {
+    settingsWindow.setIcon(iconPath)
+  }
+
+  // Load the settings page
+  loadSettingsApp(settingsWindow)
+
+  // Clean up reference when window is closed
+  settingsWindow.on('closed', () => {
+    settingsWindow = null
+  })
+
+  return settingsWindow
+}
+
+export function getSettingsWindow(): BrowserWindow | null {
+  return settingsWindow
+}
+
+function loadSettingsApp(window: BrowserWindow): void {
+  if (process.env.NODE_ENV === 'development') {
+    window.loadURL('http://localhost:3001')
+  } else {
+    // In production, load from the app.asar bundle
+    const settingsPath = join(
+      __dirname,
+      '..',
+      'dist',
+      'renderer-settings',
+      'index.html',
+    )
+    window.loadFile(settingsPath)
+  }
 }

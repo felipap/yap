@@ -146,6 +146,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
 
+  // Settings functions
+  openSettingsWindow: (): Promise<{ success: boolean; windowId: number }> =>
+    ipcRenderer.invoke('open-settings-window'),
+
+  getGeminiApiKey: (): Promise<string> =>
+    ipcRenderer.invoke('get-gemini-api-key'),
+
+  setGeminiApiKey: (apiKey: string): Promise<boolean> =>
+    ipcRenderer.invoke('set-gemini-api-key', apiKey),
+
   // Auto-updater event listeners
   onUpdateAvailable: (callback: (info: any) => void) => {
     ipcRenderer.on('update-available', (_, info) => callback(info))

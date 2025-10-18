@@ -68,7 +68,7 @@ const schema: Schema<State> = {
 
 export const store = new Store<State>({
   schema,
-  name: 'vlog-settings',
+  name: 'data',
 })
 
 // Vlog management functions

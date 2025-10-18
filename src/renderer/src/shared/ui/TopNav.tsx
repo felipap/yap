@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
-import { Library, Video, Volume2, VolumeX } from 'lucide-react'
+import { Library, Video, Volume2, VolumeX, Settings } from 'lucide-react'
 import { usePlaybackPreferences } from '../PlaybackPreferencesProvider'
+import { openSettingsWindow } from '../../ipc'
 
 interface TopNavProps {
   currentTab: 'library' | 'record'
@@ -19,6 +20,9 @@ function useTabShortcuts() {
       } else if (e.metaKey && e.key === 'R') {
         e.preventDefault()
         router.navigate({ name: 'record' })
+      } else if (e.metaKey && e.key === ',') {
+        e.preventDefault()
+        openSettingsWindow()
       }
     }
 
@@ -55,6 +59,15 @@ export function TopNav({ currentTab }: TopNavProps) {
             <Video className="w-4 h-4" />
             Record
           </TabButton>
+        </div>
+        <div className="flex items-center gap-2 pr-4">
+          <button
+            className="no-drag-region p-2 text-secondary hover:text-contrast hover:bg-two rounded-md transition-colors"
+            onClick={openSettingsWindow}
+            title="Settings (⌘,)"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
