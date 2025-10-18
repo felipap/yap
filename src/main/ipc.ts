@@ -17,7 +17,7 @@ import {
   store,
   updateVlog,
 } from './store'
-import { createSettingsWindow } from './window'
+import { createSettingsWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 

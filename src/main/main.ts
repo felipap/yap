@@ -1,15 +1,13 @@
 import 'source-map-support/register'
-import { app, BrowserWindow, dialog } from 'electron'
+
+import { app, BrowserWindow } from 'electron'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { ensureCacheDir } from './lib/thumbnails'
-import { createWindow } from './window'
 import { setupAutoUpdater } from './updater'
-import assert from 'assert'
+import { createWindow } from './windows'
 
-// Register the custom protocols
 registerProtocols()
 
-// Configure auto-updater
 setupAutoUpdater()
 
 app.whenReady().then(async () => {

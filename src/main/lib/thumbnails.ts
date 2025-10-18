@@ -49,7 +49,15 @@ export async function generateThumbnail(
       )
       return thumbnailPath
     } catch (ffmpegError) {
-      console.log('ffmpeg not available, trying alternative method')
+      if (
+        ffmpegError instanceof Error &&
+        'stderr' in ffmpegError &&
+        (ffmpegError.stderr as string).includes('command not found')
+      ) {
+        console.log('ffmpeg not available, trying alternative method')
+      } else {
+        console.log('UNEXPECTED ERROR:', ffmpegError)
+      }
     }
 
     // Fallback: try to use system's built-in tools

@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { getMainWindow } from './window'
+import { getMainWindow } from './windows'
 
 export function setupAutoUpdater(): void {
   // Only check for updates in production
