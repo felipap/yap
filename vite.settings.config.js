@@ -15,9 +15,9 @@ export default defineConfig({
     sourcemap: true,
   },
   server: {
-    port: 3001,
+    port: 4001,
     hmr: {
-      port: 3001,
+      port: 4001,
       host: 'localhost',
     },
     cors: true,

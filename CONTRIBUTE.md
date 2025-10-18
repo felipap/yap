@@ -47,7 +47,7 @@ Vlogger is a desktop app for recording and managing your personal video logs. Re
 
 This will start:
 
-- Vite dev server on `http://localhost:3000`
+- Vite dev server on `http://localhost:4000`
 - TypeScript compiler in watch mode for main process
 - Electron app with hot reload
 
@@ -214,7 +214,7 @@ bun test
 
 ### Development Issues
 
-- Make sure the Vite dev server is running on port 3000
+- Make sure the Vite dev server is running on port 4000
 - Check that TypeScript compilation is working
 - Verify Electron can access the renderer process
 

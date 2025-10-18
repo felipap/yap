@@ -21,7 +21,7 @@
     "declaration": false
   },
   "include": [
-    "src/main/**/*"
+    "main/**/*"
   ],
   "exclude": [
     "node_modules",

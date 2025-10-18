@@ -8,6 +8,8 @@ vlogger.cer
 vlogger.p12
 vlogger.certSigningRequest
 
+*.tgz
+
 # Build outputs
 dist/
 dist-electron/
