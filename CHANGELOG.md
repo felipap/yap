@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/felipap/vlogger/compare/v1.0.12...v1.1.0) (2025-10-18)
+
+
+### Features
+
+* wip: settings window ([b7200cc](https://github.com/felipap/vlogger/commit/b7200cc8998b4e080648458940fc03e3b42627ab))
+
 ### [1.0.12](https://github.com/felipap/vlogger/compare/v1.0.10...v1.0.12) (2025-10-17)
 
 ### [1.0.11](https://github.com/felipap/vlogger/compare/v1.0.10...v1.0.11) (2025-10-17)

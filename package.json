@@ -1,11 +1,11 @@
 {
   "name": "vlogger",
-  "version": "1.0.12",
+  "version": "1.1.0",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer:main\" \"bun run dev:renderer:settings\" \"bun run dev:electron\"",
-    "dev:electron": "wait-on http://localhost:3000 dist/main/main.js && NODE_ENV=development nodemon --watch dist/main --ext js --exec \"electron .\"",
+    "dev:electron": "wait-on http://localhost:4000 dist/main/main.js && NODE_ENV=development nodemon --watch dist/main --ext js --exec \"electron .\"",
     "build": "bun run build:main && bun run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build --config vite.main.config.js && vite build --config vite.settings.config.js",
