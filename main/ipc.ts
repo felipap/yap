@@ -9,6 +9,7 @@ import { extractDateFromTitle } from './ai/date-from-title'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { generateVideoSummary } from './lib/videoSummary'
+import { VideoConverter } from './lib/videoConverter'
 import {
   deleteVlog,
   getAllVlogs,
@@ -694,6 +695,75 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       return true
     } catch (error) {
       console.error('Error setting Gemini API key:', error)
+      throw error
+    }
+  })
+
+  // MP4 conversion handler
+  ipcMain.handle('convert-to-mp4', async (_, vlogId: string) => {
+    try {
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      // Check if file is webm
+      if (!filePath.toLowerCase().endsWith('.webm')) {
+        throw new Error('Only WebM files can be converted to MP4')
+      }
+
+      // Create output path with .mp4 extension
+      const outputPath = filePath.replace(/\.webm$/i, '.mp4')
+
+      // Check if output file already exists
+      try {
+        await access(outputPath)
+        throw new Error('MP4 file already exists')
+      } catch (err: any) {
+        // File doesn't exist, which is what we want
+        if (err.code !== 'ENOENT') {
+          throw err
+        }
+      }
+
+      // Run ffmpeg conversion using hardware acceleration on macOS
+      console.log('Converting video to MP4:', filePath)
+      await VideoConverter.convertToMP4(filePath, outputPath, (progress) => {
+        // Send progress updates to renderer
+        mainWindow?.webContents.send('conversion-progress', vlogId, progress)
+      })
+
+      // Create a new vlog entry for the converted file
+      const stats = await stat(outputPath)
+      const fileName =
+        outputPath.split('/').pop() || outputPath.split('\\').pop() || 'unknown'
+      const id = generateVlogId(outputPath)
+
+      // Get the original vlog's timestamp
+      const originalVlog = getVlog(vlogId)
+      const timestamp = originalVlog?.timestamp || new Date().toISOString()
+
+      // Store the mapping
+      vlogIdToPath.set(id, outputPath)
+
+      // Create vlog entry with the same timestamp as original
+      const vlog: Vlog = {
+        id,
+        name: fileName,
+        path: outputPath,
+        timestamp: timestamp,
+      }
+      setVlog(vlog)
+
+      debug(`Converted video to MP4: ${outputPath}`)
+      return {
+        success: true,
+        message: `Successfully converted to MP4`,
+        newVlogId: id,
+        outputPath: outputPath,
+      }
+    } catch (error) {
+      console.error('Error converting to MP4:', error)
       throw error
     }
   })

@@ -199,3 +199,13 @@ export async function getGeminiApiKey(): Promise<string> {
 export async function setGeminiApiKey(apiKey: string): Promise<boolean> {
   return window.electronAPI.setGeminiApiKey(apiKey)
 }
+
+// MP4 conversion
+export async function convertToMp4(vlogId: string): Promise<{
+  success: boolean
+  message: string
+  newVlogId: string
+  outputPath: string
+}> {
+  return window.electronAPI.convertToMp4(vlogId)
+}

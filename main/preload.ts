@@ -174,6 +174,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('download-progress')
     ipcRenderer.removeAllListeners('update-downloaded')
   },
+
+  // MP4 conversion
+  convertToMp4: (
+    vlogId: string,
+  ): Promise<{
+    success: boolean
+    message: string
+    newVlogId: string
+    outputPath: string
+  }> => ipcRenderer.invoke('convert-to-mp4', vlogId),
+
+  onConversionProgress: (
+    callback: (vlogId: string, progress: number) => void,
+  ) => {
+    ipcRenderer.on('conversion-progress', (_, vlogId, progress) =>
+      callback(vlogId, progress),
+    )
+  },
+
+  removeConversionProgressListener: () => {
+    ipcRenderer.removeAllListeners('conversion-progress')
+  },
 } satisfies ExposedElectronAPI)
 
 declare global {

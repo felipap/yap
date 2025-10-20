@@ -46,7 +46,7 @@ export async function extractAudioFromVideo(
   const hash = createHash('md5')
     .update(videoPath + (speedUp ? '-2x' : ''))
     .digest('hex')
-  const audioPath = join(tempDir, `${hash}.wav`)
+  const audioPath = join(tempDir, `${hash}.mp3`)
 
   // Check if audio already exists
   try {
@@ -62,11 +62,13 @@ export async function extractAudioFromVideo(
       videoPath,
       '-vn', // No video
       '-acodec',
-      'pcm_s16le', // 16-bit PCM
+      'libmp3lame', // MP3 codec for better compression
       '-ar',
       '16000', // 16kHz sample rate (good for speech)
       '-ac',
       '1', // Mono
+      '-b:a',
+      '32k', // 32kbps bitrate (sufficient for speech)
     ]
 
     // Add speed-up filter if requested
@@ -125,6 +127,117 @@ export async function extractAudioFromVideo(
   })
 }
 
+async function splitAudioIntoChunks(
+  audioPath: string,
+  maxSizeMB: number = 24, // Leave some margin below 25MB limit
+): Promise<string[]> {
+  const { stat } = await import('fs/promises')
+  const stats = await stat(audioPath)
+  const fileSizeMB = stats.size / (1024 * 1024)
+
+  // If file is small enough, return as-is
+  if (fileSizeMB <= maxSizeMB) {
+    return [audioPath]
+  }
+
+  // Calculate how many chunks we need
+  const numChunks = Math.ceil(fileSizeMB / maxSizeMB)
+
+  // Get video duration to calculate chunk duration
+  const duration = await getAudioDuration(audioPath)
+  const chunkDuration = Math.ceil(duration / numChunks)
+
+  const tempDir = join(homedir(), 'Documents', 'VlogRecordings', 'temp')
+  await mkdir(tempDir, { recursive: true })
+
+  const hash = createHash('md5')
+    .update(audioPath + Date.now())
+    .digest('hex')
+  const chunks: string[] = []
+
+  // Split the audio into chunks
+  for (let i = 0; i < numChunks; i++) {
+    const startTime = i * chunkDuration
+    const chunkPath = join(tempDir, `${hash}_chunk_${i}.mp3`)
+
+    await new Promise<void>((resolve, reject) => {
+      const args = [
+        '-i',
+        audioPath,
+        '-ss',
+        startTime.toString(),
+        '-t',
+        chunkDuration.toString(),
+        '-c',
+        'copy',
+        '-y',
+        chunkPath,
+      ]
+
+      const ffmpeg = spawn('ffmpeg', args)
+      let errorOutput = ''
+
+      ffmpeg.stderr.on('data', (data) => {
+        errorOutput += data.toString()
+      })
+
+      ffmpeg.on('close', (code) => {
+        if (code === 0) {
+          resolve()
+        } else {
+          reject(new Error(`FFmpeg chunk splitting failed: ${errorOutput}`))
+        }
+      })
+
+      ffmpeg.on('error', (error) => {
+        reject(new Error(`Failed to start FFmpeg: ${error.message}`))
+      })
+    })
+
+    chunks.push(chunkPath)
+  }
+
+  return chunks
+}
+
+async function getAudioDuration(audioPath: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const args = [
+      '-v',
+      'quiet',
+      '-print_format',
+      'json',
+      '-show_format',
+      audioPath,
+    ]
+
+    const child = spawn('ffprobe', args)
+    let output = ''
+
+    child.stdout.on('data', (data) => {
+      output += data.toString()
+    })
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        try {
+          const data = JSON.parse(output)
+          const duration = parseFloat(data?.format?.duration || '0')
+          resolve(duration)
+        } catch {
+          reject(new Error('Failed to parse ffprobe output'))
+        }
+      } else {
+        reject(new Error('ffprobe exited with error'))
+      }
+    })
+
+    child.on('error', (error) => {
+      reject(error)
+    })
+  })
+}
+
 export async function transcribeAudio(
   audioPath: string,
   speedUp: boolean = false,
@@ -139,47 +252,86 @@ export async function transcribeAudio(
   })
 
   try {
-    // Get file size for progress estimation
-    const { stat } = await import('fs/promises')
-    const stats = await stat(audioPath)
-    const fileSizeMB = stats.size / (1024 * 1024)
+    // Split audio into chunks if needed
+    const chunks = await splitAudioIntoChunks(audioPath)
+    const isChunked = chunks.length > 1
 
-    // Estimate processing time (roughly 1 second per MB for Whisper)
-    const estimatedProcessingTime = fileSizeMB * 1000
+    const allSegments: TranscriptionSegment[] = []
+    let fullText = ''
+    let language: string | undefined
+    let currentTimeOffset = 0
 
-    // Start progress simulation
-    let progress = 0
-    const progressInterval = setInterval(() => {
-      progress += Math.random() * 10 // Random progress increment
-      if (progress < 90) {
-        // Don't go above 90% until actual completion
-        onProgress?.(progress)
+    // Process each chunk
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkPath = chunks[i]
+      const chunkProgress = (i / chunks.length) * 100
+
+      // Get file size for progress estimation
+      const { stat } = await import('fs/promises')
+      const stats = await stat(chunkPath)
+      const fileSizeMB = stats.size / (1024 * 1024)
+
+      // Start progress simulation for this chunk
+      let progress = 0
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 10
+        if (progress < 90) {
+          const totalProgress = chunkProgress + progress / chunks.length
+          onProgress?.(totalProgress)
+        }
+      }, 500)
+
+      const transcription = await openai.audio.transcriptions.create({
+        file: createReadStream(chunkPath),
+        model: 'whisper-1',
+        response_format: 'verbose_json',
+        timestamp_granularities: ['segment'],
+      })
+
+      clearInterval(progressInterval)
+
+      // Store language from first chunk
+      if (!language && transcription.language) {
+        language = transcription.language
       }
-    }, 500)
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: createReadStream(audioPath),
-      model: 'whisper-1',
-      response_format: 'verbose_json',
-      timestamp_granularities: ['segment'],
-    })
+      // Append text
+      fullText += (fullText ? ' ' : '') + transcription.text
 
-    // Clear progress interval and set to 100%
-    clearInterval(progressInterval)
+      // Adjust timestamps and append segments
+      const segments =
+        transcription.segments?.map((segment) => ({
+          start:
+            (speedUp ? segment.start * 2 : segment.start) + currentTimeOffset,
+          end: (speedUp ? segment.end * 2 : segment.end) + currentTimeOffset,
+          text: segment.text,
+        })) || []
+
+      allSegments.push(...segments)
+
+      // Update time offset for next chunk
+      if (segments.length > 0) {
+        currentTimeOffset = segments[segments.length - 1].end
+      }
+
+      // Clean up chunk file if it's not the original
+      if (isChunked) {
+        try {
+          await unlink(chunkPath)
+        } catch (error) {
+          console.warn('Failed to delete chunk file:', error)
+        }
+      }
+    }
+
     onProgress?.(100)
 
-    const segments =
-      transcription.segments?.map((segment) => ({
-        start: speedUp ? segment.start * 2 : segment.start, // Adjust timestamps back to real time
-        end: speedUp ? segment.end * 2 : segment.end,
-        text: segment.text,
-      })) || []
-
     return {
-      text: transcription.text,
-      segments,
-      language: transcription.language,
-      duration: segments.length > 0 ? segments[segments.length - 1].end : 0,
+      text: fullText,
+      segments: allSegments,
+      language,
+      duration:
+        allSegments.length > 0 ? allSegments[allSegments.length - 1].end : 0,
     }
   } catch (error) {
     console.error('OpenAI transcription error:', error)

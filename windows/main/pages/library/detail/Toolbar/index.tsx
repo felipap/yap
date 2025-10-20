@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
-import { useVlog } from '../../../../shared/useVlogData'
+import { openFileLocation, untrackVlog } from '../../../../../shared/ipc'
+import { useVlog } from '../../../../../shared/useVlogData'
+import { HeaderButton } from './HeaderButton'
+import { ConvertButton } from './ConvertButton'
 
 interface ToolbarProps {
   vlogId: string
@@ -10,6 +12,8 @@ interface ToolbarProps {
 export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const { vlog } = useVlog(vlogId)
+
+  const isWebm = vlog?.name?.toLowerCase().endsWith('.webm') || false
 
   const handleOpenLocation = async () => {
     try {
@@ -45,29 +49,10 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
       <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
         📁 Show in Finder
       </HeaderButton>
+      {isWebm && <ConvertButton vlogId={vlogId} disabled={isDeleting} />}
       <HeaderButton onClick={handleDelete} disabled={isDeleting}>
         {isDeleting ? '⏳ Removing...' : '🗑️ Remove'}
       </HeaderButton>
     </div>
-  )
-}
-
-function HeaderButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <button
-      className="btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2"
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
   )
 }

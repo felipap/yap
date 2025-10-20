@@ -153,6 +153,16 @@ export type SharedIpcMethods = {
   onDownloadProgress: (callback: (progress: any) => void) => void
   onUpdateDownloaded: (callback: (info: any) => void) => void
   removeUpdateListeners: () => void
+  convertToMp4: (vlogId: string) => Promise<{
+    success: boolean
+    message: string
+    newVlogId: string
+    outputPath: string
+  }>
+  onConversionProgress: (
+    callback: (vlogId: string, progress: number) => void,
+  ) => void
+  removeConversionProgressListener: () => void
 }
 
 export type ExposedElectronAPI = SharedIpcMethods & {
