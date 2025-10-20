@@ -6,8 +6,8 @@ import {
   setRecordingMode as saveRecordingMode,
   setSelectedCameraId as saveSelectedCameraId,
   setSelectedMicrophoneId as saveSelectedMicrophoneId,
-} from '../../../shared/ipc'
-import { useRouter } from '../../shared/Router'
+} from '../../../../shared/ipc'
+import { useRouter } from '../../../../shared/Router'
 import { RecordingMode } from '../../../types'
 import { ScreenRecorder } from '../ScreenRecorder'
 import { VolumeMeter } from '../VolumeMeter'

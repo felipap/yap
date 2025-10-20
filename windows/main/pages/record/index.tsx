@@ -6,11 +6,11 @@ import {
   setRecordingMode as saveRecordingMode,
   setSelectedCameraId as saveSelectedCameraId,
   setSelectedMicrophoneId as saveSelectedMicrophoneId,
-} from '../../shared/ipc'
-import { useRouter } from '../../shared/Router'
+} from '../../../shared/ipc'
+import { useRouter } from '../../../shared/Router'
 import { RecordingMode } from '../../types'
 import { ScreenRecorder } from './ScreenRecorder'
-import { Button } from '../../shared/ui/Button'
+import { Button } from '../../../shared/ui/Button'
 import { VolumeMeter } from './VolumeMeter'
 import { DeviceSelector } from './DeviceSelector'
 import { RecordingModeSelector } from './RecordingModeSelector'

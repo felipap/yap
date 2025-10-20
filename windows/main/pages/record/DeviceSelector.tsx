@@ -1,4 +1,4 @@
-import { Select } from '../../shared/ui/Select'
+import { Select } from '../../../shared/ui/Select'
 import { VolumeMeter } from './VolumeMeter'
 import { Camera, Mic } from 'lucide-react'
 

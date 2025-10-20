@@ -1,4 +1,4 @@
-import { getVlog } from '../../../../ipc'
+import { getVlog } from '../../../../../shared/ipc'
 
 interface TranscribeButtonProps {
   vlogId: string

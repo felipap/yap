@@ -1,4 +1,4 @@
-import { getScreenSources, saveRecording } from '../../shared/ipc'
+import { getScreenSources, saveRecording } from '../../../shared/ipc'
 
 export type RecordingMode = 'screen' | 'camera' | 'both'
 

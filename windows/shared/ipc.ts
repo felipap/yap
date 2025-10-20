@@ -4,7 +4,7 @@ import {
   TranscriptionResult,
   TranscriptionState,
   ImportResult,
-} from './types'
+} from '../main/types'
 
 export interface ScreenSource {
   id: string

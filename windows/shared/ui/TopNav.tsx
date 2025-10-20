@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
 import { Library, Video, Volume2, VolumeX, Settings } from 'lucide-react'
 import { usePlaybackPreferences } from '../PlaybackPreferencesProvider'
-import { openSettingsWindow } from '../../ipc'
+import { openSettingsWindow } from '../ipc'
 
 interface TopNavProps {
   currentTab: 'library' | 'record'

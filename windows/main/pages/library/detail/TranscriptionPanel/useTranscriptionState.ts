@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
-import { getTranscription, transcribeVideo, getVlog } from '../../../../ipc'
+import {
+  getTranscription,
+  transcribeVideo,
+  getVlog,
+} from '../../../../../shared/ipc'
 import { TranscriptionResult } from '../../../../types'
 
-interface UseTranscriptionStateProps {
+interface Args {
   vlogId: string
 }
 
-interface UseTranscriptionStateReturn {
+interface Return {
   transcription: TranscriptionResult | null
   isTranscribing: boolean
   transcriptionError: string | null
@@ -18,9 +22,7 @@ interface UseTranscriptionStateReturn {
   refreshTranscription: () => Promise<void>
 }
 
-export function useTranscriptionState({
-  vlogId,
-}: UseTranscriptionStateProps): UseTranscriptionStateReturn {
+export function useTranscriptionState({ vlogId }: Args): Return {
   const [transcription, setTranscription] =
     useState<TranscriptionResult | null>(null)
   const [isTranscribing, setIsTranscribing] = useState(false)

@@ -10,7 +10,7 @@ import {
   setGlobalVideoMute,
   getGlobalPlaybackSpeed,
   setGlobalPlaybackSpeed,
-} from '../ipc'
+} from './ipc'
 
 interface PlaybackPreferencesContextType {
   // Mute state

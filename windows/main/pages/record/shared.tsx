@@ -1,5 +1,5 @@
 import { Square } from 'lucide-react'
-import { Button } from '../../shared/ui/Button'
+import { Button } from '../../../shared/ui/Button'
 
 interface RecordButtonProps {
   isRecording: boolean
@@ -7,7 +7,11 @@ interface RecordButtonProps {
   onStopRecording: () => void
 }
 
-export function RecordButton({ isRecording, onStartRecording, onStopRecording }: RecordButtonProps) {
+export function RecordButton({
+  isRecording,
+  onStartRecording,
+  onStopRecording,
+}: RecordButtonProps) {
   if (isRecording) {
     return (
       <Button variant="stop" onClick={onStopRecording}>
@@ -28,8 +32,3 @@ export function RecordButton({ isRecording, onStartRecording, onStopRecording }:
     </Button>
   )
 }
-
-
-
-
-
