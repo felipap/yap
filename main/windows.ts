@@ -91,14 +91,7 @@ function loadApp(window: BrowserWindow): void {
     // window.webContents.openDevTools()
   } else {
     // In production, load from the app.asar bundle
-    const rendererPath = join(
-      __dirname,
-      '..',
-      'dist',
-      'windows',
-      'main',
-      'index.html',
-    )
+    const rendererPath = join(__dirname, '..', 'windows', 'main', 'index.html')
     console.log('__dirname:', __dirname)
     console.log('Renderer path:', rendererPath)
     window.loadFile(rendererPath)
@@ -167,7 +160,13 @@ function loadSettingsApp(window: BrowserWindow): void {
     window.loadURL('http://localhost:4001/index.html')
   } else {
     // In production, load from the app.asar bundle
-    const settingsPath = join(__dirname, '..', 'dist', 'settings', 'index.html')
+    const settingsPath = join(
+      __dirname,
+      '..',
+      'windows',
+      'settings',
+      'index.html',
+    )
     window.loadFile(settingsPath)
   }
 }
