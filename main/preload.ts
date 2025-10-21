@@ -185,6 +185,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     outputPath: string
   }> => ipcRenderer.invoke('convert-to-mp4', vlogId),
 
+  getConversionState: (
+    vlogId: string,
+  ): Promise<{
+    isActive: boolean
+    progress: number | null
+  }> => ipcRenderer.invoke('get-conversion-state', vlogId),
+
   onConversionProgress: (
     callback: (vlogId: string, progress: number) => void,
   ) => {

@@ -8,8 +8,8 @@ import { State, UserProfile, Vlog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
-import { generateVideoSummary } from './lib/videoSummary'
 import { VideoConverter } from './lib/videoConverter'
+import { generateVideoSummary } from './lib/videoSummary'
 import {
   deleteVlog,
   getAllVlogs,
@@ -18,6 +18,7 @@ import {
   store,
   updateVlog,
 } from './store'
+import * as ephemeral from './store/ephemeral'
 import { createSettingsWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
@@ -185,30 +186,14 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      // Set transcription state to transcribing
-      const transcriptionState = {
-        status: 'transcribing' as const,
-        startTime: Date.now(),
-        progress: 0,
-      }
-      updateVlog(vlogId, { transcription: transcriptionState })
-
-      // Notify renderer that transcription started
-      mainWindow?.webContents.send(
-        'transcription-status-changed',
-        vlogId,
-        transcriptionState,
-      )
+      // Set ephemeral transcription state
+      ephemeral.setTranscriptionProgress(vlogId, 0)
 
       // Get speed-up setting
       const speedUp = store.get('transcriptionSpeedUp') || false
       const result = await transcribeVideo(filePath, speedUp, (progress) => {
-        // Update progress in store
-        const updatedState = {
-          ...transcriptionState,
-          progress: Math.round(progress),
-        }
-        updateVlog(vlogId, { transcription: updatedState })
+        // Update progress in ephemeral state only
+        ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
 
         // Notify renderer of progress update
         mainWindow?.webContents.send(
@@ -218,20 +203,15 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
         )
       })
 
-      // Update transcription state to completed
+      // Clean up ephemeral state
+      ephemeral.removeTranscription(vlogId)
+
+      // Save only the final result to persistent store
       const completedState = {
         status: 'completed' as const,
         result: result,
-        startTime: transcriptionState.startTime,
       }
       updateVlog(vlogId, { transcription: completedState })
-
-      // Notify renderer that transcription completed
-      mainWindow?.webContents.send(
-        'transcription-status-changed',
-        vlogId,
-        completedState,
-      )
 
       // Automatically generate summary if transcription was successful
       try {
@@ -252,20 +232,15 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     } catch (error) {
       console.error('Error transcribing video:', error)
 
-      // Update transcription state to error
+      // Clean up ephemeral state on error
+      ephemeral.removeTranscription(vlogId)
+
+      // Save error state to persistent store
       const errorState = {
         status: 'error' as const,
         error: error instanceof Error ? error.message : 'Unknown error',
-        startTime: Date.now(),
       }
       updateVlog(vlogId, { transcription: errorState })
-
-      // Notify renderer that transcription failed
-      mainWindow?.webContents.send(
-        'transcription-status-changed',
-        vlogId,
-        errorState,
-      )
 
       throw error
     }
@@ -286,6 +261,16 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
   ipcMain.handle('get-transcription-state', async (_, vlogId: string) => {
     try {
+      // Check ephemeral state first (for active transcriptions)
+      if (ephemeral.isTranscriptionActive(vlogId)) {
+        const progress = ephemeral.getTranscriptionProgress(vlogId)
+        return {
+          status: 'transcribing',
+          progress: progress ?? 0,
+        }
+      }
+
+      // Fall back to persistent state (for completed/error states)
       const vlog = getVlog(vlogId)
       return vlog?.transcription || { status: 'idle' }
     } catch (error) {
@@ -298,11 +283,23 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     try {
       const vlogs = getAllVlogs()
       const states: Record<string, any> = {}
+
+      // Get ephemeral states (active transcriptions)
+      const activeTranscriptions = ephemeral.getAllActiveTranscriptions()
+      for (const [vlogId, state] of Object.entries(activeTranscriptions)) {
+        states[vlogId] = {
+          status: 'transcribing',
+          progress: state.progress,
+        }
+      }
+
+      // Get persistent states (completed/error states)
       for (const [id, vlog] of Object.entries(vlogs)) {
-        if (vlog.transcription) {
+        if (vlog.transcription && !states[id]) {
           states[id] = vlog.transcription
         }
       }
+
       return states
     } catch (error) {
       console.error('Error getting all transcription states:', error)
@@ -728,10 +725,20 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
       // Run ffmpeg conversion using hardware acceleration on macOS
       console.log('Converting video to MP4:', filePath)
+
+      // Mark conversion as active
+      ephemeral.setConversionProgress(vlogId, 0)
+
       await VideoConverter.convertToMP4(filePath, outputPath, (progress) => {
+        console.log(`[IPC] Conversion progress for ${vlogId}: ${progress}%`)
+        // Update ephemeral state
+        ephemeral.setConversionProgress(vlogId, progress)
         // Send progress updates to renderer
         mainWindow?.webContents.send('conversion-progress', vlogId, progress)
       })
+
+      // Remove from active conversions
+      ephemeral.removeConversion(vlogId)
 
       // Create a new vlog entry for the converted file
       const stats = await stat(outputPath)
@@ -764,7 +771,17 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       }
     } catch (error) {
       console.error('Error converting to MP4:', error)
+      // Remove from active conversions on error
+      ephemeral.removeConversion(vlogId)
       throw error
+    }
+  })
+
+  // Get conversion state
+  ipcMain.handle('get-conversion-state', async (_, vlogId: string) => {
+    return {
+      isActive: ephemeral.isConversionActive(vlogId),
+      progress: ephemeral.getConversionProgress(vlogId),
     }
   })
 

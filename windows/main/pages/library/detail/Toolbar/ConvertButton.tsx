@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { convertToMp4 } from '../../../../../shared/ipc'
+import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
 import { useVlog } from '../../../../../shared/useVlogData'
 import { HeaderButton } from './HeaderButton'
 
@@ -13,10 +13,40 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
   const [progress, setProgress] = useState(0)
   const { vlog } = useVlog(vlogId)
 
+  // Check and restore conversion state on mount
+  useEffect(() => {
+    const checkConversionState = async () => {
+      try {
+        const state = await getConversionState(vlogId)
+        if (state.isActive) {
+          setIsConverting(true)
+          setProgress(state.progress ?? 0)
+        }
+      } catch (error) {
+        console.error('Failed to get conversion state:', error)
+      }
+    }
+
+    checkConversionState()
+  }, [vlogId])
+
   useEffect(() => {
     const handleProgress = (updatedVlogId: string, updatedProgress: number) => {
+      console.log(
+        `[ConvertButton] Received progress: vlogId=${updatedVlogId}, progress=${updatedProgress}%`,
+      )
       if (updatedVlogId === vlogId) {
+        console.log(
+          `[ConvertButton] Updating progress for ${vlogId}: ${updatedProgress}%`,
+        )
         setProgress(updatedProgress)
+        // Reset state when conversion completes
+        if (updatedProgress >= 100) {
+          setTimeout(() => {
+            setIsConverting(false)
+            setProgress(0)
+          }, 500) // Small delay to show 100% before resetting
+        }
       }
     }
 
@@ -76,8 +106,3 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
     </HeaderButton>
   )
 }
-
-
-
-
-

@@ -159,6 +159,10 @@ export type SharedIpcMethods = {
     newVlogId: string
     outputPath: string
   }>
+  getConversionState: (vlogId: string) => Promise<{
+    isActive: boolean
+    progress: number | null
+  }>
   onConversionProgress: (
     callback: (vlogId: string, progress: number) => void,
   ) => void

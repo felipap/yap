@@ -1,9 +1,10 @@
+import { spawn } from 'child_process'
 import { protocol } from 'electron'
 import { createReadStream } from 'fs'
 import { readFile, stat } from 'fs/promises'
-import { spawn } from 'child_process'
 import { vlogIdToPath } from './ipc'
 import { debug } from './lib/logger'
+import { generateThumbnail } from './lib/thumbnails'
 import { getVideoDuration } from './lib/transcription'
 
 // Cache for fixed webm files to avoid reprocessing
@@ -247,9 +248,7 @@ export function setupProtocolHandlers() {
       }
 
       // Generate thumbnail lazily if it doesn't exist
-      const { generateThumbnail } = await import('./lib/thumbnails')
       const thumbnailPath = await generateThumbnail(filePath)
-
       if (!thumbnailPath) {
         console.error('Failed to generate thumbnail for:', filePath)
         return new Response('Thumbnail generation failed', { status: 500 })

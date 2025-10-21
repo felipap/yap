@@ -51,10 +51,13 @@ export async function extractAudioFromVideo(
   // Check if audio already exists
   try {
     await access(audioPath)
+    console.log(`Using cached audio file: ${audioPath}`)
     return audioPath
   } catch {
     // Audio doesn't exist, extract it
   }
+
+  console.log(`Extracting audio from video: ${videoPath}`)
 
   return new Promise((resolve, reject) => {
     const args = [
@@ -112,10 +115,32 @@ export async function extractAudioFromVideo(
       }
     })
 
-    ffmpeg.on('close', (code) => {
+    ffmpeg.on('close', async (code) => {
       if (code === 0) {
         onProgress?.(100)
-        resolve(audioPath)
+        // Verify the extracted file exists and has content
+        try {
+          const { stat } = await import('fs/promises')
+          const stats = await stat(audioPath)
+          if (stats.size === 0) {
+            reject(
+              new Error(
+                'Audio extraction created an empty file. The video may not have an audio track.',
+              ),
+            )
+          } else {
+            console.log(
+              `Audio extracted successfully: ${audioPath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`,
+            )
+            resolve(audioPath)
+          }
+        } catch (statError) {
+          reject(
+            new Error(
+              `Audio extraction completed but file verification failed: ${statError}`,
+            ),
+          )
+        }
       } else {
         reject(new Error(`FFmpeg audio extraction failed: ${errorOutput}`))
       }
@@ -168,8 +193,14 @@ async function splitAudioIntoChunks(
         startTime.toString(),
         '-t',
         chunkDuration.toString(),
-        '-c',
-        'copy',
+        '-acodec',
+        'libmp3lame',
+        '-ar',
+        '16000',
+        '-ac',
+        '1',
+        '-b:a',
+        '32k',
         '-y',
         chunkPath,
       ]
@@ -252,6 +283,15 @@ export async function transcribeAudio(
   })
 
   try {
+    // Verify the audio file exists and has content
+    const { stat } = await import('fs/promises')
+    const audioStats = await stat(audioPath)
+    if (audioStats.size === 0) {
+      throw new Error(
+        'Extracted audio file is empty. The video may not have an audio track.',
+      )
+    }
+
     // Split audio into chunks if needed
     const chunks = await splitAudioIntoChunks(audioPath)
     const isChunked = chunks.length > 1
@@ -267,9 +307,17 @@ export async function transcribeAudio(
       const chunkProgress = (i / chunks.length) * 100
 
       // Get file size for progress estimation
-      const { stat } = await import('fs/promises')
       const stats = await stat(chunkPath)
       const fileSizeMB = stats.size / (1024 * 1024)
+
+      // Verify chunk has content
+      if (stats.size === 0) {
+        throw new Error(`Audio chunk ${i} is empty`)
+      }
+
+      console.log(
+        `Transcribing chunk ${i + 1}/${chunks.length}, size: ${fileSizeMB.toFixed(2)}MB, path: ${chunkPath}`,
+      )
 
       // Start progress simulation for this chunk
       let progress = 0
@@ -281,37 +329,47 @@ export async function transcribeAudio(
         }
       }, 500)
 
-      const transcription = await openai.audio.transcriptions.create({
-        file: createReadStream(chunkPath),
-        model: 'whisper-1',
-        response_format: 'verbose_json',
-        timestamp_granularities: ['segment'],
-      })
+      try {
+        const transcription = await openai.audio.transcriptions.create({
+          file: createReadStream(chunkPath),
+          model: 'whisper-1',
+          response_format: 'verbose_json',
+          timestamp_granularities: ['segment'],
+        })
 
-      clearInterval(progressInterval)
+        clearInterval(progressInterval)
 
-      // Store language from first chunk
-      if (!language && transcription.language) {
-        language = transcription.language
-      }
+        // Store language from first chunk
+        if (!language && transcription.language) {
+          language = transcription.language
+        }
 
-      // Append text
-      fullText += (fullText ? ' ' : '') + transcription.text
+        // Append text
+        fullText += (fullText ? ' ' : '') + transcription.text
 
-      // Adjust timestamps and append segments
-      const segments =
-        transcription.segments?.map((segment) => ({
-          start:
-            (speedUp ? segment.start * 2 : segment.start) + currentTimeOffset,
-          end: (speedUp ? segment.end * 2 : segment.end) + currentTimeOffset,
-          text: segment.text,
-        })) || []
+        // Adjust timestamps and append segments
+        const segments =
+          transcription.segments?.map((segment) => ({
+            start:
+              (speedUp ? segment.start * 2 : segment.start) + currentTimeOffset,
+            end: (speedUp ? segment.end * 2 : segment.end) + currentTimeOffset,
+            text: segment.text,
+          })) || []
 
-      allSegments.push(...segments)
+        allSegments.push(...segments)
 
-      // Update time offset for next chunk
-      if (segments.length > 0) {
-        currentTimeOffset = segments[segments.length - 1].end
+        // Update time offset for next chunk
+        if (segments.length > 0) {
+          currentTimeOffset = segments[segments.length - 1].end
+        }
+      } catch (chunkError) {
+        clearInterval(progressInterval)
+        console.error(`Failed to transcribe chunk ${i}:`, chunkError)
+        throw new Error(
+          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${
+            chunkError instanceof Error ? chunkError.message : 'Unknown error'
+          }`,
+        )
       }
 
       // Clean up chunk file if it's not the original

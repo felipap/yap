@@ -3,6 +3,7 @@ import {
   getTranscription,
   transcribeVideo,
   getVlog,
+  getTranscriptionState,
 } from '../../../../../shared/ipc'
 import { TranscriptionResult } from '../../../../types'
 
@@ -51,6 +52,32 @@ export function useTranscriptionState({ vlogId }: Args): Return {
     }
   }
 
+  // Check and restore transcription state on mount
+  useEffect(() => {
+    const checkTranscriptionState = async () => {
+      try {
+        const state = await getTranscriptionState(vlogId)
+        if (state.status === 'transcribing') {
+          setIsTranscribing(true)
+          setProgress(state.progress ?? 0)
+
+          // Set progress label based on progress range
+          if (state.progress && state.progress <= 50) {
+            setProgressLabel('Extracting audio...')
+          } else if (state.progress) {
+            setProgressLabel('Transcribing with AI...')
+          } else {
+            setProgressLabel('Starting...')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get transcription state:', error)
+      }
+    }
+
+    checkTranscriptionState()
+  }, [vlogId])
+
   // Load transcription on mount and when vlogId changes
   useEffect(() => {
     loadTranscription()
@@ -70,6 +97,16 @@ export function useTranscriptionState({ vlogId }: Args): Return {
           setProgressLabel('Extracting audio...')
         } else {
           setProgressLabel('Transcribing with AI...')
+        }
+
+        // Reset state when transcription completes
+        if (updatedProgress >= 100) {
+          setTimeout(() => {
+            setIsTranscribing(false)
+            setProgress(0)
+            setProgressLabel('')
+            loadTranscription() // Reload to get the completed transcription
+          }, 500) // Small delay to show 100% before resetting
         }
       }
     }

@@ -4,7 +4,14 @@ import {
   TranscriptionResult,
   TranscriptionState,
   ImportResult,
+  SharedIpcMethods,
 } from '../main/types'
+
+declare global {
+  interface Window {
+    electronAPI: SharedIpcMethods
+  }
+}
 
 export interface ScreenSource {
   id: string
@@ -208,4 +215,11 @@ export async function convertToMp4(vlogId: string): Promise<{
   outputPath: string
 }> {
   return window.electronAPI.convertToMp4(vlogId)
+}
+
+export async function getConversionState(vlogId: string): Promise<{
+  isActive: boolean
+  progress: number | null
+}> {
+  return window.electronAPI.getConversionState(vlogId)
 }

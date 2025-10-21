@@ -1,10 +1,64 @@
 import { spawn } from 'child_process'
-import { unlink } from 'fs/promises'
+import { unlink, access } from 'fs/promises'
+import { constants } from 'fs'
 
 export class VideoConverter {
-  private static isFFmpegAvailable(): Promise<boolean> {
+  private static ffmpegPath: string | null = null
+
+  /**
+   * Find the FFmpeg binary path by checking common installation locations
+   */
+  private static async findFFmpegPath(): Promise<string | null> {
+    if (this.ffmpegPath) {
+      return this.ffmpegPath
+    }
+
+    const commonPaths = [
+      '/opt/homebrew/bin/ffmpeg', // Homebrew on Apple Silicon
+      '/usr/local/bin/ffmpeg', // Homebrew on Intel Mac
+      '/usr/bin/ffmpeg', // System installation
+    ]
+
+    for (const path of commonPaths) {
+      try {
+        await access(path, constants.X_OK)
+        this.ffmpegPath = path
+        return path
+      } catch {
+        // Continue to next path
+      }
+    }
+
+    // If not found in common paths, try to use 'which' command
     return new Promise((resolve) => {
-      const ffmpeg = spawn('ffmpeg', ['-version'])
+      const which = spawn('which', ['ffmpeg'])
+      let output = ''
+
+      which.stdout.on('data', (data) => {
+        output += data.toString().trim()
+      })
+
+      which.on('close', (code) => {
+        if (code === 0 && output) {
+          this.ffmpegPath = output
+          resolve(output)
+        } else {
+          resolve(null)
+        }
+      })
+
+      which.on('error', () => resolve(null))
+    })
+  }
+
+  private static async isFFmpegAvailable(): Promise<boolean> {
+    const ffmpegPath = await this.findFFmpegPath()
+    if (!ffmpegPath) {
+      return false
+    }
+
+    return new Promise((resolve) => {
+      const ffmpeg = spawn(ffmpegPath, ['-version'])
       ffmpeg.on('error', () => resolve(false))
       ffmpeg.on('close', (code) => resolve(code === 0))
     })
@@ -14,14 +68,14 @@ export class VideoConverter {
     inputPath: string,
     outputPath: string,
   ): Promise<void> {
-    const isAvailable = await this.isFFmpegAvailable()
+    const ffmpegPath = await this.findFFmpegPath()
 
-    if (!isAvailable) {
+    if (!ffmpegPath) {
       throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
     }
 
     return new Promise((resolve, reject) => {
-      const ffmpeg = spawn('ffmpeg', [
+      const ffmpeg = spawn(ffmpegPath, [
         '-i',
         inputPath,
         '-c:v',
@@ -72,14 +126,14 @@ export class VideoConverter {
     outputPath: string,
     onProgress?: (progress: number) => void,
   ): Promise<void> {
-    const isAvailable = await this.isFFmpegAvailable()
+    const ffmpegPath = await this.findFFmpegPath()
 
-    if (!isAvailable) {
+    if (!ffmpegPath) {
       throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
     }
 
     return new Promise((resolve, reject) => {
-      const ffmpeg = spawn('ffmpeg', [
+      const ffmpeg = spawn(ffmpegPath, [
         '-i',
         inputPath,
         '-c:v',
@@ -96,31 +150,50 @@ export class VideoConverter {
 
       let errorOutput = ''
       let duration = 0
+      let lastReportedProgress = 0
 
       ffmpeg.stdout.on('data', (data) => {
         const output = data.toString()
+        console.log('[FFMPEG STDOUT RAW]:', JSON.stringify(output))
 
-        // Parse duration from ffmpeg output
-        const durationMatch = output.match(
-          /Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})/,
-        )
-        if (durationMatch) {
-          const hours = parseInt(durationMatch[1])
-          const minutes = parseInt(durationMatch[2])
-          const seconds = parseInt(durationMatch[3])
-          duration = hours * 3600 + minutes * 60 + seconds
+        // Parse progress (time processed) from -progress output
+        // Try multiple possible formats
+        let timeMatch = output.match(/out_time_us=(\d+)/)
+        if (!timeMatch) {
+          timeMatch = output.match(/out_time_ms=(\d+)/)
+        }
+        if (!timeMatch) {
+          timeMatch = output.match(/out_time=(\d+)/)
         }
 
-        // Parse progress (time processed)
-        const timeMatch = output.match(/out_time_ms=(\d+)/)
-        if (timeMatch && duration > 0) {
-          const timeProcessed = parseInt(timeMatch[1]) / 1000000 // Convert microseconds to seconds
-          const progress = Math.min(
-            Math.round((timeProcessed / duration) * 100),
-            100,
-          )
-          if (onProgress) {
-            onProgress(progress)
+        if (timeMatch) {
+          console.log('[MATCH FOUND]:', timeMatch[0], 'duration:', duration)
+          if (duration > 0) {
+            // Determine the unit based on which pattern matched
+            let timeProcessed: number
+            if (output.includes('out_time_us=')) {
+              timeProcessed = parseInt(timeMatch[1]) / 1000000 // microseconds to seconds
+            } else if (output.includes('out_time_ms=')) {
+              timeProcessed = parseInt(timeMatch[1]) / 1000000 // still microseconds, just different name
+            } else {
+              timeProcessed = parseInt(timeMatch[1]) / 1000000 // assume microseconds
+            }
+
+            const progress = Math.min(
+              Math.round((timeProcessed / duration) * 100),
+              100,
+            )
+            console.log(
+              `[PROGRESS] ${progress}% (${timeProcessed.toFixed(1)}s / ${duration}s)`,
+            )
+            // Only report progress if it has increased
+            if (onProgress && progress > lastReportedProgress) {
+              lastReportedProgress = progress
+              console.log(`[REPORTING PROGRESS] ${progress}%`)
+              onProgress(progress)
+            }
+          } else {
+            console.log('[PROGRESS WAITING] Duration not yet detected')
           }
         }
       })
@@ -129,7 +202,12 @@ export class VideoConverter {
         const output = data.toString()
         errorOutput += output
 
-        // Also try to parse duration from stderr (ffmpeg outputs info there)
+        // Only log stderr lines that contain Duration or time= to avoid spam
+        if (output.includes('Duration:') || output.includes('time=')) {
+          console.log('[FFMPEG STDERR]:', output.trim())
+        }
+
+        // Parse duration from stderr (ffmpeg outputs metadata here)
         if (duration === 0) {
           const durationMatch = output.match(
             /Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})/,
@@ -139,10 +217,16 @@ export class VideoConverter {
             const minutes = parseInt(durationMatch[2])
             const seconds = parseInt(durationMatch[3])
             duration = hours * 3600 + minutes * 60 + seconds
+            console.log(`[DURATION DETECTED] ${duration} seconds`)
+            // Report 0% progress once we have duration
+            if (onProgress) {
+              console.log('[REPORTING] 0% progress')
+              onProgress(0)
+            }
           }
         }
 
-        // Parse time from stderr as well
+        // Also parse time from stderr as backup (format: time=00:01:23.45)
         const timeMatch = output.match(/time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/)
         if (timeMatch && duration > 0) {
           const hours = parseInt(timeMatch[1])
@@ -153,7 +237,10 @@ export class VideoConverter {
             Math.round((timeProcessed / duration) * 100),
             100,
           )
-          if (onProgress) {
+          // Only report progress if it has increased
+          if (onProgress && progress > lastReportedProgress) {
+            lastReportedProgress = progress
+            console.log(`[REPORTING PROGRESS FROM STDERR] ${progress}%`)
             onProgress(progress)
           }
         }

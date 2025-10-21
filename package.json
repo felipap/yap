@@ -88,6 +88,9 @@
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.plist",
       "notarize": false,
+      "extendInfo": {
+        "NSCameraUseContinuityCameraDeviceType": true
+      },
       "target": [
         {
           "target": "dmg",
