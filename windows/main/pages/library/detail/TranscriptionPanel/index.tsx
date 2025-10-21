@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { VideoRef } from '../Video'
 import { Teleprompter } from './Teleprompter'
@@ -22,12 +23,39 @@ export const TranscriptionPanel = withBoundary(function ({
     transcribe,
   } = useTranscriptionState({ vlogId })
 
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
+
+  const handleCopyTranscript = async () => {
+    if (!transcription) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(transcription.text)
+      setCopyStatus('copied')
+      setTimeout(() => {
+        setCopyStatus('idle')
+      }, 2000)
+    } catch (error) {
+      console.error('Failed to copy transcript:', error)
+    }
+  }
+
   return (
     <div className="bg-two rounded-lg p-4 border w-full">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-contrast m-0">Transcript</h3>
 
         <div className="flex items-center gap-2">
+          {transcription && (
+            <button
+              onClick={handleCopyTranscript}
+              className="btn-secondary text-sm"
+              title="Copy transcript to clipboard"
+            >
+              {copyStatus === 'copied' ? '✓ Copied' : '📋 Copy'}
+            </button>
+          )}
           <TranscribeButton
             vlogId={vlogId}
             useExternal

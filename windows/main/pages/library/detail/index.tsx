@@ -60,10 +60,7 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
         </header>
 
         <div className="gap-4 w-full">
-          <Summary
-            vlog={currentVlog}
-            transcription={currentVlog.summary ? '' : undefined}
-          />
+          <Summary vlog={currentVlog} />
         </div>
 
         <div className="flex flex-col gap-4 w-full">

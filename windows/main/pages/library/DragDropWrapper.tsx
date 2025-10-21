@@ -51,7 +51,12 @@ export function DragDropWrapper({
         for (const file of videoFiles) {
           try {
             console.log(`- Importing: ${file.name}`)
-            const result = await importVideoFile(file.name)
+            // Use file.path to get the full file path (available in Electron)
+            const filePath = (file as any).path
+            if (!filePath) {
+              throw new Error('Could not get file path')
+            }
+            const result = await importVideoFile(filePath)
 
             if (result.success && result.vlog) {
               console.log(`- Successfully imported: ${result.vlog.name}`)

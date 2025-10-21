@@ -8,6 +8,12 @@ exports.default = async function notarizing(context) {
     return
   }
 
+  // Skip notarization if SKIP_NOTARIZE is set
+  if (process.env.SKIP_NOTARIZE === 'true') {
+    console.log('Skipping notarization (SKIP_NOTARIZE=true)')
+    return
+  }
+
   const appName = context.packager.appInfo.productFilename
 
   return await notarize({
