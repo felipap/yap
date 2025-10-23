@@ -8,6 +8,7 @@ vlogger.cer
 vlogger.p12
 vlogger.certSigningRequest
 
+
 *.tgz
 
 # Build outputs

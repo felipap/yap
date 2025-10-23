@@ -1,5 +1,5 @@
 {
-  "name": "vlogger",
+  "name": "yap-camera",
   "version": "1.2.3",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",

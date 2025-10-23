@@ -1,6 +1,6 @@
 <img src="assets/original.png" width="128" alt="Logo" />
 
-# Vlogger
+# Yap
 
 Record and manage your daily life through video logs.
 
@@ -16,7 +16,7 @@ Record and manage your daily life through video logs.
 
 ## About
 
-Vlogger is a desktop app for recording and managing your personal video logs. Record your screen, camera, or both, then organize everything in a smart library with AI-powered transcription and summaries.
+Yap is a desktop app for recording and managing your personal video logs. Record your screen, camera, or both, then organize everything in a smart library with AI-powered transcription and summaries.
 
 ## Download
 
