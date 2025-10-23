@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/felipap/vlogger/compare/v1.2.3...v1.3.0) (2025-10-23)
+
+
+### Features
+
+* persisting progress in conversion and transcription buttons ([dd22e48](https://github.com/felipap/vlogger/commit/dd22e483d67e9deaa7a3780ee85ca20492a58aae))
+
 ### [1.2.3](https://github.com/felipap/vlogger/compare/v1.2.2...v1.2.3) (2025-10-21)
 
 ### [1.2.2](https://github.com/felipap/vlogger/compare/v1.2.1...v1.2.2) (2025-10-21)
