@@ -49,6 +49,7 @@ export default function Page() {
       stopCameraPreview()
       // Cleanup if component unmounts while recording
       if (recorder) {
+        // Force stop recording and save any recorded data
         recorder.stop().catch(console.error)
       }
     }
@@ -63,10 +64,24 @@ export default function Page() {
       setRecordingTime((prev) => prev + 1)
     }, 1000)
 
+    // Add beforeunload handler for crash protection
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (recorder && isRecording) {
+        // Trigger emergency save
+        recorder.emergencySave().catch(console.error)
+        e.preventDefault()
+        e.returnValue = 'Recording in progress. Are you sure you want to leave?'
+        return e.returnValue
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
     return () => {
       clearInterval(interval)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [isRecording])
+  }, [isRecording, recorder])
 
   const loadSettings = async () => {
     try {

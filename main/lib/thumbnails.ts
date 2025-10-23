@@ -3,21 +3,14 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import { join } from 'path'
 import { createHash } from 'crypto'
-import { homedir } from 'os'
+import { getCacheDir } from './config'
 
 const execAsync = promisify(exec)
 
 // Cache directory for thumbnails
-const CACHE_DIR = join(homedir(), '.vlogger', 'thumbnails')
+const CACHE_DIR = join(getCacheDir(), 'thumbnails')
 
-// Ensure cache directory exists
-export async function ensureCacheDir(): Promise<void> {
-  try {
-    await access(CACHE_DIR)
-  } catch {
-    await mkdir(CACHE_DIR, { recursive: true })
-  }
-}
+// Cache directory initialization is handled by the centralized config
 
 // Helper function to generate thumbnail for a video file
 export async function generateThumbnail(
@@ -25,7 +18,7 @@ export async function generateThumbnail(
 ): Promise<string | null> {
   try {
     // Ensure cache directory exists
-    await ensureCacheDir()
+    await mkdir(CACHE_DIR, { recursive: true })
 
     // Generate a unique filename based on video path hash
     const videoHash = createHash('sha256')

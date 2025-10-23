@@ -6,6 +6,7 @@ import { OpenAI } from 'openai'
 import { homedir } from 'os'
 import { join } from 'path'
 import { store } from '../store'
+import { getTempDir } from './config'
 
 const OPENAI_API_KEY = store.get('openaiApiKey') || null
 
@@ -40,7 +41,7 @@ export async function extractAudioFromVideo(
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
   }
 
-  const tempDir = join(homedir(), 'Documents', 'VlogRecordings', 'temp')
+  const tempDir = getTempDir()
   await mkdir(tempDir, { recursive: true })
 
   const hash = createHash('md5')
@@ -172,7 +173,7 @@ async function splitAudioIntoChunks(
   const duration = await getAudioDuration(audioPath)
   const chunkDuration = Math.ceil(duration / numChunks)
 
-  const tempDir = join(homedir(), 'Documents', 'VlogRecordings', 'temp')
+  const tempDir = getTempDir()
   await mkdir(tempDir, { recursive: true })
 
   const hash = createHash('md5')

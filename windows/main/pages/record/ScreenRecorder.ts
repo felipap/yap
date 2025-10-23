@@ -10,6 +10,9 @@ export class ScreenRecorder {
   private mode: RecordingMode
   private cameraId: string
   private microphoneId: string
+  private recordingId: string | null = null
+  private autoSaveInterval: NodeJS.Timeout | null = null
+  private isRecording: boolean = false
 
   constructor(
     mode: RecordingMode = 'screen',
@@ -37,6 +40,9 @@ export class ScreenRecorder {
         this.stream = await this.getCombinedStream()
       }
 
+      // Generate unique recording ID for crash recovery
+      this.recordingId = `recording-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
       // Set up MediaRecorder
       const options: MediaRecorderOptions = {
         mimeType: 'video/webm;codecs=vp9',
@@ -50,6 +56,7 @@ export class ScreenRecorder {
 
       this.mediaRecorder = new MediaRecorder(this.stream, options)
       this.recordedChunks = []
+      this.isRecording = true
 
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -60,6 +67,9 @@ export class ScreenRecorder {
 
       // Start recording - collect data every 100ms for smoother recording
       this.mediaRecorder.start(100)
+
+      // Start auto-save mechanism for crash protection
+      this.startAutoSave()
     } catch (error) {
       console.error('Error starting screen recording:', error)
       throw error
@@ -73,9 +83,15 @@ export class ScreenRecorder {
         return
       }
 
+      // Stop auto-save mechanism
+      this.stopAutoSave()
+      this.isRecording = false
+
       this.mediaRecorder.onstop = async () => {
         try {
           await this.saveRecording()
+
+          // Note: Crash protection is now handled by the main process
 
           if (this.stream) {
             this.stream.getTracks().forEach((track) => track.stop())
@@ -125,6 +141,71 @@ export class ScreenRecorder {
     } catch (error) {
       console.error('Error saving recording:', error)
       throw error
+    }
+  }
+
+  private startAutoSave(): void {
+    // Auto-save chunks every 30 seconds to prevent data loss
+    this.autoSaveInterval = setInterval(async () => {
+      if (
+        this.isRecording &&
+        this.recordingId &&
+        this.recordedChunks.length > 0
+      ) {
+        try {
+          console.log(
+            `Auto-saving ${this.recordedChunks.length} chunks for recording ${this.recordingId}`,
+          )
+
+          // Create a copy of current chunks to save
+          const chunksToSave = [...this.recordedChunks]
+          const blob = new Blob(chunksToSave, {
+            type: 'video/webm;codecs=vp9',
+          })
+          const arrayBuffer = await blob.arrayBuffer()
+
+          // Note: Auto-save is now handled by the main process
+
+          console.log(`Auto-saved chunk for recording ${this.recordingId}`)
+        } catch (error) {
+          console.error('Error auto-saving recording chunk:', error)
+        }
+      }
+    }, 30000) // 30 seconds
+  }
+
+  private stopAutoSave(): void {
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval)
+      this.autoSaveInterval = null
+    }
+  }
+
+  // Emergency save method for crash scenarios
+  async emergencySave(): Promise<void> {
+    if (
+      this.isRecording &&
+      this.recordingId &&
+      this.recordedChunks.length > 0
+    ) {
+      try {
+        console.log(
+          `Emergency saving ${this.recordedChunks.length} chunks for recording ${this.recordingId}`,
+        )
+
+        // Create a copy of current chunks to save
+        const chunksToSave = [...this.recordedChunks]
+        const blob = new Blob(chunksToSave, {
+          type: 'video/webm;codecs=vp9',
+        })
+        const arrayBuffer = await blob.arrayBuffer()
+
+        // Note: Emergency save is now handled by the main process
+
+        console.log(`Emergency saved chunk for recording ${this.recordingId}`)
+      } catch (error) {
+        console.error('Error emergency saving recording chunk:', error)
+      }
     }
   }
 

@@ -30,12 +30,25 @@ export function Item({ data, selected, onClick }: Props) {
                 (data.title || formatDate(data.created) || data.name) as string
               }
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Hide the broken image and show fallback
+                e.currentTarget.style.display = 'none'
+                const fallback = e.currentTarget
+                  .nextElementSibling as HTMLElement
+                if (fallback) {
+                  fallback.style.display = 'flex'
+                }
+              }}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-2xl">🎬</div>
-            </div>
-          )}
+          ) : null}
+
+          {/* Fallback when no thumbnail or thumbnail fails to load */}
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ display: data.thumbnailPath ? 'none' : 'flex' }}
+          >
+            <div className="text-2xl">🎬</div>
+          </div>
 
           {data.duration && (
             <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">

@@ -32,28 +32,28 @@ _Demo coming soon..._
 
 <details>
   <summary>
-    <strong>How does Vlogger work?</strong>
+    <strong>How does Yap work?</strong>
   </summary>
   <p>
-    Vlogger lets you record your screen, camera, or both simultaneously. Your recordings are automatically organized in a library with metadata, and you can generate AI-powered transcriptions and summaries to help you find and understand your content.
+    Yap lets you record your screen, camera, or both simultaneously. Your recordings are automatically organized in a library with metadata, and you can generate AI-powered transcriptions and summaries to help you find and understand your content.
   </p>
 </details>
 
 <details>
   <summary>
-    <strong>What AI services does Vlogger use?</strong>
+    <strong>What AI services does Yap use?</strong>
   </summary>
   <p>
-    Vlogger uses OpenAI Whisper for transcription and Google Gemini for generating video summaries. You'll need to provide your own API keys for these services.
+    Yap uses OpenAI Whisper for transcription and Google Gemini for generating video summaries. You'll need to provide your own API keys for these services.
   </p>
 </details>
 
 <details>
   <summary>
-    <strong>What data does Vlogger collect?</strong>
+    <strong>What data does Yap collect?</strong>
   </summary>
   <p>
-    Vlogger stores your video files locally and only sends data to AI services when you explicitly request transcription or summary generation. Your videos and personal data stay on your machine.
+    Yap stores your video files locally and only sends data to AI services when you explicitly request transcription or summary generation. Your videos and personal data stay on your machine.
   </p>
 </details>
 

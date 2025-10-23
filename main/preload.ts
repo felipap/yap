@@ -46,6 +46,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> =>
     ipcRenderer.invoke('save-recording', filename, buffer),
 
+  // Crash protection methods
+  saveRecordingChunk: (
+    recordingId: string,
+    buffer: ArrayBuffer,
+  ): Promise<string> =>
+    ipcRenderer.invoke('save-recording-chunk', recordingId, buffer),
+
+  getRecordingChunks: (recordingId: string): Promise<string[]> =>
+    ipcRenderer.invoke('get-recording-chunks', recordingId),
+
+  cleanupRecordingChunks: (recordingId: string): Promise<boolean> =>
+    ipcRenderer.invoke('cleanup-recording-chunks', recordingId),
+
+  recoverIncompleteRecordings: (): Promise<string[]> =>
+    ipcRenderer.invoke('recover-incomplete-recordings'),
+
+  // New recording system methods
+  startRecording: (config: any): Promise<string> =>
+    ipcRenderer.invoke('start-recording', config),
+
+  stopRecording: (): Promise<string> => ipcRenderer.invoke('stop-recording'),
+
+  getRecordingState: (): Promise<any> =>
+    ipcRenderer.invoke('get-recording-state'),
+
+  emergencySaveRecording: (): Promise<void> =>
+    ipcRenderer.invoke('emergency-save-recording'),
+
   store: {
     get: <T>(key: string): Promise<T> => ipcRenderer.invoke('store-get', key),
 

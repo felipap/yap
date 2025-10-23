@@ -1,8 +1,8 @@
 import { BrowserWindow, app } from 'electron'
-import { join } from 'path'
 import { existsSync } from 'fs'
-import { store } from './store'
+import { join } from 'path'
 import { setupIpcHandlers } from './ipc'
+import { store } from './store'
 
 let mainWindow: BrowserWindow
 let settingsWindow: BrowserWindow | null = null
@@ -19,6 +19,8 @@ export function createWindow(): BrowserWindow {
     minHeight: 500,
     center: true,
     maxWidth: 900,
+    // Prevent window from stealing focus during development hot reload
+    show: true, // process.env.NODE_ENV !== 'development',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -51,8 +53,25 @@ export function createWindow(): BrowserWindow {
   // Load the app
   loadApp(mainWindow)
 
+  // Show window after content is loaded in development to prevent focus stealing
+  if (process.env.NODE_ENV === 'development') {
+    // mainWindow.once('ready-to-show', () => {
+    //   mainWindow.show()
+    // })
+  }
+
   // Setup IPC handlers after window is created
   setupIpcHandlers(mainWindow)
+
+  // Load recording handler script
+  mainWindow.webContents.once('dom-ready', () => {
+    mainWindow.webContents.executeJavaScript(`
+      // Load the recording handler script
+      const script = document.createElement('script');
+      script.src = './recording-handler.js';
+      document.head.appendChild(script);
+    `)
+  })
 
   return mainWindow
 }
@@ -141,7 +160,19 @@ export function createSettingsWindow(): BrowserWindow {
   }
 
   // Load the settings page
-  loadSettingsApp(settingsWindow)
+  if (process.env.NODE_ENV === 'development') {
+    settingsWindow.loadURL('http://localhost:4001/index.html')
+  } else {
+    // In production, load from the app.asar bundle
+    const settingsPath = join(
+      __dirname,
+      '..',
+      'windows',
+      'settings',
+      'index.html',
+    )
+    settingsWindow.loadFile(settingsPath)
+  }
 
   // Clean up reference when window is closed
   settingsWindow.on('closed', () => {
@@ -153,20 +184,4 @@ export function createSettingsWindow(): BrowserWindow {
 
 export function getSettingsWindow(): BrowserWindow | null {
   return settingsWindow
-}
-
-function loadSettingsApp(window: BrowserWindow): void {
-  if (process.env.NODE_ENV === 'development') {
-    window.loadURL('http://localhost:4001/index.html')
-  } else {
-    // In production, load from the app.asar bundle
-    const settingsPath = join(
-      __dirname,
-      '..',
-      'windows',
-      'settings',
-      'index.html',
-    )
-    window.loadFile(settingsPath)
-  }
 }

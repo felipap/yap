@@ -1,7 +1,15 @@
 import { createHash } from 'crypto'
 import { app, BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { access, mkdir, stat, writeFile } from 'fs/promises'
+import {
+  access,
+  mkdir,
+  readdir,
+  readFile,
+  stat,
+  unlink,
+  writeFile,
+} from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
 import { State, UserProfile, Vlog } from '../shared-types'
@@ -18,10 +26,15 @@ import {
   store,
   updateVlog,
 } from './store'
+import * as recording from './recording/recording'
+import { RecordingConfig } from './recording/types'
+import { getTempDir, getRecordingsDir, FILE_PATTERNS } from './lib/config'
 import * as ephemeral from './store/ephemeral'
 import { createSettingsWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
+
+// Initialize recording system
 
 // Helper function to generate a unique ID for a vlog
 function generateVlogId(filePath: string): string {
@@ -30,6 +43,8 @@ function generateVlogId(filePath: string): string {
 
 // IPC handlers
 export function setupIpcHandlers(mainWindow: BrowserWindow) {
+  // Initialize recording system
+  recording.initializeRecording(mainWindow)
   ipcMain.handle('get-screen-sources', async () => {
     try {
       const sources = await desktopCapturer.getSources({
@@ -52,7 +67,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
   ipcMain.handle('get-recorded-files', async () => {
     try {
-      const documentsPath = join(homedir(), 'Documents', 'VlogRecordings')
+      const documentsPath = getRecordingsDir()
 
       // Create directory if it doesn't exist
       await mkdir(documentsPath, { recursive: true })
@@ -137,7 +152,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
     'save-recording',
     async (_, filename: string, arrayBuffer: ArrayBuffer) => {
       try {
-        const recordingsDir = join(homedir(), 'Documents', 'VlogRecordings')
+        const recordingsDir = getRecordingsDir()
         await mkdir(recordingsDir, { recursive: true })
 
         const filepath = join(recordingsDir, filename)
@@ -164,6 +179,159 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
       }
     },
   )
+
+  // Crash protection handlers
+  ipcMain.handle(
+    'save-recording-chunk',
+    async (_, recordingId: string, arrayBuffer: ArrayBuffer) => {
+      try {
+        const tempDir = getTempDir()
+        await mkdir(tempDir, { recursive: true })
+
+        const chunkPath = join(
+          tempDir,
+          FILE_PATTERNS.RECORDING_CHUNK(recordingId, Date.now()),
+        )
+        const buffer = Buffer.from(arrayBuffer)
+        await writeFile(chunkPath, buffer)
+
+        debug(`Recording chunk saved: ${chunkPath}`)
+        return chunkPath
+      } catch (error) {
+        console.error('Error saving recording chunk:', error)
+        throw error
+      }
+    },
+  )
+
+  ipcMain.handle('get-recording-chunks', async (_, recordingId: string) => {
+    try {
+      const tempDir = getTempDir()
+      const files = await readdir(tempDir)
+      const chunkFiles = files
+        .filter((file) => file.startsWith(`${recordingId}-chunk-`))
+        .map((file) => join(tempDir, file))
+        .sort() // Sort by timestamp
+
+      return chunkFiles
+    } catch (error) {
+      console.error('Error getting recording chunks:', error)
+      return []
+    }
+  })
+
+  ipcMain.handle('cleanup-recording-chunks', async (_, recordingId: string) => {
+    try {
+      const tempDir = getTempDir()
+      const files = await readdir(tempDir)
+      const chunkFiles = files.filter((file) =>
+        file.startsWith(`${recordingId}-chunk-`),
+      )
+
+      for (const file of chunkFiles) {
+        const filePath = join(tempDir, file)
+        await unlink(filePath)
+      }
+
+      debug(
+        `Cleaned up ${chunkFiles.length} chunks for recording ${recordingId}`,
+      )
+      return true
+    } catch (error) {
+      console.error('Error cleaning up recording chunks:', error)
+      return false
+    }
+  })
+
+  ipcMain.handle('recover-incomplete-recordings', async () => {
+    try {
+      const tempDir = getTempDir()
+      const files = await readdir(tempDir)
+      const chunkFiles = files.filter((file) => file.includes('-chunk-'))
+
+      // Group chunks by recording ID
+      const recordings: Record<string, string[]> = {}
+      for (const file of chunkFiles) {
+        const recordingId = file.split('-chunk-')[0]
+        if (!recordings[recordingId]) {
+          recordings[recordingId] = []
+        }
+        recordings[recordingId].push(join(tempDir, file))
+      }
+
+      const recoveredRecordings: string[] = []
+
+      for (const [recordingId, chunkPaths] of Object.entries(recordings)) {
+        try {
+          // Sort chunks by timestamp
+          chunkPaths.sort()
+
+          // Combine all chunks into one file
+          const combinedBuffer = Buffer.concat(
+            await Promise.all(
+              chunkPaths.map(async (path) => {
+                const chunkBuffer = await readFile(path)
+                return chunkBuffer
+              }),
+            ),
+          )
+
+          // Save as recovered recording
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+          const filename = FILE_PATTERNS.RECOVERED_FILE(recordingId, timestamp)
+          const recordingsDir = getRecordingsDir()
+          const filepath = join(recordingsDir, filename)
+
+          await writeFile(filepath, combinedBuffer)
+
+          const id = generateVlogId(filepath)
+          vlogIdToPath.set(id, filepath)
+
+          // Create and save vlog object
+          const vlog: Vlog = {
+            id,
+            name: filename,
+            path: filepath,
+            timestamp: new Date().toISOString(),
+            title: `Recovered Recording (${recordingId})`,
+          }
+          setVlog(vlog)
+
+          // Clean up chunk files
+          for (const chunkPath of chunkPaths) {
+            await unlink(chunkPath)
+          }
+
+          recoveredRecordings.push(id)
+          debug(`Recovered recording: ${filepath}`)
+        } catch (error) {
+          console.error(`Error recovering recording ${recordingId}:`, error)
+        }
+      }
+
+      return recoveredRecordings
+    } catch (error) {
+      console.error('Error recovering incomplete recordings:', error)
+      return []
+    }
+  })
+
+  // Recording system handlers
+  ipcMain.handle('start-recording', async (_, config: RecordingConfig) => {
+    return await recording.startRecording(config)
+  })
+
+  ipcMain.handle('stop-recording', async () => {
+    return await recording.stopRecording()
+  })
+
+  ipcMain.handle('get-recording-state', async () => {
+    return recording.getRecordingState()
+  })
+
+  ipcMain.handle('emergency-save-recording', async () => {
+    return await recording.emergencySave()
+  })
 
   // Store handlers
   ipcMain.handle('store-get', (_, key: string) => {

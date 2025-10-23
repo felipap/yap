@@ -1,3 +1,5 @@
+// ~/Library/Application Support/yap-camera/data.json
+
 import Store, { Schema } from 'electron-store'
 import { State, Vlog } from '../shared-types'
 

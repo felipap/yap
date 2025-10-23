@@ -102,6 +102,17 @@ export type SharedIpcMethods = {
   getState: () => Promise<State>
   untrackVlog: (vlogId: string) => Promise<boolean>
   saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
+  saveRecordingChunk: (
+    recordingId: string,
+    buffer: ArrayBuffer,
+  ) => Promise<string>
+  getRecordingChunks: (recordingId: string) => Promise<string[]>
+  cleanupRecordingChunks: (recordingId: string) => Promise<boolean>
+  recoverIncompleteRecordings: () => Promise<string[]>
+  startRecording: (config: any) => Promise<string>
+  stopRecording: () => Promise<string>
+  getRecordingState: () => Promise<any>
+  emergencySaveRecording: () => Promise<void>
   store: {
     get: <T>(key: string) => Promise<T>
     set: (key: string, value: any) => Promise<void>
