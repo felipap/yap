@@ -21,7 +21,6 @@
     "release": "standard-version",
     "ts-check-windows": "tsc -p windows/tsconfig.json",
     "ts-check-backend": "tsc -p main/tsconfig.json",
-    "release:dry-run": "standard-version --dry-run",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "prettier": {
