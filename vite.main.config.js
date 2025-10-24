@@ -3,17 +3,13 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [
-    react({
-      fastRefresh: true,
-    }),
+    // react({
+    //   fastRefresh: true,
+    // }),
+    react(),
   ],
   root: 'windows/main',
   base: './',
-  build: {
-    outDir: '../../dist/windows/main',
-    emptyOutDir: true,
-    sourcemap: true,
-  },
   server: {
     port: 4000,
     hmr: {
@@ -23,7 +19,15 @@ export default defineConfig({
     cors: true,
     strictPort: true,
   },
-  // optimizeDeps: {
-  //   include: ['react', 'react-dom'],
-  // },
+  optimizeDeps: {
+    // include: ['react', 'react-dom'],
+  },
+  build: {
+    sourcemap: true,
+    outDir: '../../dist/windows/main',
+    emptyOutDir: true,
+    rollupOptions: {
+      external: [],
+    },
+  },
 })
