@@ -1,8 +1,8 @@
-import { BrowserWindow } from 'electron'
+import { mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
-import { mkdir, writeFile, readdir, readFile, unlink } from 'fs/promises'
+import { FILE_PATTERNS, getRecordingsDir, getTempDir } from '../lib/config'
 import { debug } from '../lib/logger'
-import { getTempDir, getRecordingsDir, FILE_PATTERNS } from '../lib/config'
+import { mainWindow } from '../windows'
 import { RecordingConfig, RecordingState } from './types'
 
 // Global recording state - only one recording at a time
@@ -13,13 +13,9 @@ let recordingState: RecordingState = {
   duration: 0,
 }
 
-let mainWindow: BrowserWindow | null = null
-
-export function initializeRecording(window: BrowserWindow) {
-  mainWindow = window
-}
-
 export async function startRecording(config: RecordingConfig): Promise<string> {
+  return 'fuck'
+
   if (recordingState.isRecording) {
     throw new Error('Recording is already in progress')
   }
@@ -218,3 +214,79 @@ function notifyRecordingStateChange(): void {
     mainWindow.webContents.send('recording-state-changed', serializableState)
   }
 }
+
+// Crash recovery function
+// async function recoverIncompleteRecordings() {
+//   try {
+//     const { join } = await import('path')
+//     const { homedir } = await import('os')
+//     const { readdir, readFile, unlink, writeFile, mkdir } = await import(
+//       'fs/promises'
+//     )
+
+//     const tempDir = getTempDir()
+
+//     try {
+//       const files = await readdir(tempDir)
+//       const chunkFiles = files.filter((file) => file.includes('-chunk-'))
+
+//       if (chunkFiles.length === 0) {
+//         debug('No incomplete recordings found')
+//         return
+//       }
+
+//       // Group chunks by recording ID
+//       const recordings: Record<string, string[]> = {}
+//       for (const file of chunkFiles) {
+//         const recordingId = file.split('-chunk-')[0]
+//         if (!recordings[recordingId]) {
+//           recordings[recordingId] = []
+//         }
+//         recordings[recordingId].push(join(tempDir, file))
+//       }
+
+//       const recoveredCount = Object.keys(recordings).length
+//       debug(`Found ${recoveredCount} incomplete recordings to recover`)
+
+//       for (const [recordingId, chunkPaths] of Object.entries(recordings)) {
+//         try {
+//           // Sort chunks by timestamp
+//           chunkPaths.sort()
+
+//           // Combine all chunks into one file
+//           const combinedBuffer = Buffer.concat(
+//             await Promise.all(
+//               chunkPaths.map(async (path) => {
+//                 const chunkBuffer = await readFile(path)
+//                 return chunkBuffer
+//               }),
+//             ),
+//           )
+
+//           // Save as recovered recording
+//           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+//           const filename = `recovered-${recordingId}-${timestamp}.webm`
+//           const recordingsDir = getRecordingsDir()
+//           await mkdir(recordingsDir, { recursive: true })
+//           const filepath = join(recordingsDir, filename)
+
+//           await writeFile(filepath, combinedBuffer)
+
+//           // Clean up chunk files
+//           for (const chunkPath of chunkPaths) {
+//             await unlink(chunkPath)
+//           }
+
+//           debug(`Recovered recording: ${filepath}`)
+//         } catch (error) {
+//           console.error(`Error recovering recording ${recordingId}:`, error)
+//         }
+//       }
+//     } catch (error) {
+//       // Temp directory doesn't exist yet, which is fine
+//       debug('No temp directory found for recovery')
+//     }
+//   } catch (error) {
+//     console.error('Error during crash recovery:', error)
+//   }
+// }

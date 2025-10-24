@@ -10,14 +10,21 @@ import {
   unlink,
   writeFile,
 } from 'fs/promises'
-import { homedir } from 'os'
 import { join } from 'path'
 import { State, UserProfile, Vlog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
+import { FILE_PATTERNS, getRecordingsDir, getTempDir } from './lib/config'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
 import { generateVideoSummary } from './lib/videoSummary'
+import {
+  emergencySave,
+  getRecordingState,
+  startRecording,
+  stopRecording,
+} from './recording'
+import { RecordingConfig } from './recording/types'
 import {
   deleteVlog,
   getAllVlogs,
@@ -26,11 +33,8 @@ import {
   store,
   updateVlog,
 } from './store'
-import * as recording from './recording/recording'
-import { RecordingConfig } from './recording/types'
-import { getTempDir, getRecordingsDir, FILE_PATTERNS } from './lib/config'
 import * as ephemeral from './store/ephemeral'
-import { createSettingsWindow } from './windows'
+import { createSettingsWindow, mainWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -42,7 +46,7 @@ function generateVlogId(filePath: string): string {
 }
 
 // IPC handlers
-export function setupIpcHandlers(mainWindow?: BrowserWindow) {
+export function setupIpcHandlers() {
   ipcMain.handle('get-screen-sources', async () => {
     try {
       const sources = await desktopCapturer.getSources({
@@ -316,19 +320,19 @@ export function setupIpcHandlers(mainWindow?: BrowserWindow) {
 
   // Recording system handlers
   ipcMain.handle('start-recording', async (_, config: RecordingConfig) => {
-    return await recording.startRecording(config)
+    return await startRecording(config)
   })
 
   ipcMain.handle('stop-recording', async () => {
-    return await recording.stopRecording()
+    return await stopRecording()
   })
 
   ipcMain.handle('get-recording-state', async () => {
-    return recording.getRecordingState()
+    return getRecordingState()
   })
 
   ipcMain.handle('emergency-save-recording', async () => {
-    return await recording.emergencySave()
+    return await emergencySave()
   })
 
   // Store handlers
