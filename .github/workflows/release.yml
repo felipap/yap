@@ -57,7 +57,7 @@ jobs:
         # Only create release on nudge-specific version tags
         uses: softprops/action-gh-release@v1
         with:
-          name: 'Vlogger ${{ github.ref_name }}'
+          name: 'Yap ${{ github.ref_name }}'
           files: |
             dist-electron/**/*.dmg
             dist-electron/**/*.app

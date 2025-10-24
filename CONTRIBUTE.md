@@ -1,10 +1,10 @@
-# Contributing to Vlogger
+# Contributing to Yap
 
-Thank you for your interest in contributing to Vlogger! This guide will help you get started with development.
+Thank you for your interest in contributing to Yap! This guide will help you get started with development.
 
-## About Vlogger
+## About Yap
 
-Vlogger is a desktop app for recording and managing your personal video logs. Record your screen, camera, or both, then organize everything in a smart library with AI-powered transcription and summaries.
+Yap is a desktop app for recording and managing your personal video logs. Record your screen, camera, or both, then organize everything in a smart library with AI-powered transcription and summaries.
 
 ## Tech Stack
 
@@ -30,8 +30,8 @@ Vlogger is a desktop app for recording and managing your personal video logs. Re
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/felipap/vlogger.git
-   cd vlogger
+   git clone https://github.com/felipap/yap.git
+   cd yap
    ```
 
 2. **Install dependencies**
@@ -157,19 +157,19 @@ Use commit prefixes: `feat:`, `fix:`, `docs:`, `chore:`, etc.
 
 ### Logs
 
-Vlogger writes logs to:
+Yap writes logs to:
 
-- `~/Library/Logs/Vlogger/main.log`
-- `~/Library/Logs/Vlogger/error.log`
+- `~/Library/Logs/Yap/main.log`
+- `~/Library/Logs/Yap/error.log`
 
-In development, logs are written to `~/Library/Logs/VloggerDev/`.
+In development, logs are written to `~/Library/Logs/YapDev/`.
 
 ### macOS Permissions
 
 If you encounter permission issues on macOS:
 
 ```bash
-sudo tccutil reset All com.felipap.vlogger
+sudo tccutil reset All com.felipap.yap
 ```
 
 ### Development Tools
@@ -220,8 +220,8 @@ bun test
 
 ## Getting Help
 
-- Check existing [GitHub Issues](https://github.com/felipap/vlogger/issues)
-- Start a [Discussion](https://github.com/felipap/vlogger/discussions) for questions
+- Check existing [GitHub Issues](https://github.com/felipap/yap/issues)
+- Start a [Discussion](https://github.com/felipap/yap/discussions) for questions
 - Review the codebase for examples of similar functionality
 
 ## License
@@ -230,4 +230,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Thank you for contributing to Vlogger! 🎥
+Thank you for contributing to Yap! 🎥
