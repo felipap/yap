@@ -9,11 +9,11 @@ import { setupBackgroundRecordingIPC } from './recording/background-recording'
 import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
 import {
-  createMainWindow,
+  createLibraryWindow,
   createRecordingWindow,
   createSettingsWindow,
   getMainWindow,
-  mainWindow,
+  libraryWindow,
 } from './windows'
 import { recoverIncompleteRecordings } from './recording'
 
@@ -58,14 +58,14 @@ async function onInit() {
   setupIpcHandlers()
 
   // Create windows
-  createMainWindow()
-  // createSettingsWindow()
-  // createRecordingWindow()
+  createLibraryWindow()
+  createSettingsWindow()
+  createRecordingWindow()
   createTray()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      mainWindow?.show()
+      libraryWindow?.show()
       // createMainWindow()
     }
   })
@@ -74,18 +74,6 @@ async function onInit() {
 async function quitApp() {
   console.log('Will quit.')
   // onAppClose()
-
-  // if (!app.isPackaged) {
-  //   const { response } = await dialog.showMessageBox({
-  //     type: "question",
-  //     buttons: ["Yes", "No"],
-  //     title: "Confirm",
-  //     message: "Are you sure you want to quit?",
-  //   })
-
-  //   if (response === 1) return // User clicked "No"
-  // }
-
   app.isQuitting = true
   app.quit()
   process.exit(0)
@@ -112,7 +100,7 @@ if (started) {
   app.quit()
 }
 
-app.setAppUserModelId(app.getName())
+// app.setAppUserModelId(app.getName())
 
 // Prevent multiple instances of the app
 const gotTheLock = app.requestSingleInstanceLock()
@@ -122,11 +110,11 @@ if (!gotTheLock) {
 } else {
   app.on('second-instance', (event, commandLine) => {
     // Someone tried to run a second instance, focus our window instead
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore()
+    if (libraryWindow) {
+      if (libraryWindow.isMinimized()) {
+        libraryWindow.restore()
       }
-      mainWindow.focus()
+      libraryWindow.focus()
     }
   })
 }

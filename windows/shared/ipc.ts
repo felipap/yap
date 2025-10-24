@@ -5,7 +5,7 @@ import {
   TranscriptionState,
   ImportResult,
   SharedIpcMethods,
-} from '../main/types'
+} from '../library/types'
 
 declare global {
   interface Window {

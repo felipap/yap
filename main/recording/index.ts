@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { FILE_PATTERNS, getRecordingsDir, getTempDir } from '../lib/config'
 import { debug } from '../lib/logger'
-import { mainWindow } from '../windows'
+import { libraryWindow } from '../windows'
 import { RecordingConfig, RecordingState } from './types'
 
 // Global recording state - only one recording at a time
@@ -33,8 +33,8 @@ export async function startRecording(config: RecordingConfig): Promise<string> {
     }
 
     // Send start recording command to renderer
-    if (mainWindow) {
-      mainWindow.webContents.send('start-recording', {
+    if (libraryWindow) {
+      libraryWindow.webContents.send('start-recording', {
         recordingId,
         config: {
           mode: config.mode,
@@ -62,8 +62,8 @@ export async function stopRecording(): Promise<string> {
 
   try {
     // Send stop recording command to renderer
-    if (mainWindow) {
-      mainWindow.webContents.send('stop-recording', {
+    if (libraryWindow) {
+      libraryWindow.webContents.send('stop-recording', {
         recordingId: recordingState.recordingId,
       })
     }
@@ -97,8 +97,8 @@ export async function emergencySave(): Promise<void> {
       debug(`Emergency saving recording: ${recordingState.recordingId}`)
 
       // Send emergency save command to renderer
-      if (mainWindow) {
-        mainWindow.webContents.send('emergency-save-recording', {
+      if (libraryWindow) {
+        libraryWindow.webContents.send('emergency-save-recording', {
           recordingId: recordingState.recordingId,
         })
       }
@@ -203,7 +203,7 @@ export async function cleanup(): Promise<void> {
 }
 
 function notifyRecordingStateChange(): void {
-  if (mainWindow) {
+  if (libraryWindow) {
     // Ensure we only send serializable data
     const serializableState = {
       isRecording: recordingState.isRecording,
@@ -211,7 +211,7 @@ function notifyRecordingStateChange(): void {
       startTime: recordingState.startTime,
       duration: recordingState.duration,
     }
-    mainWindow.webContents.send('recording-state-changed', serializableState)
+    libraryWindow.webContents.send('recording-state-changed', serializableState)
   }
 }
 

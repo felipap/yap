@@ -6,7 +6,7 @@ import {
   onVlogUpdated,
   removeVlogUpdatedListener,
 } from './ipc'
-import { RecordedFile, State } from '../main/types'
+import { RecordedFile, State } from '../library/types'
 
 export async function setPartialState(state: Partial<State>) {
   return await window.electronAPI.setPartialState(state)

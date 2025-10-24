@@ -1,14 +1,27 @@
+// The camera window is only used for capturing camera streams. It doesn't
+// actually show a camera — that lives in the library window. Hope that's ok.
+
+// Type declarations
+interface CameraElectronAPI {
+  getScreenSources: () => Promise<
+    Array<{ id: string; name: string; thumbnail: string }>
+  >
+  saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
+}
+
 // Background recording logic
-let mediaRecorder = null
-let recordedChunks = []
-let stream = null
+let mediaRecorder: MediaRecorder | null = null
+let recordedChunks: Blob[] = []
+let stream: MediaStream | null = null
 
 async function startRecording() {
   try {
     console.log('Starting background recording...')
 
     // Get screen sources from main process
-    const sources = await window.electronAPI.getScreenSources()
+    const sources = await (
+      window.electronAPI as CameraElectronAPI
+    ).getScreenSources()
 
     if (sources.length === 0) {
       throw new Error('No screen sources available')
@@ -26,24 +39,24 @@ async function startRecording() {
           minHeight: 720,
           maxHeight: 1080,
         },
-      },
+      } as any, // Chrome-specific constraints
     })
 
     // Set up MediaRecorder
-    const options = {
+    const options: MediaRecorderOptions = {
       mimeType: 'video/webm;codecs=vp9',
       videoBitsPerSecond: 5000000,
     }
 
     // Fallback to VP8 if VP9 is not supported
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
       options.mimeType = 'video/webm;codecs=vp8'
     }
 
     mediaRecorder = new MediaRecorder(stream, options)
     recordedChunks = []
 
-    mediaRecorder.ondataavailable = (event) => {
+    mediaRecorder.ondataavailable = (event: BlobEvent) => {
       if (event.data.size > 0) {
         console.log(
           'Background recording - received data chunk:',
@@ -94,7 +107,12 @@ async function saveRecording() {
     const buffer = await blob.arrayBuffer()
 
     // Send to main process to save
-    await window.electronAPI.saveBackgroundRecording(buffer)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const filename = `background-recording-${timestamp}.webm`
+    await (window.electronAPI as CameraElectronAPI).saveRecording(
+      filename,
+      buffer,
+    )
 
     console.log('Background recording saved')
   } catch (error) {
@@ -103,7 +121,7 @@ async function saveRecording() {
 }
 
 // Listen for messages from main process
-window.addEventListener('message', (event) => {
+window.addEventListener('message', (event: MessageEvent) => {
   if (event.data === 'start-recording') {
     startRecording()
   } else if (event.data === 'stop-recording') {
@@ -117,7 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateStatus('Script loaded')
 })
 
-function updateStatus(status) {
+function updateStatus(status: string): void {
   const statusElement = document.getElementById('status')
   if (statusElement) {
     statusElement.textContent = status

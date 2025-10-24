@@ -34,7 +34,7 @@ import {
   updateVlog,
 } from './store'
 import * as ephemeral from './store/ephemeral'
-import { createSettingsWindow, mainWindow } from './windows'
+import { createSettingsWindow, libraryWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -366,7 +366,7 @@ export function setupIpcHandlers() {
         ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
 
         // Notify renderer of progress update
-        mainWindow?.webContents.send(
+        libraryWindow?.webContents.send(
           'transcription-progress-updated',
           vlogId,
           Math.round(progress),
@@ -390,7 +390,7 @@ export function setupIpcHandlers() {
         updateVlog(vlogId, { summary })
 
         // Notify renderer that summary was generated
-        mainWindow?.webContents.send('summary-generated', vlogId, summary)
+        libraryWindow?.webContents.send('summary-generated', vlogId, summary)
         console.log(`Summary generated and saved for vlog ${vlogId}`)
       } catch (summaryError) {
         console.error('Error generating automatic summary:', summaryError)
@@ -904,7 +904,7 @@ export function setupIpcHandlers() {
         // Update ephemeral state
         ephemeral.setConversionProgress(vlogId, progress)
         // Send progress updates to renderer
-        mainWindow?.webContents.send('conversion-progress', vlogId, progress)
+        libraryWindow?.webContents.send('conversion-progress', vlogId, progress)
       })
 
       // Remove from active conversions
@@ -959,7 +959,7 @@ export function setupIpcHandlers() {
   store.onDidAnyChange((state) => {
     // Ensure we only send serializable data
     const serializableState = JSON.parse(JSON.stringify(state))
-    mainWindow?.webContents.send('state-changed', serializableState)
+    libraryWindow?.webContents.send('state-changed', serializableState)
   })
 
   // Broadcast electron-store vlog changes to all renderer windows

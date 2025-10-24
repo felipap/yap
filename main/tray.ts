@@ -7,7 +7,7 @@ import {
   stopBackgroundRecording,
 } from './recording/background-recording'
 import { RecordingConfig } from './recording/types'
-import { createMainWindow } from './windows'
+import { createLibraryWindow } from './windows'
 
 let tray: Tray | null = null
 let isRecording = false
@@ -89,7 +89,7 @@ export function createTray(): Tray {
       (w) => w === require('./windows').mainWindow,
     )
     if (!mainWindow || mainWindow.isDestroyed()) {
-      createMainWindow()
+      createLibraryWindow()
     } else {
       mainWindow.show()
       mainWindow.focus()
@@ -121,7 +121,7 @@ function updateTrayMenu(): void {
           (w) => w === require('./windows').mainWindow,
         )
         if (!mainWindow || mainWindow.isDestroyed()) {
-          createMainWindow()
+          createLibraryWindow()
         } else {
           mainWindow.show()
           mainWindow.focus()

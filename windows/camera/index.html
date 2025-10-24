@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recording Window</title>
+    <title>Camera Window</title>
     <style>
+      .fallback {
+        opacity: 50%;
+        font-size: 12px;
+        text-align: center;
+        padding: 10px;
+        font-family: Arial, sans-serif;
+      }
+
       #status {
         background: #4caf50;
         color: white;
@@ -18,7 +26,9 @@
     </style>
   </head>
   <body>
-    <div id="status">Loading window</div>
-    <script src="./main.js"></script>
+    <div id="root">
+      <div class="fallback">Loading camera window...</div>
+    </div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

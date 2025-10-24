@@ -5,14 +5,14 @@ import { store } from './store'
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
-export let mainWindow: BrowserWindow
+export let libraryWindow: BrowserWindow
 export let settingsWindow: BrowserWindow | null = null
 export let recordingWindow: BrowserWindow | null = null
 
-export function createMainWindow(): BrowserWindow {
-  if (mainWindow) {
-    console.log('MainWindow already created, skipping...')
-    throw new Error('MainWindow already created')
+export function createLibraryWindow(): BrowserWindow {
+  if (libraryWindow) {
+    console.log('Library window already created, skipping...')
+    throw new Error('Library window already created')
   }
 
   const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
@@ -48,50 +48,56 @@ export function createMainWindow(): BrowserWindow {
     windowOptions.icon = iconPath
   }
 
-  mainWindow = new BrowserWindow(windowOptions)
+  libraryWindow = new BrowserWindow(windowOptions)
 
   if (iconPath) {
     app.dock?.setIcon(iconPath)
-    mainWindow.setIcon(iconPath)
+    libraryWindow.setIcon(iconPath)
   }
 
   // Save window bounds on close and hide instead of destroy
-  mainWindow.on('close', (event) => {
+  libraryWindow.on('close', (event) => {
     if (!app.isQuitting) {
       event.preventDefault()
-      const bounds = mainWindow.getBounds()
+      const bounds = libraryWindow.getBounds()
       store.set('windowBounds', bounds)
-      mainWindow.hide()
+      libraryWindow.hide()
       return false
     }
     return true
   })
 
   // Track window focus state
-  mainWindow.on('focus', () => {
+  libraryWindow.on('focus', () => {
     store.set('wasLastFocused', true)
   })
 
-  mainWindow.on('blur', () => {
+  libraryWindow.on('blur', () => {
     store.set('wasLastFocused', false)
   })
 
   // Load the app
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:4000/main.html')
+    libraryWindow.loadURL('http://localhost:4000/main.html')
     // window.webContents.openDevTools()
   } else {
     // In production, load from the app.asar bundle
-    const rendererPath = join(__dirname, '..', 'windows', 'main', 'index.html')
+    const rendererPath = join(
+      __dirname,
+      '..',
+      'windows',
+      'library',
+      'index.html',
+    )
     console.log('__dirname:', __dirname)
     console.log('Renderer path:', rendererPath)
-    mainWindow.loadFile(rendererPath)
+    libraryWindow.loadFile(rendererPath)
   }
 
   // Show window after content is loaded in development to prevent focus stealing
   if (process.env.NODE_ENV === 'development' && wasLastFocused) {
-    mainWindow.once('ready-to-show', () => {
-      mainWindow.show()
+    libraryWindow.once('ready-to-show', () => {
+      libraryWindow.show()
     })
   }
 
@@ -105,7 +111,7 @@ export function createMainWindow(): BrowserWindow {
   //   `)
   // })
 
-  return mainWindow
+  return libraryWindow
 }
 
 export function getIconPath(env?: 'production' | 'development'): string | null {
@@ -137,7 +143,7 @@ function findIconPath(): string | null {
 }
 
 export function getMainWindow(): BrowserWindow | undefined {
-  return mainWindow
+  return libraryWindow
 }
 
 //
@@ -162,11 +168,12 @@ export function createSettingsWindow(): BrowserWindow {
       contextIsolation: true,
       preload: join(__dirname, 'preload.js'),
     },
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: 'default',
     vibrancy: 'under-window',
     visualEffectState: 'active',
-    parent: mainWindow,
-    modal: false,
+    show: false,
+    // parent: libraryWindow,
+    // modal: false,
   }
 
   // Try multiple possible icon paths for both dev and production
@@ -208,8 +215,9 @@ export function getSettingsWindow(): BrowserWindow | null {
 //
 //
 
+// The recording window is used to get a camera feed. It always exists and it's
+// always hidden (except in development, where it's visible).
 export function createRecordingWindow(): BrowserWindow {
-  // Don't create multiple recording windows
   if (recordingWindow) {
     throw new Error('RecordingWindow already created')
   }
@@ -234,14 +242,18 @@ export function createRecordingWindow(): BrowserWindow {
   recordingWindow = new BrowserWindow(recordingWindowOptions)
 
   // Load the recording window (static HTML file)
-  const recordingPath = join(
-    __dirname,
-    '..',
-    'windows',
-    'recording',
-    'index.html',
-  )
-  recordingWindow.loadFile(recordingPath)
+  if (process.env.NODE_ENV === 'development') {
+    recordingWindow.loadURL('http://localhost:4002/index.html')
+  } else {
+    const recordingPath = join(
+      __dirname,
+      '..',
+      'windows',
+      'camera',
+      'index.html',
+    )
+    recordingWindow.loadFile(recordingPath)
+  }
 
   // Clean up reference when window is closed
   recordingWindow.on('closed', () => {

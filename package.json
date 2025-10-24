@@ -4,9 +4,10 @@
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:renderer-library\" \"npm run dev:renderer-settings\" \"npm run dev:watch-main\"",
+    "dev": "concurrently \"npm run dev:renderer-library\" \"npm run dev:renderer-camera\" \"npm run dev:renderer-settings\" \"npm run dev:watch-main\"",
     "dev:watch-main": "NODE_ENV=development nodemon --watch main --ext ts --exec \"npm run build:main && electron dist/main/main.js\"",
     "dev:renderer-library": "vite --config vite.library.config.js",
+    "dev:renderer-camera": "vite --config vite.camera.config.js",
     "dev:renderer-settings": "vite --config vite.settings.config.js",
     "//": "",
     "build": "npm run build:main && npm run build:renderer && npm run build:recording",

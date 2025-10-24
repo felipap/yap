@@ -2,6 +2,7 @@
 
 import Store, { Schema } from 'electron-store'
 import { State, Vlog } from '../../shared-types'
+import { app } from 'electron'
 
 export type { State } from '../../shared-types'
 
@@ -72,10 +73,17 @@ const schema: Schema<State> = {
   },
 }
 
+app.setName('yap-camera')
+
 export const store = new Store<State>({
   schema,
   name: 'data',
+  clearInvalidConfig: true,
+  // watch: true,
+  // cwd: '~/Library/Application Support/Yap',
 })
+
+console.debug('Store intialized from file:', store.path)
 
 // Vlog management functions
 export function getVlog(vlogId: string): Vlog | null {

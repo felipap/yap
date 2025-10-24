@@ -1,11 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from './App'
+import { RouterProvider } from '../shared/Router'
+import { App } from '../library/App'
 
-import '../shared/css/tailwind.css'
+function Indicator() {
+  return <div id="status">Recording...</div>
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <Indicator />
   </React.StrictMode>,
 )

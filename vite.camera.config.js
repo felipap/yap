@@ -6,14 +6,13 @@ export default defineConfig({
     // react({
     //   fastRefresh: true,
     // }),
-    react(),
   ],
-  root: 'windows/library',
+  root: 'windows/camera',
   base: './',
   server: {
-    port: 4000,
+    port: 4002,
     hmr: {
-      port: 4000,
+      port: 4002,
       host: 'localhost',
     },
     cors: true,
@@ -24,7 +23,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: '../../dist/windows/library',
+    outDir: '../../dist/windows/camera',
     emptyOutDir: true,
     rollupOptions: {
       external: [],
