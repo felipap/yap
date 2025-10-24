@@ -35,7 +35,7 @@ jobs:
         run: pnpm run ts-check-windows
 
       - name: Rebuild native dependencies
-        run: pnpm run rebuild
+        run: pnpm rebuild
 
       - name: Build Electron app
         run: pnpm run pack-local

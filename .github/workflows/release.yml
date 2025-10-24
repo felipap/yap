@@ -22,13 +22,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '22'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Import code signing certificate
         uses: apple-actions/import-codesign-certs@v1
@@ -45,10 +48,10 @@ jobs:
         run: xcode-select --install || true
 
       - name: Build Electron app
-        run: bun run build
+        run: pnpm run build
 
       - name: Package Electron app
-        run: bun run pack
+        run: pnpm run pack
 
       - name: Create Release
         # Only create release on nudge-specific version tags
