@@ -159,7 +159,9 @@ export default function Page() {
         <div className="max-w-2xl w-full space-y-8">
           {/* Recording Mode Selection */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-primary">Recording Mode</h2>
+            <h2 className="text-lg font-medium text-contrast">
+              Recording Mode
+            </h2>
             <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => setRecordingMode('camera')}
@@ -199,7 +201,7 @@ export default function Page() {
 
           {/* Device Selection */}
           <div className="space-y-4">
-            <h2 className="text-lg font-medium text-primary">Devices</h2>
+            <h2 className="text-lg font-medium text-contrast">Devices</h2>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-secondary mb-2">
@@ -208,7 +210,7 @@ export default function Page() {
                 <select
                   value={selectedCameraId}
                   onChange={(e) => setSelectedCameraId(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-border bg-background text-primary"
+                  className="w-full p-3 rounded-lg border border-border bg-background text-contrast"
                 >
                   <option value="">Default Camera</option>
                   {cameras.map((camera) => (
@@ -225,7 +227,7 @@ export default function Page() {
                 <select
                   value={selectedMicrophoneId}
                   onChange={(e) => setSelectedMicrophoneId(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-border bg-background text-primary"
+                  className="w-full p-3 rounded-lg border border-border bg-background text-contrast"
                 >
                   <option value="">Default Microphone</option>
                   {microphones.map((mic) => (

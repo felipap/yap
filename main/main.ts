@@ -64,9 +64,16 @@ async function onInit() {
   createTray()
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      libraryWindow?.show()
-      // createMainWindow()
+    // On macOS, when the dock icon is clicked, show the library window
+    if (libraryWindow) {
+      if (libraryWindow.isMinimized()) {
+        libraryWindow.restore()
+      }
+      libraryWindow.show()
+      libraryWindow.focus()
+    } else {
+      // If library window doesn't exist, create it
+      createLibraryWindow()
     }
   })
 }

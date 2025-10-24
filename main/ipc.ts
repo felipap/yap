@@ -34,7 +34,7 @@ import {
   updateVlog,
 } from './store'
 import * as ephemeral from './store/ephemeral'
-import { createSettingsWindow, libraryWindow } from './windows'
+import { createSettingsWindow, libraryWindow, settingsWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -838,8 +838,8 @@ export function setupIpcHandlers() {
   // Settings window handlers
   ipcMain.handle('openSettingsWindow', async () => {
     try {
-      const settingsWindow = createSettingsWindow()
-      return { success: true, windowId: settingsWindow.id }
+      settingsWindow?.show()
+      return { success: true, windowId: settingsWindow?.id || 0 }
     } catch (error) {
       console.error('Error opening settings window:', error)
       throw error
