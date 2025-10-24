@@ -51,26 +51,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('saveRecording', filename, buffer)
   },
 
-  // Crash protection methods
-  saveRecordingChunk: (
-    recordingId: string,
-    buffer: ArrayBuffer,
-  ): Promise<string> => {
-    return ipcRenderer.invoke('saveRecordingChunk', recordingId, buffer)
-  },
-
-  getRecordingChunks: (recordingId: string): Promise<string[]> => {
-    return ipcRenderer.invoke('getRecordingChunks', recordingId)
-  },
-
-  cleanupRecordingChunks: (recordingId: string): Promise<boolean> => {
-    return ipcRenderer.invoke('cleanupRecordingChunks', recordingId)
-  },
-
-  recoverIncompleteRecordings: (): Promise<string[]> => {
-    return ipcRenderer.invoke('recoverIncompleteRecordings')
-  },
-
   // New recording system methods
   startRecording: (config: any): Promise<string> => {
     return ipcRenderer.invoke('startRecording', config)
@@ -96,10 +76,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     set: (key: string, value: any): Promise<void> => {
       return ipcRenderer.invoke('storeSet', key, value)
     },
-
-    getAll: (): Promise<Record<string, any>> => {
-      return ipcRenderer.invoke('storeGetAll')
-    },
   },
 
   // Transcription functions
@@ -119,25 +95,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('getTranscriptionState', vlogId)
   },
 
-  getAllTranscriptionStates: (): Promise<
-    Record<string, TranscriptionState>
-  > => {
-    return ipcRenderer.invoke('getAllTranscriptionStates')
-  },
   getVlog: (vlogId: string) => {
     return ipcRenderer.invoke('getVlog', vlogId)
   },
-  getAllVlogs: () => {
-    return ipcRenderer.invoke('getAllVlogs')
-  },
   updateVlog: (vlogId: string, updates: any) => {
     return ipcRenderer.invoke('updateVlog', vlogId, updates)
-  },
-  getTranscriptionSpeedUp: () => {
-    return ipcRenderer.invoke('getTranscriptionSpeedUp')
-  },
-  setTranscriptionSpeedUp: (speedUp: boolean) => {
-    return ipcRenderer.invoke('setTranscriptionSpeedUp', speedUp)
   },
   generateVideoSummary: (
     vlogId: string,
@@ -199,23 +161,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('transcription-progress-updated')
   },
 
-  // Auto-updater functions
-  checkForUpdates: (): Promise<{ available: boolean; message: string }> => {
-    return ipcRenderer.invoke('checkForUpdates')
-  },
-
-  downloadUpdate: (): Promise<{ success: boolean; message: string }> => {
-    return ipcRenderer.invoke('downloadUpdate')
-  },
-
-  installUpdate: (): Promise<{ success: boolean; message: string }> => {
-    return ipcRenderer.invoke('installUpdate')
-  },
-
-  getAppVersion: (): Promise<string> => {
-    return ipcRenderer.invoke('getAppVersion')
-  },
-
   // Settings functions
   openSettingsWindow: (): Promise<{ success: boolean; windowId: number }> => {
     return ipcRenderer.invoke('openSettingsWindow')
@@ -230,23 +175,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Auto-updater event listeners
-  onUpdateAvailable: (callback: (info: any) => void) => {
-    ipcRenderer.on('update-available', (_, info) => callback(info))
-  },
-
-  onDownloadProgress: (callback: (progress: any) => void) => {
-    ipcRenderer.on('download-progress', (_, progress) => callback(progress))
-  },
-
-  onUpdateDownloaded: (callback: (info: any) => void) => {
-    ipcRenderer.on('update-downloaded', (_, info) => callback(info))
-  },
-
-  removeUpdateListeners: () => {
-    ipcRenderer.removeAllListeners('update-available')
-    ipcRenderer.removeAllListeners('download-progress')
-    ipcRenderer.removeAllListeners('update-downloaded')
-  },
 
   // MP4 conversion
   convertToMp4: (
@@ -279,6 +207,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   removeConversionProgressListener: () => {
     ipcRenderer.removeAllListeners('conversion-progress')
+  },
+
+  //
+  //
+  //
+  //
+
+  // Streaming recording methods
+  startStreamingRecording: (filename: string): Promise<string> => {
+    return ipcRenderer.invoke('startStreamingRecording', filename)
+  },
+  appendRecordingChunk: (
+    recordingId: string,
+    chunk: ArrayBuffer,
+  ): Promise<void> => {
+    return ipcRenderer.invoke('appendRecordingChunk', recordingId, chunk)
+  },
+  finalizeStreamingRecording: (recordingId: string): Promise<string> => {
+    return ipcRenderer.invoke('finalizeStreamingRecording', recordingId)
   },
 } satisfies ExposedElectronAPI)
 

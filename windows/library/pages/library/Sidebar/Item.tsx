@@ -13,7 +13,7 @@ export function Item({ data, selected, onClick }: Props) {
     <button
       onClick={onClick}
       className={twMerge(
-        `text-left px-2 py-1.5 transition-colors`,
+        `text-left pl-2 py-1.5 transition-colors`,
         'bg-transparent hover:bg-one hover:dark:bg-one',
         selected
           ? '!bg-blue-500 dark:!bg-blue-500/20 hover:dark:!bg-blue-500/25 text-white'
@@ -22,7 +22,7 @@ export function Item({ data, selected, onClick }: Props) {
     >
       <div className="flex items-center gap-3">
         {/* Thumbnail */}
-        <div className="relative w-[80px] h-12 bg-gray-900 rounded overflow-hidden flex-shrink-0">
+        <div className="relative x2 w-[70px] h-12 bg-gray-900 rounded overflow-hidden flex-shrink-0">
           {data.thumbnailPath ? (
             <img
               src={data.thumbnailPath}

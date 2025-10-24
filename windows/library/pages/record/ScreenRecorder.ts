@@ -1,16 +1,15 @@
-import { getScreenSources, saveRecording } from '../../../shared/ipc'
+import { getScreenSources } from '../../../shared/ipc'
 
 export type RecordingMode = 'screen' | 'camera' | 'both'
 
 export class ScreenRecorder {
   private mediaRecorder: MediaRecorder | null = null
-  private recordedChunks: Blob[] = []
   private stream: MediaStream | null = null
   private cameraStream: MediaStream | null = null
   private mode: RecordingMode
   private cameraId: string
   private microphoneId: string
-  private recordingId: string | null = null
+  private recordedChunks: Blob[] = []
   private isRecording: boolean = false
 
   constructor(
@@ -39,9 +38,6 @@ export class ScreenRecorder {
         this.stream = await this.getCombinedStream()
       }
 
-      // Generate unique recording ID for crash recovery
-      this.recordingId = `recording-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
       // Set up MediaRecorder
       const options: MediaRecorderOptions = {
         mimeType: 'video/webm;codecs=vp9',
@@ -54,7 +50,6 @@ export class ScreenRecorder {
       }
 
       this.mediaRecorder = new MediaRecorder(this.stream, options)
-      this.recordedChunks = []
       this.isRecording = true
 
       this.mediaRecorder.ondataavailable = (event) => {
@@ -83,8 +78,6 @@ export class ScreenRecorder {
 
       this.mediaRecorder.onstop = async () => {
         try {
-          await this.saveRecording()
-
           // Note: Crash protection is now handled by the main process
 
           if (this.stream) {
@@ -105,37 +98,6 @@ export class ScreenRecorder {
 
       this.mediaRecorder.stop()
     })
-  }
-
-  private async saveRecording(): Promise<void> {
-    if (this.recordedChunks.length === 0) {
-      console.warn('No recorded chunks to save')
-      return
-    }
-
-    try {
-      console.log(`Saving ${this.recordedChunks.length} chunks`)
-
-      // Generate filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-      const filename = `vlog-${timestamp}.webm`
-
-      // Create blob from recorded chunks with proper MIME type
-      const blob = new Blob(this.recordedChunks, {
-        type: 'video/webm;codecs=vp9',
-      })
-      console.log(`Total blob size: ${blob.size} bytes`)
-
-      const arrayBuffer = await blob.arrayBuffer()
-
-      // Save file using Electron API
-      await saveRecording(filename, arrayBuffer)
-
-      console.log(`Recording saved: ${filename}`)
-    } catch (error) {
-      console.error('Error saving recording:', error)
-      throw error
-    }
   }
 
   private async getScreenStream(): Promise<MediaStream> {

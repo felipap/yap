@@ -18,7 +18,7 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   useSidebarShortcuts({ displayVlogs, onVideoSelect, selectedVlog })
 
   return (
-    <div className="w-[280px] h-full border-r overflow-y-auto bg-two pb-5">
+    <div className="w-[220px] h-full border-r overflow-y-auto bg-two pb-5">
       <div className="flex flex-col gap-0 divide-y divide-three/20">
         {displayVlogs.map((vlog) => (
           <Item

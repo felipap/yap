@@ -18,3 +18,4 @@ export function SolidSquare({ size = 16, className }: IconProps) {
   )
 }
 
+

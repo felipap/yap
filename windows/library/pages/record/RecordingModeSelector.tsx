@@ -12,6 +12,8 @@ export function RecordingModeSelector({
   onModeChange,
   isRecording,
 }: RecordingModeSelectorProps) {
+  return null
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-2">

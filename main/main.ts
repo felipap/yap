@@ -5,7 +5,6 @@ import started from 'electron-squirrel-startup'
 import { app, BrowserWindow } from 'electron'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
-import { setupBackgroundRecordingIPC } from './recording/background-recording'
 import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
 import {
@@ -15,7 +14,6 @@ import {
   getMainWindow,
   libraryWindow,
 } from './windows'
-import { recoverIncompleteRecordings } from './recording'
 
 if (app.isPackaged) {
   SentryInit({
@@ -51,16 +49,12 @@ async function onInit() {
 
   setupProtocolHandlers()
 
-  setupBackgroundRecordingIPC()
-
-  await recoverIncompleteRecordings()
-
   setupIpcHandlers()
 
   // Create windows
   createLibraryWindow()
   createSettingsWindow()
-  createRecordingWindow()
+  // createRecordingWindow()
   createTray()
 
   app.on('activate', () => {

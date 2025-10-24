@@ -24,6 +24,11 @@ import {
   startRecording,
   stopRecording,
 } from './recording'
+import {
+  appendRecordingChunk,
+  finalizeStreamingRecording,
+  startStreamingRecording,
+} from './recording/background-recording'
 import { RecordingConfig } from './recording/types'
 import {
   deleteVlog,
@@ -34,7 +39,7 @@ import {
   updateVlog,
 } from './store'
 import * as ephemeral from './store/ephemeral'
-import { createSettingsWindow, libraryWindow, settingsWindow } from './windows'
+import { libraryWindow, settingsWindow } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -150,173 +155,28 @@ export function setupIpcHandlers() {
     }
   })
 
+  //
+  //
+  //
+  //
+
+  ipcMain.handle('startStreamingRecording', async (_, filename: string) => {
+    return startStreamingRecording(filename)
+  })
+
   ipcMain.handle(
-    'saveRecording',
-    async (_, filename: string, arrayBuffer: ArrayBuffer) => {
-      try {
-        const recordingsDir = getRecordingsDir()
-        await mkdir(recordingsDir, { recursive: true })
-
-        const filepath = join(recordingsDir, filename)
-        const buffer = Buffer.from(arrayBuffer)
-        await writeFile(filepath, buffer)
-
-        const id = generateVlogId(filepath)
-        vlogIdToPath.set(id, filepath)
-
-        // Create and save vlog object
-        const vlog: Vlog = {
-          id,
-          name: filename,
-          path: filepath,
-          timestamp: new Date().toISOString(),
-        }
-        setVlog(vlog)
-
-        debug(`Recording saved: ${filepath}`)
-        return id
-      } catch (error) {
-        console.error('Error saving recording:', error)
-        throw error
-      }
+    'appendRecordingChunk',
+    async (_, recordingId: string, chunk: ArrayBuffer) => {
+      return appendRecordingChunk(recordingId, chunk)
     },
   )
 
-  // Crash protection handlers
   ipcMain.handle(
-    'saveRecordingChunk',
-    async (_, recordingId: string, arrayBuffer: ArrayBuffer) => {
-      try {
-        const tempDir = getTempDir()
-        await mkdir(tempDir, { recursive: true })
-
-        const chunkPath = join(
-          tempDir,
-          FILE_PATTERNS.RECORDING_CHUNK(recordingId, Date.now()),
-        )
-        const buffer = Buffer.from(arrayBuffer)
-        await writeFile(chunkPath, buffer)
-
-        debug(`Recording chunk saved: ${chunkPath}`)
-        return chunkPath
-      } catch (error) {
-        console.error('Error saving recording chunk:', error)
-        throw error
-      }
+    'finalizeStreamingRecording',
+    async (_, recordingId: string) => {
+      return finalizeStreamingRecording(recordingId)
     },
   )
-
-  ipcMain.handle('getRecordingChunks', async (_, recordingId: string) => {
-    try {
-      const tempDir = getTempDir()
-      const files = await readdir(tempDir)
-      const chunkFiles = files
-        .filter((file) => file.startsWith(`${recordingId}-chunk-`))
-        .map((file) => join(tempDir, file))
-        .sort() // Sort by timestamp
-
-      return chunkFiles
-    } catch (error) {
-      console.error('Error getting recording chunks:', error)
-      return []
-    }
-  })
-
-  ipcMain.handle('cleanupRecordingChunks', async (_, recordingId: string) => {
-    try {
-      const tempDir = getTempDir()
-      const files = await readdir(tempDir)
-      const chunkFiles = files.filter((file) =>
-        file.startsWith(`${recordingId}-chunk-`),
-      )
-
-      for (const file of chunkFiles) {
-        const filePath = join(tempDir, file)
-        await unlink(filePath)
-      }
-
-      debug(
-        `Cleaned up ${chunkFiles.length} chunks for recording ${recordingId}`,
-      )
-      return true
-    } catch (error) {
-      console.error('Error cleaning up recording chunks:', error)
-      return false
-    }
-  })
-
-  ipcMain.handle('recoverIncompleteRecordings', async () => {
-    try {
-      const tempDir = getTempDir()
-      const files = await readdir(tempDir)
-      const chunkFiles = files.filter((file) => file.includes('-chunk-'))
-
-      // Group chunks by recording ID
-      const recordings: Record<string, string[]> = {}
-      for (const file of chunkFiles) {
-        const recordingId = file.split('-chunk-')[0]
-        if (!recordings[recordingId]) {
-          recordings[recordingId] = []
-        }
-        recordings[recordingId].push(join(tempDir, file))
-      }
-
-      const recoveredRecordings: string[] = []
-
-      for (const [recordingId, chunkPaths] of Object.entries(recordings)) {
-        try {
-          // Sort chunks by timestamp
-          chunkPaths.sort()
-
-          // Combine all chunks into one file
-          const combinedBuffer = Buffer.concat(
-            await Promise.all(
-              chunkPaths.map(async (path) => {
-                const chunkBuffer = await readFile(path)
-                return chunkBuffer
-              }),
-            ),
-          )
-
-          // Save as recovered recording
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-          const filename = FILE_PATTERNS.RECOVERED_FILE(recordingId, timestamp)
-          const recordingsDir = getRecordingsDir()
-          const filepath = join(recordingsDir, filename)
-
-          await writeFile(filepath, combinedBuffer)
-
-          const id = generateVlogId(filepath)
-          vlogIdToPath.set(id, filepath)
-
-          // Create and save vlog object
-          const vlog: Vlog = {
-            id,
-            name: filename,
-            path: filepath,
-            timestamp: new Date().toISOString(),
-            title: `Recovered Recording (${recordingId})`,
-          }
-          setVlog(vlog)
-
-          // Clean up chunk files
-          for (const chunkPath of chunkPaths) {
-            await unlink(chunkPath)
-          }
-
-          recoveredRecordings.push(id)
-          debug(`Recovered recording: ${filepath}`)
-        } catch (error) {
-          console.error(`Error recovering recording ${recordingId}:`, error)
-        }
-      }
-
-      return recoveredRecordings
-    } catch (error) {
-      console.error('Error recovering incomplete recordings:', error)
-      return []
-    }
-  })
 
   // Recording system handlers
   ipcMain.handle('startRecording', async (_, config: RecordingConfig) => {
@@ -335,6 +195,11 @@ export function setupIpcHandlers() {
     return await emergencySave()
   })
 
+  //
+  //
+  //
+  //
+
   // Store handlers
   ipcMain.handle('storeGet', (_, key: string) => {
     return store.get(key)
@@ -342,10 +207,6 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('storeSet', (_, key: string, value: any) => {
     store.set(key, value)
-  })
-
-  ipcMain.handle('storeGetAll', () => {
-    return store.store
   })
 
   // Transcription handlers
@@ -449,34 +310,6 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('getAllTranscriptionStates', async () => {
-    try {
-      const vlogs = getAllVlogs()
-      const states: Record<string, any> = {}
-
-      // Get ephemeral states (active transcriptions)
-      const activeTranscriptions = ephemeral.getAllActiveTranscriptions()
-      for (const [vlogId, state] of Object.entries(activeTranscriptions)) {
-        states[vlogId] = {
-          status: 'transcribing',
-          progress: state.progress,
-        }
-      }
-
-      // Get persistent states (completed/error states)
-      for (const [id, vlog] of Object.entries(vlogs)) {
-        if (vlog.transcription && !states[id]) {
-          states[id] = vlog.transcription
-        }
-      }
-
-      return states
-    } catch (error) {
-      console.error('Error getting all transcription states:', error)
-      throw error
-    }
-  })
-
   // Load and cache video duration on demand (performance optimization)
   // This avoids calculating duration for all videos on load, which would be very slow
   // Duration is only calculated when the user actually opens/selects a video
@@ -534,15 +367,6 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('getAllVlogs', async () => {
-    try {
-      return getAllVlogs()
-    } catch (error) {
-      console.error('Error getting all vlogs:', error)
-      throw error
-    }
-  })
-
   ipcMain.handle(
     'updateVlog',
     async (_, vlogId: string, updates: Partial<Vlog>) => {
@@ -557,57 +381,6 @@ export function setupIpcHandlers() {
   )
 
   // Transcription settings handlers
-  ipcMain.handle('getTranscriptionSpeedUp', async () => {
-    try {
-      return store.get('transcriptionSpeedUp') || false
-    } catch (error) {
-      console.error('Error getting transcription speed-up setting:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('setTranscriptionSpeedUp', async (_, speedUp: boolean) => {
-    try {
-      store.set('transcriptionSpeedUp', speedUp)
-      return true
-    } catch (error) {
-      console.error('Error setting transcription speed-up:', error)
-      throw error
-    }
-  })
-
-  // User profile handlers
-  ipcMain.handle('get-user-profile', async () => {
-    try {
-      const profile: UserProfile = store.get('userProfile') || {
-        name: 'Felipe',
-        role: 'Solo founder/entrepreneur',
-        interests: [
-          'AI',
-          'tech projects',
-          'workflow automation',
-          'inbox agents',
-        ],
-        languages: ['English', 'Portuguese'],
-        context:
-          'Working on AI and tech projects, exploring business ideas, considering co-founders for certain projects',
-      }
-      return profile
-    } catch (error) {
-      console.error('Error getting user profile:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('update-user-profile', async (_, profile: UserProfile) => {
-    try {
-      store.set('userProfile', profile)
-      return true
-    } catch (error) {
-      console.error('Error updating user profile:', error)
-      throw error
-    }
-  })
 
   // Summary handlers
 
@@ -784,56 +557,6 @@ export function setupIpcHandlers() {
   })
 
   // Auto-updater handlers
-  ipcMain.handle('checkForUpdates', async () => {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        return { available: false, message: 'Updates disabled in development' }
-      }
-
-      const result = await autoUpdater.checkForUpdates()
-      return { available: !!result, message: 'Update check completed' }
-    } catch (error) {
-      console.error('Error checking for updates:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('downloadUpdate', async () => {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        throw new Error('Updates disabled in development')
-      }
-
-      autoUpdater.downloadUpdate()
-      return { success: true, message: 'Download started' }
-    } catch (error) {
-      console.error('Error downloading update:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('installUpdate', async () => {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        throw new Error('Updates disabled in development')
-      }
-
-      autoUpdater.quitAndInstall()
-      return { success: true, message: 'Installing update...' }
-    } catch (error) {
-      console.error('Error installing update:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('getAppVersion', async () => {
-    try {
-      return app.getVersion()
-    } catch (error) {
-      console.error('Error getting app version:', error)
-      throw error
-    }
-  })
 
   // Settings window handlers
   ipcMain.handle('openSettingsWindow', async () => {

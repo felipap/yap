@@ -15,7 +15,7 @@ export function createLibraryWindow(): BrowserWindow {
     throw new Error('Library window already created')
   }
 
-  const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
+  const windowBounds = store.get('windowBounds', { width: 700, height: 500 })
 
   // Check if window was last focused (only relevant in development)
   const wasLastFocused = store.get('wasLastFocused', false)
@@ -26,10 +26,10 @@ export function createLibraryWindow(): BrowserWindow {
     height: windowBounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    minWidth: 800,
+    minWidth: 700,
     minHeight: 500,
     center: true,
-    maxWidth: 800,
+    maxWidth: 700,
     maxHeight: 1000,
     // Only show window in development if it was last focused
     show: shouldShow,
@@ -101,16 +101,6 @@ export function createLibraryWindow(): BrowserWindow {
       libraryWindow.show()
     })
   }
-
-  // // Load recording handler script
-  // mainWindow.webContents.once('dom-ready', () => {
-  //   mainWindow.webContents.executeJavaScript(`
-  //     // Load the recording handler script
-  //     const script = document.createElement('script');
-  //     script.src = './recording-handler.js';
-  //     document.head.appendChild(script);
-  //   `)
-  // })
 
   return libraryWindow
 }

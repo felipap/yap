@@ -103,13 +103,12 @@ export type SharedIpcMethods = {
   getState: () => Promise<State>
   untrackVlog: (vlogId: string) => Promise<boolean>
   saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
-  saveRecordingChunk: (
+  startStreamingRecording: (filename: string) => Promise<string>
+  appendRecordingChunk: (
     recordingId: string,
-    buffer: ArrayBuffer,
-  ) => Promise<string>
-  getRecordingChunks: (recordingId: string) => Promise<string[]>
-  cleanupRecordingChunks: (recordingId: string) => Promise<boolean>
-  recoverIncompleteRecordings: () => Promise<string[]>
+    chunk: ArrayBuffer,
+  ) => Promise<void>
+  finalizeStreamingRecording: (recordingId: string) => Promise<string>
   startRecording: (config: any) => Promise<string>
   stopRecording: () => Promise<string>
   getRecordingState: () => Promise<any>
@@ -117,18 +116,13 @@ export type SharedIpcMethods = {
   store: {
     get: <T>(key: string) => Promise<T>
     set: (key: string, value: any) => Promise<void>
-    getAll: () => Promise<Record<string, any>>
   }
   transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
   getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
   loadVideoDuration: (vlogId: string) => Promise<number>
   getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
-  getAllTranscriptionStates: () => Promise<Record<string, TranscriptionState>>
   getVlog: (vlogId: string) => Promise<any>
-  getAllVlogs: () => Promise<Record<string, any>>
   updateVlog: (vlogId: string, updates: any) => Promise<boolean>
-  getTranscriptionSpeedUp: () => Promise<boolean>
-  setTranscriptionSpeedUp: (speedUp: boolean) => Promise<boolean>
   generateVideoSummary: (
     vlogId: string,
     transcription: string,
@@ -154,17 +148,9 @@ export type SharedIpcMethods = {
   onStateChange: (callback: (state: any) => void) => () => void
   onVlogUpdated: (callback: (vlogId: string) => void) => void
   removeVlogUpdatedListener: () => void
-  checkForUpdates: () => Promise<{ available: boolean; message: string }>
-  downloadUpdate: () => Promise<{ success: boolean; message: string }>
-  installUpdate: () => Promise<{ success: boolean; message: string }>
-  getAppVersion: () => Promise<string>
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
   getGeminiApiKey: () => Promise<string>
   setGeminiApiKey: (apiKey: string) => Promise<boolean>
-  onUpdateAvailable: (callback: (info: any) => void) => void
-  onDownloadProgress: (callback: (progress: any) => void) => void
-  onUpdateDownloaded: (callback: (info: any) => void) => void
-  removeUpdateListeners: () => void
   convertToMp4: (vlogId: string) => Promise<{
     success: boolean
     message: string

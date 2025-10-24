@@ -140,12 +140,6 @@ export async function getTranscriptionState(
   return window.electronAPI.getTranscriptionState(vlogId)
 }
 
-export async function getAllTranscriptionStates(): Promise<
-  Record<string, TranscriptionState>
-> {
-  return window.electronAPI.getAllTranscriptionStates()
-}
-
 // Summary functions
 export async function generateVideoSummary(
   vlogId: string,
