@@ -1,6 +1,6 @@
 {
   "name": "yap-camera",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
@@ -22,7 +22,8 @@
     "release": "standard-version",
     "ts-check-windows": "tsc -p windows/tsconfig.json",
     "ts-check-backend": "tsc -p main/tsconfig.json",
-    "release:dry-run": "standard-version --dry-run"
+    "release:dry-run": "standard-version --dry-run",
+    "lint": "eslint --ext .ts,.tsx ."
   },
   "prettier": {
     "singleQuote": true,
@@ -52,7 +53,11 @@
     "tailwindcss": "^4.0.12",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
-    "wait-on": "^7.2.0"
+    "wait-on": "^7.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.31.0"
   },
   "dependencies": {
     "@google/genai": "^1.22.0",

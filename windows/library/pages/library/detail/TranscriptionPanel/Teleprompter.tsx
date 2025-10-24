@@ -71,16 +71,13 @@ export function Teleprompter({ transcription, videoRef }: TeleprompterProps) {
 
       <div className="h-[400px] overflow-y-auto" ref={containerRef}>
         {transcription.segments.map(
-          (
-            segment: TranscriptionResult['segments'][number],
-            index: number,
-          ) => (
+          (segment: TranscriptionResult['segments'][number], index: number) => (
             <div
               key={index}
-              className="p-2 rounded cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+              className="p-2 rounded cursor-pointer hover:bg-hover transition-colors"
               onClick={() => handleSegmentClick(segment.start)}
             >
-              <div className="text-xs text-[var(--text-secondary)] mb-1">
+              <div className="text-xs textsecondary mb-1">
                 {formatTime(segment.start)} - {formatTime(segment.end)}
               </div>
               <div className="text-sm text-contrast">{segment.text}</div>
@@ -91,5 +88,3 @@ export function Teleprompter({ transcription, videoRef }: TeleprompterProps) {
     </div>
   )
 }
-
-

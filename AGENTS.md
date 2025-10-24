@@ -9,7 +9,7 @@
   3. Fixing underlying type mismatches instead of bypassing them
   4. Using proper type guards and null checks
 - This is a critical rule that must be followed at all times
-- Use `npm run ts-check-windows` and `npm run ts-check-main` instead of building to check for TypeScript errors (faster and more focused)
+- Use `npm run ts-check-windows` and `npm run ts-check-backend` instead of building to check for TypeScript errors (faster and more focused)
 
 ## Component Organization
 
