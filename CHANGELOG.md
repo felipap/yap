@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.4](https://github.com/felipap/vlogger/compare/v1.4.0...v1.4.4) (2025-10-24)
+
 ### [1.4.3](https://github.com/felipap/vlogger/compare/v1.4.0...v1.4.3) (2025-10-24)
 
 ### [1.4.2](https://github.com/felipap/vlogger/compare/v1.4.0...v1.4.2) (2025-10-24)
