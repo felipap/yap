@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, nativeImage, Tray } from 'electron'
-import { join } from 'path'
+import path, { join } from 'path'
 import { startRecording, stopRecording } from './recording'
 import {
   getBackgroundRecordingState,
@@ -7,7 +7,7 @@ import {
   stopBackgroundRecording,
 } from './recording/background-recording'
 import { RecordingConfig } from './recording/types'
-import { createLibraryWindow } from './windows'
+import { createLibraryWindow, libraryWindow } from './windows'
 
 let tray: Tray | null = null
 let isRecording = false
@@ -69,13 +69,21 @@ export function createTray(): Tray {
     return tray
   }
 
-  // Create tray with normal icon initially
-  const iconPath = findIconPath()
-  const icon = iconPath
-    ? nativeImage.createFromPath(iconPath)
-    : createNormalIcon()
+  const iconPath = getImagePath('tray-default.png')
+  console.log('iconPath', iconPath)
+  const icon = nativeImage.createFromPath(iconPath)
+  // if you want to resize it, be careful, it creates a copy
+  const trayIcon = icon.resize({ width: 18, quality: 'best' })
+  // here is the important part (has to be set on the resized version)
+  trayIcon.setTemplateImage(true)
 
-  tray = new Tray(icon)
+  // // Create tray with normal icon initially
+  // const iconPath = findIconPath()
+  // const icon = iconPath
+  //   ? nativeImage.createFromPath(iconPath)
+  //   : createNormalIcon()
+
+  tray = new Tray(trayIcon)
 
   // Set tooltip
   tray.setToolTip('Yap Camera')
@@ -85,22 +93,17 @@ export function createTray(): Tray {
 
   // Handle tray click
   tray.on('click', () => {
-    const mainWindow = BrowserWindow.getAllWindows().find(
-      (w) => w === require('./windows').mainWindow,
-    )
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      createLibraryWindow()
-    } else {
-      mainWindow.show()
-      mainWindow.focus()
-    }
+    libraryWindow.show()
+    libraryWindow.focus()
   })
 
   return tray
 }
 
 function updateTrayMenu(): void {
-  if (!tray) return
+  if (!tray) {
+    return
+  }
 
   const menu = Menu.buildFromTemplate([
     {
@@ -210,4 +213,11 @@ export function destroyTray(): void {
     tray.destroy()
     tray = null
   }
+}
+
+export function getImagePath(name: string) {
+  const base = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets')
+  return path.join(base, name)
 }

@@ -26,10 +26,10 @@ export function createLibraryWindow(): BrowserWindow {
     height: windowBounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    minWidth: 900,
+    minWidth: 800,
     minHeight: 500,
     center: true,
-    maxWidth: 900,
+    maxWidth: 800,
     // Only show window in development if it was last focused
     show: shouldShow,
     webPreferences: {

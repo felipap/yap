@@ -8,13 +8,13 @@ import {
   setSelectedMicrophoneId as saveSelectedMicrophoneId,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
+import { Camera, CameraRef } from '../../components/Camera'
+import { RecordButton } from '../../components/RecordButton'
 import { RecordingMode } from '../../types'
-import { ScreenRecorder } from './ScreenRecorder'
-import { Button } from '../../../shared/ui/Button'
-import { VolumeMeter } from './VolumeMeter'
 import { DeviceSelector } from './DeviceSelector'
 import { RecordingModeSelector } from './RecordingModeSelector'
-import { Square } from 'lucide-react'
+import { ScreenRecorder } from './ScreenRecorder'
+import { VolumeMeter } from './VolumeMeter'
 
 const formatTime = (seconds: number): string => {
   const hrs = Math.floor(seconds / 3600)
@@ -38,7 +38,7 @@ export default function Page() {
   const [recorder, setRecorder] = useState<ScreenRecorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const cameraRef = useRef<CameraRef | null>(null)
 
   useEffect(() => {
     loadCameras()
@@ -149,8 +149,8 @@ export default function Page() {
       })
       setPreviewStream(stream)
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
+      if (cameraRef.current) {
+        cameraRef.current.srcObject = stream
       }
     } catch (error) {
       console.error('Failed to start camera preview:', error)
@@ -184,8 +184,8 @@ export default function Page() {
       (recordingMode === 'camera' || recordingMode === 'both')
     ) {
       const cameraStream = recorder.getCameraStream()
-      if (videoRef.current && cameraStream) {
-        videoRef.current.srcObject = cameraStream
+      if (cameraRef.current && cameraStream) {
+        cameraRef.current.srcObject = cameraStream
       }
     }
   }, [isRecording, recorder, recordingMode])
@@ -223,8 +223,8 @@ export default function Page() {
       // Set up camera preview for recording (if camera is involved)
       if (recordingMode === 'camera' || recordingMode === 'both') {
         const cameraStream = newRecorder.getCameraStream()
-        if (videoRef.current && cameraStream) {
-          videoRef.current.srcObject = cameraStream
+        if (cameraRef.current && cameraStream) {
+          cameraRef.current.srcObject = cameraStream
         }
       }
 
@@ -272,15 +272,8 @@ export default function Page() {
           {/* Camera Preview - Dynamic sizing */}
           {(recordingMode === 'camera' || recordingMode === 'both') && (
             <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
-              {previewStream || videoRef.current?.srcObject ? (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
+              {previewStream || cameraRef.current?.srcObject ? (
+                <Camera ref={cameraRef} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-8xl">📹</div>
@@ -335,21 +328,11 @@ export default function Page() {
           />
 
           {/* Recording Button */}
-          {isRecording ? (
-            <Button variant="stop" onClick={handleStopRecording}>
-              <div className="flex items-center justify-center gap-3">
-                <Square size={16} />
-                Stop Recording
-              </div>
-            </Button>
-          ) : (
-            <Button variant="recording" onClick={handleStartRecording}>
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
-                Record
-              </div>
-            </Button>
-          )}
+          <RecordButton
+            isRecording={isRecording}
+            onStartRecording={handleStartRecording}
+            onStopRecording={handleStopRecording}
+          />
         </div>
       </div>
     </div>

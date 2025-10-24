@@ -1,5 +1,5 @@
-import { Square } from 'lucide-react'
-import { Button } from '../../../shared/ui/Button'
+import { Button } from '../../shared/ui/Button'
+import { SolidSquare } from '../../shared/icons'
 
 interface RecordButtonProps {
   isRecording: boolean
@@ -7,16 +7,16 @@ interface RecordButtonProps {
   onStopRecording: () => void
 }
 
-export function RecordButton({
+export const RecordButton = ({
   isRecording,
   onStartRecording,
   onStopRecording,
-}: RecordButtonProps) {
+}: RecordButtonProps) => {
   if (isRecording) {
     return (
       <Button variant="stop" onClick={onStopRecording}>
         <div className="flex items-center justify-center gap-3">
-          <Square size={16} />
+          <SolidSquare size={16} />
           Stop Recording
         </div>
       </Button>
