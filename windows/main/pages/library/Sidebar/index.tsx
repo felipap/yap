@@ -18,7 +18,7 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   useSidebarShortcuts({ displayVlogs, onVideoSelect, selectedVlog })
 
   return (
-    <div className="w-[280px] h-full flex-shrink-0 border-r overflow-y-auto bg-two pb-5">
+    <div className="w-[280px] h-full border-r overflow-y-auto bg-two pb-5">
       <div className="flex flex-col gap-0 divide-y divide-three/20">
         {displayVlogs.map((vlog) => (
           <Item
@@ -30,6 +30,11 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
             }}
           />
         ))}
+        {displayVlogs.length === 0 && (
+          <div className="text-center text-sm text-secondary p-4 track-10">
+            No vlogs yet
+          </div>
+        )}
       </div>
     </div>
   )

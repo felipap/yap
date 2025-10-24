@@ -7,12 +7,13 @@
     "module": "CommonJS",
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "outDir": "dist",
-    "strict": true,
+    // "rootDir": "..",
     // "noUnusedLocals": true,
     // "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "../dist",
+    "strict": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -21,7 +22,7 @@
     "declaration": false
   },
   "include": [
-    "main/**/*"
+    "**/*"
   ],
   "exclude": [
     "node_modules",

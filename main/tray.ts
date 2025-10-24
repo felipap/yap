@@ -85,12 +85,14 @@ export function createTray(): Tray {
 
   // Handle tray click
   tray.on('click', () => {
-    const windows = BrowserWindow.getAllWindows()
-    if (windows.length === 0) {
+    const mainWindow = BrowserWindow.getAllWindows().find(
+      (w) => w === require('./windows').mainWindow,
+    )
+    if (!mainWindow || mainWindow.isDestroyed()) {
       createMainWindow()
     } else {
-      windows[0].show()
-      windows[0].focus()
+      mainWindow.show()
+      mainWindow.focus()
     }
   })
 
@@ -115,12 +117,14 @@ function updateTrayMenu(): void {
     {
       label: 'Show App',
       click: () => {
-        const windows = BrowserWindow.getAllWindows()
-        if (windows.length === 0) {
+        const mainWindow = BrowserWindow.getAllWindows().find(
+          (w) => w === require('./windows').mainWindow,
+        )
+        if (!mainWindow || mainWindow.isDestroyed()) {
           createMainWindow()
         } else {
-          windows[0].show()
-          windows[0].focus()
+          mainWindow.show()
+          mainWindow.focus()
         }
       },
     },
@@ -143,9 +147,11 @@ async function handleStartRecording(): Promise<void> {
       microphoneId: '',
     }
 
-    // Use background recording when no windows are open
-    const windows = BrowserWindow.getAllWindows()
-    if (windows.length === 0) {
+    // Use background recording when main window is not visible
+    const mainWindow = BrowserWindow.getAllWindows().find(
+      (w) => w === require('./windows').mainWindow,
+    )
+    if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
       await startBackgroundRecording(config)
     } else {
       await startRecording(config)

@@ -1,5 +1,5 @@
 import { Film } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { useVlog } from '../../../shared/useVlogData'
 import { RecordedFile } from '../../types'
@@ -14,20 +14,6 @@ export default function Page() {
   function handleSelectVlog(next: RecordedFile) {
     setSelectedVlogId(next.id)
   }
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedVlogId) {
-        setSelectedVlogId(null)
-      }
-    }
-
-    window.addEventListener('keydown', handleEscape)
-
-    return () => {
-      window.removeEventListener('keydown', handleEscape)
-    }
-  }, [selectedVlogId])
 
   return (
     <PlaybackPreferencesProvider>
@@ -47,9 +33,7 @@ export default function Page() {
               <DetailPage
                 key={vlog.id}
                 vlog={vlog}
-                onBack={() => {
-                  setSelectedVlogId(null)
-                }}
+                onBack={() => setSelectedVlogId(null)}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center">

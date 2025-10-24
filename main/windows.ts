@@ -55,10 +55,16 @@ export function createMainWindow(): BrowserWindow {
     mainWindow.setIcon(iconPath)
   }
 
-  // Save window bounds on close
-  mainWindow.on('close', () => {
-    const bounds = mainWindow.getBounds()
-    store.set('windowBounds', bounds)
+  // Save window bounds on close and hide instead of destroy
+  mainWindow.on('close', (event) => {
+    if (!app.isQuitting) {
+      event.preventDefault()
+      const bounds = mainWindow.getBounds()
+      store.set('windowBounds', bounds)
+      mainWindow.hide()
+      return false
+    }
+    return true
   })
 
   // Track window focus state

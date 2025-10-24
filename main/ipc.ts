@@ -47,7 +47,7 @@ function generateVlogId(filePath: string): string {
 
 // IPC handlers
 export function setupIpcHandlers() {
-  ipcMain.handle('get-screen-sources', async () => {
+  ipcMain.handle('getScreenSources', async () => {
     try {
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
@@ -67,7 +67,7 @@ export function setupIpcHandlers() {
     store.set(state)
   })
 
-  ipcMain.handle('get-recorded-files', async () => {
+  ipcMain.handle('getRecordedFiles', async () => {
     try {
       const documentsPath = getRecordingsDir()
 
@@ -125,7 +125,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('open-file-location', async (_, vlogId: string) => {
+  ipcMain.handle('openFileLocation', async (_, vlogId: string) => {
     try {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
@@ -138,7 +138,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('untrack-vlog', async (_, vlogId: string) => {
+  ipcMain.handle('untrackVlog', async (_, vlogId: string) => {
     try {
       // Remove from vlog store (but keep the file)
       deleteVlog(vlogId)
@@ -151,7 +151,7 @@ export function setupIpcHandlers() {
   })
 
   ipcMain.handle(
-    'save-recording',
+    'saveRecording',
     async (_, filename: string, arrayBuffer: ArrayBuffer) => {
       try {
         const recordingsDir = getRecordingsDir()
@@ -184,7 +184,7 @@ export function setupIpcHandlers() {
 
   // Crash protection handlers
   ipcMain.handle(
-    'save-recording-chunk',
+    'saveRecordingChunk',
     async (_, recordingId: string, arrayBuffer: ArrayBuffer) => {
       try {
         const tempDir = getTempDir()
@@ -206,7 +206,7 @@ export function setupIpcHandlers() {
     },
   )
 
-  ipcMain.handle('get-recording-chunks', async (_, recordingId: string) => {
+  ipcMain.handle('getRecordingChunks', async (_, recordingId: string) => {
     try {
       const tempDir = getTempDir()
       const files = await readdir(tempDir)
@@ -222,7 +222,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('cleanup-recording-chunks', async (_, recordingId: string) => {
+  ipcMain.handle('cleanupRecordingChunks', async (_, recordingId: string) => {
     try {
       const tempDir = getTempDir()
       const files = await readdir(tempDir)
@@ -245,7 +245,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('recover-incomplete-recordings', async () => {
+  ipcMain.handle('recoverIncompleteRecordings', async () => {
     try {
       const tempDir = getTempDir()
       const files = await readdir(tempDir)
@@ -319,37 +319,37 @@ export function setupIpcHandlers() {
   })
 
   // Recording system handlers
-  ipcMain.handle('start-recording', async (_, config: RecordingConfig) => {
+  ipcMain.handle('startRecording', async (_, config: RecordingConfig) => {
     return await startRecording(config)
   })
 
-  ipcMain.handle('stop-recording', async () => {
+  ipcMain.handle('stopRecording', async () => {
     return await stopRecording()
   })
 
-  ipcMain.handle('get-recording-state', async () => {
+  ipcMain.handle('getRecordingState', async () => {
     return getRecordingState()
   })
 
-  ipcMain.handle('emergency-save-recording', async () => {
+  ipcMain.handle('emergencySaveRecording', async () => {
     return await emergencySave()
   })
 
   // Store handlers
-  ipcMain.handle('store-get', (_, key: string) => {
+  ipcMain.handle('storeGet', (_, key: string) => {
     return store.get(key)
   })
 
-  ipcMain.handle('store-set', (_, key: string, value: any) => {
+  ipcMain.handle('storeSet', (_, key: string, value: any) => {
     store.set(key, value)
   })
 
-  ipcMain.handle('store-get-all', () => {
+  ipcMain.handle('storeGetAll', () => {
     return store.store
   })
 
   // Transcription handlers
-  ipcMain.handle('transcribe-video', async (_, vlogId: string) => {
+  ipcMain.handle('transcribeVideo', async (_, vlogId: string) => {
     try {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
@@ -416,7 +416,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('get-transcription', async (_, vlogId: string) => {
+  ipcMain.handle('getTranscription', async (_, vlogId: string) => {
     try {
       const vlog = getVlog(vlogId)
       if (!vlog || !vlog.transcription) {
@@ -429,7 +429,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('get-transcription-state', async (_, vlogId: string) => {
+  ipcMain.handle('getTranscriptionState', async (_, vlogId: string) => {
     try {
       // Check ephemeral state first (for active transcriptions)
       if (ephemeral.isTranscriptionActive(vlogId)) {
@@ -449,7 +449,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('get-all-transcription-states', async () => {
+  ipcMain.handle('getAllTranscriptionStates', async () => {
     try {
       const vlogs = getAllVlogs()
       const states: Record<string, any> = {}
@@ -525,7 +525,7 @@ export function setupIpcHandlers() {
   )
 
   // Vlog management handlers
-  ipcMain.handle('get-vlog', async (_, vlogId: string) => {
+  ipcMain.handle('getVlog', async (_, vlogId: string) => {
     try {
       return getVlog(vlogId)
     } catch (error) {
@@ -534,7 +534,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('get-all-vlogs', async () => {
+  ipcMain.handle('getAllVlogs', async () => {
     try {
       return getAllVlogs()
     } catch (error) {
@@ -544,7 +544,7 @@ export function setupIpcHandlers() {
   })
 
   ipcMain.handle(
-    'update-vlog',
+    'updateVlog',
     async (_, vlogId: string, updates: Partial<Vlog>) => {
       try {
         updateVlog(vlogId, updates)
@@ -557,7 +557,7 @@ export function setupIpcHandlers() {
   )
 
   // Transcription settings handlers
-  ipcMain.handle('get-transcription-speed-up', async () => {
+  ipcMain.handle('getTranscriptionSpeedUp', async () => {
     try {
       return store.get('transcriptionSpeedUp') || false
     } catch (error) {
@@ -566,7 +566,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('set-transcription-speed-up', async (_, speedUp: boolean) => {
+  ipcMain.handle('setTranscriptionSpeedUp', async (_, speedUp: boolean) => {
     try {
       store.set('transcriptionSpeedUp', speedUp)
       return true
@@ -612,7 +612,7 @@ export function setupIpcHandlers() {
   // Summary handlers
 
   ipcMain.handle(
-    'generate-video-summary',
+    'generateVideoSummary',
     async (_, vlogId: string, transcription: string) => {
       try {
         const summary = await generateVideoSummary(vlogId, transcription)
@@ -629,7 +629,7 @@ export function setupIpcHandlers() {
   )
 
   ipcMain.handle(
-    'save-video-summary',
+    'saveVideoSummary',
     async (_, vlogId: string, summary: string) => {
       try {
         updateVlog(vlogId, { summary })
@@ -641,7 +641,7 @@ export function setupIpcHandlers() {
   )
 
   // Import external video file handler
-  ipcMain.handle('import-video-file', async (_, filePath: string) => {
+  ipcMain.handle('importVideoFile', async (_, filePath: string) => {
     try {
       // Check if file exists
       await access(filePath)
@@ -738,7 +738,7 @@ export function setupIpcHandlers() {
 
   // Video position handlers
   ipcMain.handle(
-    'save-video-position',
+    'saveVideoPosition',
     async (_, vlogId: string, position: number) => {
       try {
         const now = new Date().toISOString()
@@ -754,7 +754,7 @@ export function setupIpcHandlers() {
     },
   )
 
-  ipcMain.handle('get-video-position', async (_, vlogId: string) => {
+  ipcMain.handle('getVideoPosition', async (_, vlogId: string) => {
     try {
       const vlog = getVlog(vlogId)
       if (!vlog) {
@@ -784,7 +784,7 @@ export function setupIpcHandlers() {
   })
 
   // Auto-updater handlers
-  ipcMain.handle('check-for-updates', async () => {
+  ipcMain.handle('checkForUpdates', async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
         return { available: false, message: 'Updates disabled in development' }
@@ -798,7 +798,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('download-update', async () => {
+  ipcMain.handle('downloadUpdate', async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
         throw new Error('Updates disabled in development')
@@ -812,7 +812,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('install-update', async () => {
+  ipcMain.handle('installUpdate', async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
         throw new Error('Updates disabled in development')
@@ -826,7 +826,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('get-app-version', async () => {
+  ipcMain.handle('getAppVersion', async () => {
     try {
       return app.getVersion()
     } catch (error) {
@@ -836,7 +836,7 @@ export function setupIpcHandlers() {
   })
 
   // Settings window handlers
-  ipcMain.handle('open-settings-window', async () => {
+  ipcMain.handle('openSettingsWindow', async () => {
     try {
       const settingsWindow = createSettingsWindow()
       return { success: true, windowId: settingsWindow.id }
@@ -847,7 +847,7 @@ export function setupIpcHandlers() {
   })
 
   // Gemini API key handlers
-  ipcMain.handle('get-gemini-api-key', async () => {
+  ipcMain.handle('getGeminiApiKey', async () => {
     try {
       return store.get('geminiApiKey') || ''
     } catch (error) {
@@ -856,7 +856,7 @@ export function setupIpcHandlers() {
     }
   })
 
-  ipcMain.handle('set-gemini-api-key', async (_, apiKey: string) => {
+  ipcMain.handle('setGeminiApiKey', async (_, apiKey: string) => {
     try {
       store.set('geminiApiKey', apiKey)
       return true
@@ -867,7 +867,7 @@ export function setupIpcHandlers() {
   })
 
   // MP4 conversion handler
-  ipcMain.handle('convert-to-mp4', async (_, vlogId: string) => {
+  ipcMain.handle('convertToMp4', async (_, vlogId: string) => {
     try {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
@@ -948,7 +948,7 @@ export function setupIpcHandlers() {
   })
 
   // Get conversion state
-  ipcMain.handle('get-conversion-state', async (_, vlogId: string) => {
+  ipcMain.handle('getConversionState', async (_, vlogId: string) => {
     return {
       isActive: ephemeral.isConversionActive(vlogId),
       progress: ephemeral.getConversionProgress(vlogId),

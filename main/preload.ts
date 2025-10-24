@@ -31,100 +31,137 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
-  getScreenSources: (): Promise<ScreenSource[]> =>
-    ipcRenderer.invoke('get-screen-sources'),
+  getScreenSources: (): Promise<ScreenSource[]> => {
+    return ipcRenderer.invoke('getScreenSources')
+  },
 
-  getRecordedFiles: (): Promise<RecordedFile[]> =>
-    ipcRenderer.invoke('get-recorded-files'),
+  getRecordedFiles: (): Promise<RecordedFile[]> => {
+    return ipcRenderer.invoke('getRecordedFiles')
+  },
 
-  openFileLocation: (vlogId: string): Promise<void> =>
-    ipcRenderer.invoke('open-file-location', vlogId),
+  openFileLocation: (vlogId: string): Promise<void> => {
+    return ipcRenderer.invoke('openFileLocation', vlogId)
+  },
 
-  untrackVlog: (vlogId: string): Promise<boolean> =>
-    ipcRenderer.invoke('untrack-vlog', vlogId),
+  untrackVlog: (vlogId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('untrackVlog', vlogId)
+  },
 
-  saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> =>
-    ipcRenderer.invoke('save-recording', filename, buffer),
+  saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> => {
+    return ipcRenderer.invoke('saveRecording', filename, buffer)
+  },
 
   // Crash protection methods
   saveRecordingChunk: (
     recordingId: string,
     buffer: ArrayBuffer,
-  ): Promise<string> =>
-    ipcRenderer.invoke('save-recording-chunk', recordingId, buffer),
+  ): Promise<string> => {
+    return ipcRenderer.invoke('saveRecordingChunk', recordingId, buffer)
+  },
 
-  getRecordingChunks: (recordingId: string): Promise<string[]> =>
-    ipcRenderer.invoke('get-recording-chunks', recordingId),
+  getRecordingChunks: (recordingId: string): Promise<string[]> => {
+    return ipcRenderer.invoke('getRecordingChunks', recordingId)
+  },
 
-  cleanupRecordingChunks: (recordingId: string): Promise<boolean> =>
-    ipcRenderer.invoke('cleanup-recording-chunks', recordingId),
+  cleanupRecordingChunks: (recordingId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('cleanupRecordingChunks', recordingId)
+  },
 
-  recoverIncompleteRecordings: (): Promise<string[]> =>
-    ipcRenderer.invoke('recover-incomplete-recordings'),
+  recoverIncompleteRecordings: (): Promise<string[]> => {
+    return ipcRenderer.invoke('recoverIncompleteRecordings')
+  },
 
   // New recording system methods
-  startRecording: (config: any): Promise<string> =>
-    ipcRenderer.invoke('start-recording', config),
+  startRecording: (config: any): Promise<string> => {
+    return ipcRenderer.invoke('startRecording', config)
+  },
 
-  stopRecording: (): Promise<string> => ipcRenderer.invoke('stop-recording'),
+  stopRecording: (): Promise<string> => {
+    return ipcRenderer.invoke('stopRecording')
+  },
 
-  getRecordingState: (): Promise<any> =>
-    ipcRenderer.invoke('get-recording-state'),
+  getRecordingState: (): Promise<any> => {
+    return ipcRenderer.invoke('getRecordingState')
+  },
 
-  emergencySaveRecording: (): Promise<void> =>
-    ipcRenderer.invoke('emergency-save-recording'),
+  emergencySaveRecording: (): Promise<void> => {
+    return ipcRenderer.invoke('emergencySaveRecording')
+  },
 
   store: {
-    get: <T>(key: string): Promise<T> => ipcRenderer.invoke('store-get', key),
+    get: <T>(key: string): Promise<T> => {
+      return ipcRenderer.invoke('storeGet', key)
+    },
 
-    set: (key: string, value: any): Promise<void> =>
-      ipcRenderer.invoke('store-set', key, value),
+    set: (key: string, value: any): Promise<void> => {
+      return ipcRenderer.invoke('storeSet', key, value)
+    },
 
-    getAll: (): Promise<Record<string, any>> =>
-      ipcRenderer.invoke('store-get-all'),
+    getAll: (): Promise<Record<string, any>> => {
+      return ipcRenderer.invoke('storeGetAll')
+    },
   },
 
   // Transcription functions
-  transcribeVideo: (vlogId: string): Promise<TranscriptionResult> =>
-    ipcRenderer.invoke('transcribe-video', vlogId),
+  transcribeVideo: (vlogId: string): Promise<TranscriptionResult> => {
+    return ipcRenderer.invoke('transcribeVideo', vlogId)
+  },
 
-  getTranscription: (vlogId: string): Promise<TranscriptionResult | null> =>
-    ipcRenderer.invoke('get-transcription', vlogId),
+  getTranscription: (vlogId: string): Promise<TranscriptionResult | null> => {
+    return ipcRenderer.invoke('getTranscription', vlogId)
+  },
 
-  loadVideoDuration: (vlogId: string): Promise<number> =>
-    ipcRenderer.invoke('loadVideoDuration', vlogId),
+  loadVideoDuration: (vlogId: string): Promise<number> => {
+    return ipcRenderer.invoke('loadVideoDuration', vlogId)
+  },
 
-  getTranscriptionState: (vlogId: string): Promise<TranscriptionState> =>
-    ipcRenderer.invoke('get-transcription-state', vlogId),
+  getTranscriptionState: (vlogId: string): Promise<TranscriptionState> => {
+    return ipcRenderer.invoke('getTranscriptionState', vlogId)
+  },
 
-  getAllTranscriptionStates: (): Promise<Record<string, TranscriptionState>> =>
-    ipcRenderer.invoke('get-all-transcription-states'),
-  getVlog: (vlogId: string) => ipcRenderer.invoke('get-vlog', vlogId),
-  getAllVlogs: () => ipcRenderer.invoke('get-all-vlogs'),
-  updateVlog: (vlogId: string, updates: any) =>
-    ipcRenderer.invoke('update-vlog', vlogId, updates),
-  getTranscriptionSpeedUp: () =>
-    ipcRenderer.invoke('get-transcription-speed-up'),
-  setTranscriptionSpeedUp: (speedUp: boolean) =>
-    ipcRenderer.invoke('set-transcription-speed-up', speedUp),
+  getAllTranscriptionStates: (): Promise<
+    Record<string, TranscriptionState>
+  > => {
+    return ipcRenderer.invoke('getAllTranscriptionStates')
+  },
+  getVlog: (vlogId: string) => {
+    return ipcRenderer.invoke('getVlog', vlogId)
+  },
+  getAllVlogs: () => {
+    return ipcRenderer.invoke('getAllVlogs')
+  },
+  updateVlog: (vlogId: string, updates: any) => {
+    return ipcRenderer.invoke('updateVlog', vlogId, updates)
+  },
+  getTranscriptionSpeedUp: () => {
+    return ipcRenderer.invoke('getTranscriptionSpeedUp')
+  },
+  setTranscriptionSpeedUp: (speedUp: boolean) => {
+    return ipcRenderer.invoke('setTranscriptionSpeedUp', speedUp)
+  },
   generateVideoSummary: (
     vlogId: string,
     transcription: string,
-  ): Promise<string> =>
-    ipcRenderer.invoke('generate-video-summary', vlogId, transcription),
-  saveVideoSummary: (vlogId: string, summary: string): Promise<void> =>
-    ipcRenderer.invoke('save-video-summary', vlogId, summary),
-  importVideoFile: (filePath: string): Promise<any> =>
-    ipcRenderer.invoke('import-video-file', filePath),
+  ): Promise<string> => {
+    return ipcRenderer.invoke('generateVideoSummary', vlogId, transcription)
+  },
+  saveVideoSummary: (vlogId: string, summary: string): Promise<void> => {
+    return ipcRenderer.invoke('saveVideoSummary', vlogId, summary)
+  },
+  importVideoFile: (filePath: string): Promise<any> => {
+    return ipcRenderer.invoke('importVideoFile', filePath)
+  },
 
   // Video position functions
-  saveVideoPosition: (vlogId: string, position: number): Promise<boolean> =>
-    ipcRenderer.invoke('save-video-position', vlogId, position),
+  saveVideoPosition: (vlogId: string, position: number): Promise<boolean> => {
+    return ipcRenderer.invoke('saveVideoPosition', vlogId, position)
+  },
 
   getVideoPosition: (
     vlogId: string,
-  ): Promise<{ position: number; timestamp: string } | null> =>
-    ipcRenderer.invoke('get-video-position', vlogId),
+  ): Promise<{ position: number; timestamp: string } | null> => {
+    return ipcRenderer.invoke('getVideoPosition', vlogId)
+  },
 
   // Event listeners for real-time updates
   onVlogUpdated: (callback: (vlogId: string) => void) => {
@@ -163,26 +200,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Auto-updater functions
-  checkForUpdates: (): Promise<{ available: boolean; message: string }> =>
-    ipcRenderer.invoke('check-for-updates'),
+  checkForUpdates: (): Promise<{ available: boolean; message: string }> => {
+    return ipcRenderer.invoke('checkForUpdates')
+  },
 
-  downloadUpdate: (): Promise<{ success: boolean; message: string }> =>
-    ipcRenderer.invoke('download-update'),
+  downloadUpdate: (): Promise<{ success: boolean; message: string }> => {
+    return ipcRenderer.invoke('downloadUpdate')
+  },
 
-  installUpdate: (): Promise<{ success: boolean; message: string }> =>
-    ipcRenderer.invoke('install-update'),
+  installUpdate: (): Promise<{ success: boolean; message: string }> => {
+    return ipcRenderer.invoke('installUpdate')
+  },
 
-  getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
+  getAppVersion: (): Promise<string> => {
+    return ipcRenderer.invoke('getAppVersion')
+  },
 
   // Settings functions
-  openSettingsWindow: (): Promise<{ success: boolean; windowId: number }> =>
-    ipcRenderer.invoke('open-settings-window'),
+  openSettingsWindow: (): Promise<{ success: boolean; windowId: number }> => {
+    return ipcRenderer.invoke('openSettingsWindow')
+  },
 
-  getGeminiApiKey: (): Promise<string> =>
-    ipcRenderer.invoke('get-gemini-api-key'),
+  getGeminiApiKey: (): Promise<string> => {
+    return ipcRenderer.invoke('getGeminiApiKey')
+  },
 
-  setGeminiApiKey: (apiKey: string): Promise<boolean> =>
-    ipcRenderer.invoke('set-gemini-api-key', apiKey),
+  setGeminiApiKey: (apiKey: string): Promise<boolean> => {
+    return ipcRenderer.invoke('setGeminiApiKey', apiKey)
+  },
 
   // Auto-updater event listeners
   onUpdateAvailable: (callback: (info: any) => void) => {
@@ -211,14 +256,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     message: string
     newVlogId: string
     outputPath: string
-  }> => ipcRenderer.invoke('convert-to-mp4', vlogId),
+  }> => {
+    return ipcRenderer.invoke('convertToMp4', vlogId)
+  },
 
   getConversionState: (
     vlogId: string,
   ): Promise<{
     isActive: boolean
     progress: number | null
-  }> => ipcRenderer.invoke('get-conversion-state', vlogId),
+  }> => {
+    return ipcRenderer.invoke('getConversionState', vlogId)
+  },
 
   onConversionProgress: (
     callback: (vlogId: string, progress: number) => void,

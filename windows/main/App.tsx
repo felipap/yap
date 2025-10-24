@@ -1,7 +1,7 @@
-import LibraryPage from './pages/library'
-import RecordPage from './pages/record'
 import { useRouter } from '../shared/Router'
 import { TopNav } from '../shared/ui/TopNav'
+import LibraryPage from './pages/library'
+import RecordPage from './pages/record'
 
 export function App() {
   const { currentRoute } = useRouter()
