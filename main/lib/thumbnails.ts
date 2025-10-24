@@ -49,22 +49,59 @@ export async function generateThumbnail(
       ) {
         console.log('ffmpeg not available, trying alternative method')
       } else {
-        console.log('UNEXPECTED ERROR:', ffmpegError)
+        console.log('FFmpeg failed for video:', videoPath)
+        console.log('Error details:', ffmpegError)
+
+        // Try with different ffmpeg options for corrupted files
+        try {
+          console.log('Trying ffmpeg with error recovery options...')
+          await execAsync(
+            `ffmpeg -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+          )
+          return thumbnailPath
+        } catch (recoveryError) {
+          console.log(
+            'FFmpeg recovery also failed, trying alternative approach...',
+          )
+        }
       }
     }
 
-    // Fallback: try to use system's built-in tools
+    // Fallback: try different approaches for corrupted files
     try {
-      // On macOS, try sips (built-in image processing tool)
-      if (process.platform === 'darwin') {
-        // First extract frame using ffmpeg if available, or use a different approach
+      // Try extracting from the very beginning (frame 0) which is more likely to work
+      console.log('Trying to extract frame from beginning of video...')
+      await execAsync(
+        `ffmpeg -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+      )
+      return thumbnailPath
+    } catch (beginningError) {
+      console.log(
+        'Beginning frame extraction failed, trying with different codec options...',
+      )
+
+      // Try with different codec options
+      try {
         await execAsync(
-          `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -f image2pipe -vcodec png - | sips -s format jpeg --out "${thumbnailPath}"`,
+          `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
         )
         return thumbnailPath
+      } catch (codecError) {
+        console.log(
+          'Codec-specific extraction failed, trying final fallback...',
+        )
+
+        // Final fallback: try without seeking (just take first frame)
+        try {
+          await execAsync(
+            `ffmpeg -i "${videoPath}" -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+          )
+          return thumbnailPath
+        } catch (finalError) {
+          console.log('All thumbnail generation methods failed for:', videoPath)
+          console.log('Final error:', finalError)
+        }
       }
-    } catch (fallbackError) {
-      console.log('Fallback thumbnail generation failed')
     }
 
     return null

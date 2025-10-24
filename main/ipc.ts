@@ -42,9 +42,7 @@ function generateVlogId(filePath: string): string {
 }
 
 // IPC handlers
-export function setupIpcHandlers(mainWindow: BrowserWindow) {
-  // Initialize recording system
-  recording.initializeRecording(mainWindow)
+export function setupIpcHandlers(mainWindow?: BrowserWindow) {
   ipcMain.handle('get-screen-sources', async () => {
     try {
       const sources = await desktopCapturer.getSources({

@@ -1,14 +1,24 @@
 import { BrowserWindow, app } from 'electron'
 import { existsSync } from 'fs'
 import { join } from 'path'
-import { setupIpcHandlers } from './ipc'
 import { store } from './store'
 
-let mainWindow: BrowserWindow
-let settingsWindow: BrowserWindow | null = null
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
-export function createWindow(): BrowserWindow {
+export let mainWindow: BrowserWindow
+export let settingsWindow: BrowserWindow | null = null
+export let recordingWindow: BrowserWindow | null = null
+
+export function createMainWindow(): BrowserWindow {
+  if (mainWindow) {
+    throw new Error('MainWindow already created')
+  }
+
   const windowBounds = store.get('windowBounds', { width: 1200, height: 800 })
+
+  // Check if window was last focused (only relevant in development)
+  const wasLastFocused = store.get('wasLastFocused', false)
+  const shouldShow = process.env.NODE_ENV !== 'development' || wasLastFocused
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: windowBounds.width,
@@ -19,8 +29,8 @@ export function createWindow(): BrowserWindow {
     minHeight: 500,
     center: true,
     maxWidth: 900,
-    // Prevent window from stealing focus during development hot reload
-    show: true, // process.env.NODE_ENV !== 'development',
+    // Only show window in development if it was last focused
+    show: shouldShow,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -50,18 +60,33 @@ export function createWindow(): BrowserWindow {
     store.set('windowBounds', bounds)
   })
 
-  // Load the app
-  loadApp(mainWindow)
+  // Track window focus state
+  mainWindow.on('focus', () => {
+    store.set('wasLastFocused', true)
+  })
 
-  // Show window after content is loaded in development to prevent focus stealing
+  mainWindow.on('blur', () => {
+    store.set('wasLastFocused', false)
+  })
+
+  // Load the app
   if (process.env.NODE_ENV === 'development') {
-    // mainWindow.once('ready-to-show', () => {
-    //   mainWindow.show()
-    // })
+    mainWindow.loadURL('http://localhost:4000/main.html')
+    // window.webContents.openDevTools()
+  } else {
+    // In production, load from the app.asar bundle
+    const rendererPath = join(__dirname, '..', 'windows', 'main', 'index.html')
+    console.log('__dirname:', __dirname)
+    console.log('Renderer path:', rendererPath)
+    mainWindow.loadFile(rendererPath)
   }
 
-  // Setup IPC handlers after window is created
-  setupIpcHandlers(mainWindow)
+  // Show window after content is loaded in development to prevent focus stealing
+  if (process.env.NODE_ENV === 'development' && wasLastFocused) {
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.show()
+    })
+  }
 
   // Load recording handler script
   mainWindow.webContents.once('dom-ready', () => {
@@ -104,28 +129,18 @@ function findIconPath(): string | null {
   return getIconPath()
 }
 
-function loadApp(window: BrowserWindow): void {
-  if (process.env.NODE_ENV === 'development') {
-    window.loadURL('http://localhost:4000/main.html')
-    // window.webContents.openDevTools()
-  } else {
-    // In production, load from the app.asar bundle
-    const rendererPath = join(__dirname, '..', 'windows', 'main', 'index.html')
-    console.log('__dirname:', __dirname)
-    console.log('Renderer path:', rendererPath)
-    window.loadFile(rendererPath)
-  }
-}
-
 export function getMainWindow(): BrowserWindow | undefined {
   return mainWindow
 }
 
+//
+//
+//
+//
+
 export function createSettingsWindow(): BrowserWindow {
-  // Don't create multiple settings windows
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.focus()
-    return settingsWindow
+  if (settingsWindow) {
+    throw new Error('SettingsWindow already created')
   }
 
   const settingsWindowOptions: Electron.BrowserWindowConstructorOptions = {
@@ -155,10 +170,6 @@ export function createSettingsWindow(): BrowserWindow {
 
   settingsWindow = new BrowserWindow(settingsWindowOptions)
 
-  if (iconPath) {
-    settingsWindow.setIcon(iconPath)
-  }
-
   // Load the settings page
   if (process.env.NODE_ENV === 'development') {
     settingsWindow.loadURL('http://localhost:4001/index.html')
@@ -184,4 +195,55 @@ export function createSettingsWindow(): BrowserWindow {
 
 export function getSettingsWindow(): BrowserWindow | null {
   return settingsWindow
+}
+
+//
+//
+//
+
+export function createRecordingWindow(): BrowserWindow {
+  // Don't create multiple recording windows
+  if (recordingWindow) {
+    throw new Error('RecordingWindow already created')
+  }
+
+  const visible = IS_DEVELOPMENT
+
+  const recordingWindowOptions: Electron.BrowserWindowConstructorOptions = {
+    width: 200,
+    height: 200,
+    maxWidth: 200,
+    maxHeight: 200,
+    minWidth: 200,
+    minHeight: 200,
+    show: visible,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: join(__dirname, 'recording', 'preload.js'),
+    },
+  }
+
+  recordingWindow = new BrowserWindow(recordingWindowOptions)
+
+  // Load the recording window (static HTML file)
+  const recordingPath = join(
+    __dirname,
+    '..',
+    'windows',
+    'recording',
+    'index.html',
+  )
+  recordingWindow.loadFile(recordingPath)
+
+  // Clean up reference when window is closed
+  recordingWindow.on('closed', () => {
+    recordingWindow = null
+  })
+
+  return recordingWindow
+}
+
+export function getRecordingWindow(): BrowserWindow | null {
+  return recordingWindow
 }

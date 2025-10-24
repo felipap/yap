@@ -43,6 +43,7 @@ export interface State {
   vlogs?: Record<string, Vlog>
   transcriptionSpeedUp?: boolean
   userProfile?: UserProfile
+  wasLastFocused?: boolean
 }
 
 //

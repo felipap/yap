@@ -1,9 +1,9 @@
 // ~/Library/Application Support/yap-camera/data.json
 
 import Store, { Schema } from 'electron-store'
-import { State, Vlog } from '../shared-types'
+import { State, Vlog } from '../../shared-types'
 
-export type { State } from '../shared-types'
+export type { State } from '../../shared-types'
 
 const schema: Schema<State> = {
   selectedCameraId: {
@@ -63,6 +63,10 @@ const schema: Schema<State> = {
     },
   },
   transcriptionSpeedUp: {
+    type: 'boolean',
+    default: false,
+  },
+  wasLastFocused: {
     type: 'boolean',
     default: false,
   },

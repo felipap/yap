@@ -1,12 +1,38 @@
 import 'source-map-support/register'
 
 import { app, BrowserWindow } from 'electron'
+
+// Prevent multiple instances
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // Someone tried to run a second instance, focus our window instead
+    const mainWindow = getMainWindow()
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
-import { setupAutoUpdater } from './updater'
-import { createWindow } from './windows'
+import { setupIpcHandlers } from './ipc'
+import { getRecordingsDir, getTempDir } from './lib/config'
 import { debug } from './lib/logger'
+import { setupBackgroundRecordingIPC } from './recording/background-recording'
 import * as recording from './recording/recording'
-import { getTempDir, getRecordingsDir } from './lib/config'
+import { createTray, destroyTray } from './tray'
+import { setupAutoUpdater } from './updater'
+import {
+  createMainWindow,
+  createRecordingWindow,
+  createSettingsWindow,
+  getMainWindow,
+  getRecordingWindow,
+  getSettingsWindow,
+} from './windows'
 
 // Crash recovery function
 async function recoverIncompleteRecordings() {
@@ -88,34 +114,48 @@ registerProtocols()
 
 setupAutoUpdater()
 
+// Prevent multiple initialization
+let isInitialized = false
+
 app.whenReady().then(async () => {
+  if (isInitialized) {
+    console.log('App already initialized, skipping...')
+    return
+  }
+  isInitialized = true
   // Setup protocol handlers
   setupProtocolHandlers()
+
+  // Setup background recording IPC handlers
+  setupBackgroundRecordingIPC()
 
   // Attempt to recover any incomplete recordings from crashes
   await recording.recoverIncompleteRecordings()
 
-  createWindow()
+  // Create tray (this will be available even when no windows are open)
+  createTray()
+
+  // Create main window
+  const mainWindow = createMainWindow()
+  createSettingsWindow()
+  createRecordingWindow()
+
+  // Initialize recording system
+  recording.initializeRecording(mainWindow)
+
+  setupIpcHandlers(mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createMainWindow()
     }
   })
 })
 
 app.on('window-all-closed', () => {
+  // On macOS, keep the app running even when all windows are closed
+  // The tray will remain available for background recording
   if (process.platform !== 'darwin') {
     app.quit()
   }
-})
-
-// Handle uncaught exceptions with better stack traces
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error)
-  console.error('Stack trace:', error.stack)
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
 })
