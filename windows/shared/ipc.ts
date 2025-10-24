@@ -42,6 +42,25 @@ export async function saveRecording(
   return window.electronAPI.saveRecording(filename, buffer)
 }
 
+export async function startStreamingRecording(
+  filename: string,
+): Promise<string> {
+  return window.electronAPI.startStreamingRecording(filename)
+}
+
+export async function appendRecordingChunk(
+  recordingId: string,
+  chunk: ArrayBuffer,
+): Promise<void> {
+  return window.electronAPI.appendRecordingChunk(recordingId, chunk)
+}
+
+export async function finalizeStreamingRecording(
+  recordingId: string,
+): Promise<string> {
+  return window.electronAPI.finalizeStreamingRecording(recordingId)
+}
+
 // Store functions
 export async function getStoredValue<T>(key: string): Promise<T> {
   return window.electronAPI.store.get<T>(key)

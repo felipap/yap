@@ -65,16 +65,11 @@ async function onInit() {
 
   app.on('activate', () => {
     // On macOS, when the dock icon is clicked, show the library window
-    if (libraryWindow) {
-      if (libraryWindow.isMinimized()) {
-        libraryWindow.restore()
-      }
-      libraryWindow.show()
-      libraryWindow.focus()
-    } else {
-      // If library window doesn't exist, create it
-      createLibraryWindow()
+    if (libraryWindow.isMinimized()) {
+      libraryWindow.restore()
     }
+    libraryWindow.show()
+    libraryWindow.focus()
   })
 }
 

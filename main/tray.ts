@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, nativeImage, Tray } from 'electron'
-import path, { join } from 'path'
+import path from 'path'
 import { startRecording, stopRecording } from './recording'
 import {
   getBackgroundRecordingState,
@@ -7,62 +7,10 @@ import {
   stopBackgroundRecording,
 } from './recording/background-recording'
 import { RecordingConfig } from './recording/types'
-import { createLibraryWindow, libraryWindow } from './windows'
+import { libraryWindow } from './windows'
 
 let tray: Tray | null = null
 let isRecording = false
-
-// Create a red circle icon for recording state
-function createRecordIcon(): Electron.NativeImage {
-  // Create a simple red circle using a data URL
-  const size = 16
-  const svg = `
-    <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="#ff0000"/>
-    </svg>
-  `
-  const buffer = Buffer.from(svg)
-  return nativeImage.createFromBuffer(buffer)
-}
-
-// Create a normal app icon for non-recording state
-function createNormalIcon(): Electron.NativeImage {
-  // Try to use the app icon, fallback to a simple icon
-  const iconPath = findIconPath()
-  if (iconPath) {
-    return nativeImage.createFromPath(iconPath)
-  }
-
-  // Fallback: create a simple icon
-  const size = 16
-  const svg = `
-    <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${size}" height="${size}" fill="#333333"/>
-    </svg>
-  `
-  const buffer = Buffer.from(svg)
-  return nativeImage.createFromBuffer(buffer)
-}
-
-function findIconPath(): string | null {
-  const { existsSync } = require('fs')
-  const possibleIconPaths = [
-    join(__dirname, '../assets', 'icon.png'),
-    join(__dirname, '../assets', 'icon.icns'),
-    join(process.resourcesPath, 'assets', 'icon.png'),
-    join(process.resourcesPath, 'assets', 'icon.icns'),
-    join(process.cwd(), 'assets', 'icon.png'),
-    join(process.cwd(), 'assets', 'icon.icns'),
-  ]
-
-  for (const path of possibleIconPaths) {
-    if (existsSync(path)) {
-      return path
-    }
-  }
-
-  return null
-}
 
 export function createTray(): Tray {
   if (tray) {
@@ -77,21 +25,13 @@ export function createTray(): Tray {
   // here is the important part (has to be set on the resized version)
   trayIcon.setTemplateImage(true)
 
-  // // Create tray with normal icon initially
-  // const iconPath = findIconPath()
-  // const icon = iconPath
-  //   ? nativeImage.createFromPath(iconPath)
-  //   : createNormalIcon()
-
   tray = new Tray(trayIcon)
 
-  // Set tooltip
   tray.setToolTip('Yap Camera')
 
   // Create context menu
   updateTrayMenu()
 
-  // Handle tray click
   tray.on('click', () => {
     libraryWindow.show()
     libraryWindow.focus()
@@ -120,15 +60,8 @@ function updateTrayMenu(): void {
     {
       label: 'Show App',
       click: () => {
-        const mainWindow = BrowserWindow.getAllWindows().find(
-          (w) => w === require('./windows').mainWindow,
-        )
-        if (!mainWindow || mainWindow.isDestroyed()) {
-          createLibraryWindow()
-        } else {
-          mainWindow.show()
-          mainWindow.focus()
-        }
+        libraryWindow.show()
+        libraryWindow.focus()
       },
     },
     {
@@ -190,15 +123,10 @@ function updateTrayIcon(): void {
   if (!tray) return
 
   if (isRecording) {
-    tray.setImage(createRecordIcon())
-    tray.setToolTip('Yap Camera - Recording')
-  } else {
-    const iconPath = findIconPath()
-    const icon = iconPath
-      ? nativeImage.createFromPath(iconPath)
-      : createNormalIcon()
+    const iconPath = getImagePath('tray-recording.png')
+    const icon = nativeImage.createFromPath(iconPath)
     tray.setImage(icon)
-    tray.setToolTip('Yap Camera')
+    tray.setToolTip('Yap Camera - Recording')
   }
 }
 

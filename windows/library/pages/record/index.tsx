@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   getRecordingMode,
+  getScreenSources,
   getSelectedCameraId,
   getSelectedMicrophoneId,
   setRecordingMode as saveRecordingMode,
@@ -29,16 +30,19 @@ const formatTime = (seconds: number): string => {
 
 export default function Page() {
   const router = useRouter()
-  const [recordingMode] = useState<RecordingMode>('camera')
+  const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen')
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState<string>('')
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
+  const [screenPreviewStream, setScreenPreviewStream] =
+    useState<MediaStream | null>(null)
   const [recorder, setRecorder] = useState<ScreenRecorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const cameraRef = useRef<CameraRef | null>(null)
+  const screenRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
     loadCameras()
@@ -47,6 +51,7 @@ export default function Page() {
 
     return () => {
       stopCameraPreview()
+      stopScreenPreview()
       // Cleanup if component unmounts while recording
       if (recorder) {
         // Force stop recording and save any recorded data
@@ -67,8 +72,6 @@ export default function Page() {
     // Add beforeunload handler for crash protection
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (recorder && isRecording) {
-        // Trigger emergency save
-        recorder.emergencySave().catch(console.error)
         e.preventDefault()
         e.returnValue = 'Recording in progress. Are you sure you want to leave?'
         return e.returnValue
@@ -95,7 +98,9 @@ export default function Page() {
       if (savedMicrophoneId) {
         setSelectedMicrophoneId(savedMicrophoneId)
       }
-      // Recording mode is always 'camera' for now
+      if (savedMode) {
+        setRecordingMode(savedMode)
+      }
     } catch (error) {
       console.error('Failed to load settings:', error)
     }
@@ -164,15 +169,72 @@ export default function Page() {
     }
   }
 
+  const startScreenPreview = async () => {
+    try {
+      // Stop any existing screen preview
+      if (screenPreviewStream) {
+        screenPreviewStream.getTracks().forEach((track) => track.stop())
+      }
+
+      // Get screen sources
+      const sources = await getScreenSources()
+
+      if (sources.length === 0) {
+        throw new Error(
+          'No screen sources available. Please check screen recording permissions.',
+        )
+      }
+
+      const screenSource =
+        sources.find((source) => source.name.includes('Screen')) || sources[0]
+      console.log('Starting screen preview with source:', screenSource.name)
+
+      // Start screen preview
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          // @ts-ignore - Electron specific constraint
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: screenSource.id,
+            minWidth: 1280,
+            maxWidth: 1920,
+            minHeight: 720,
+            maxHeight: 1080,
+          },
+        },
+      })
+      setScreenPreviewStream(stream)
+
+      if (screenRef.current) {
+        screenRef.current.srcObject = stream
+      }
+    } catch (error) {
+      console.error('Failed to start screen preview:', error)
+    }
+  }
+
+  const stopScreenPreview = () => {
+    if (screenPreviewStream) {
+      screenPreviewStream.getTracks().forEach((track) => track.stop())
+      setScreenPreviewStream(null)
+    }
+  }
+
   useEffect(() => {
-    if (
-      !isRecording &&
-      (recordingMode === 'camera' || recordingMode === 'both') &&
-      selectedCameraId
-    ) {
-      startCameraPreview(selectedCameraId)
-    } else if (!isRecording) {
+    if (!isRecording) {
+      if (recordingMode === 'camera' || recordingMode === 'both') {
+        if (selectedCameraId) {
+          startCameraPreview(selectedCameraId)
+        }
+        stopScreenPreview()
+      } else if (recordingMode === 'screen') {
+        startScreenPreview()
+        stopCameraPreview()
+      }
+    } else {
       stopCameraPreview()
+      stopScreenPreview()
     }
   }, [recordingMode, selectedCameraId, isRecording])
 
@@ -202,10 +264,6 @@ export default function Page() {
       saveSelectedMicrophoneId(selectedMicrophoneId)
     }
   }, [selectedMicrophoneId])
-
-  useEffect(() => {
-    saveRecordingMode('camera')
-  }, [])
 
   const handleStartRecording = async () => {
     try {
@@ -295,23 +353,38 @@ export default function Page() {
           )}
 
           {recordingMode === 'screen' && (
-            <div className="w-full flex-1 min-h-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border-4 border-one flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-8xl mb-4">🖥️</div>
-                <p className="text-xl text-contrast font-semibold">
-                  Screen 123
-                </p>
-              </div>
+            <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
+              {screenPreviewStream || screenRef.current?.srcObject ? (
+                <video
+                  ref={screenRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-8xl mb-4">🖥️</div>
+                    <p className="text-xl text-contrast font-semibold">
+                      Screen
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col gap-4 w-full max-w-2xl flex-shrink-0">
+        <div className="flex flex-col gap-4 w-full max-w-2xl shrink-0">
           {/* Recording Mode Selection */}
           <RecordingModeSelector
             recordingMode={recordingMode}
-            onModeChange={() => {}} // No-op since mode is fixed
+            onModeChange={(mode) => {
+              setRecordingMode(mode)
+              saveRecordingMode(mode)
+            }}
             isRecording={isRecording}
           />
 

@@ -1,8 +1,7 @@
+import { Library, Video } from 'lucide-react'
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
-import { Library, Video, Volume2, VolumeX, Settings } from 'lucide-react'
-import { usePlaybackPreferences } from '../PlaybackPreferencesProvider'
 import { openSettingsWindow } from '../ipc'
 
 interface TopNavProps {
@@ -59,15 +58,6 @@ export function TopNav({ currentTab }: TopNavProps) {
             <Video className="w-4 h-4" />
             Record
           </TabButton>
-        </div>
-        <div className="flex items-center gap-2 pr-4">
-          <button
-            className="no-drag-region p-2 text-secondary hover:text-contrast hover:bg-two rounded-md transition-colors"
-            onClick={openSettingsWindow}
-            title="Settings (⌘,)"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </div>
