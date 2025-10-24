@@ -955,7 +955,9 @@ export function setupIpcHandlers(mainWindow: BrowserWindow) {
 
   // Set up state change listener
   store.onDidAnyChange((state) => {
-    mainWindow?.webContents.send('state-changed', state)
+    // Ensure we only send serializable data
+    const serializableState = JSON.parse(JSON.stringify(state))
+    mainWindow?.webContents.send('state-changed', serializableState)
   })
 
   // Broadcast electron-store vlog changes to all renderer windows

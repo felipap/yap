@@ -12,9 +12,6 @@ export const PATHS = {
 
   // Cache directory
   CACHE: join(homedir(), '.yap', 'cache'),
-
-  // Logs directory
-  LOGS: join(homedir(), '.yap', 'logs'),
 } as const
 
 // Recording configuration
@@ -26,16 +23,6 @@ export const RECORDING_CONFIG = {
   VIDEO_BITRATE: 5000000, // 5 Mbps
   MIME_TYPE: 'video/webm;codecs=vp9',
   FALLBACK_MIME_TYPE: 'video/webm;codecs=vp8',
-
-  // Video constraints
-  VIDEO_CONSTRAINTS: {
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
-    minWidth: 1280,
-    maxWidth: 1920,
-    minHeight: 720,
-    maxHeight: 1080,
-  },
 
   // Recording chunk settings
   CHUNK_INTERVAL: 100, // milliseconds
@@ -67,8 +54,4 @@ export function getUserDataDir(): string {
 
 export function getCacheDir(): string {
   return PATHS.CACHE
-}
-
-export function getLogsDir(): string {
-  return PATHS.LOGS
 }

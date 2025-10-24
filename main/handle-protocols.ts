@@ -115,170 +115,205 @@ export function registerProtocols() {
 // Setup protocol handlers
 export function setupProtocolHandlers() {
   // Register custom protocol to serve local video files
-  protocol.handle('vlog-video', async (request) => {
-    try {
-      // Remove the protocol and get the vlog ID
-      const vlogId = request.url
-        .replace('vlog-video://', '')
-        .replace('/', '')
-        .replace(/(\.mp4)|(\.webm)/, '')
+  protocol.handle(
+    'vlog-video',
+    withErrorHandling(
+      async (request) => {
+        // Remove the protocol and get the vlog ID
+        const vlogId = request.url
+          .replace('vlog-video://', '')
+          .replace('/', '')
+          .replace(/(\.mp4)|(\.webm)/, '')
 
-      debug('Video request URL:', request.url)
-      debug('Vlog ID:', vlogId)
-      debug('Request headers:', Object.fromEntries(request.headers.entries()))
+        debug('Video request URL:', request.url)
+        debug('Vlog ID:', vlogId)
+        debug('Request headers:', Object.fromEntries(request.headers.entries()))
 
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        debug('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
-        return new Response('Vlog not found', { status: 404 })
-      }
-
-      debug('Resolved file path:', filePath)
-
-      // Check if file exists and get stats
-      let stats
-      try {
-        stats = await stat(filePath)
-        debug('File stats:', { size: stats.size, isFile: stats.isFile() })
-
-        if (!stats.isFile()) {
-          console.error('Path is not a file:', filePath)
-          return new Response('Not a file', { status: 400 })
+        const filePath = vlogIdToPath.get(vlogId)
+        if (!filePath) {
+          console.error(`Vlog with ID ${vlogId} not found in mapping`)
+          debug('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
+          return new Response('Vlog not found', { status: 404 })
         }
-      } catch (statError) {
-        console.error('File stat error:', statError)
-        return new Response('File not accessible', { status: 404 })
-      }
 
-      // Determine MIME type based on file extension
-      const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
-      debug('MIME type:', mimeType)
+        debug('Resolved file path:', filePath)
 
-      // For webm files, try to fix duration metadata
-      let actualFilePath = filePath
-      if (filePath.endsWith('.webm')) {
+        // Check if file exists and get stats
+        let stats
         try {
-          actualFilePath = await fixWebmDuration(filePath)
-          debug('Using webm file:', actualFilePath)
-        } catch (error) {
-          debug('Failed to fix webm duration, using original:', error)
+          stats = await stat(filePath)
+          debug('File stats:', { size: stats.size, isFile: stats.isFile() })
+
+          if (!stats.isFile()) {
+            console.error('Path is not a file:', filePath)
+            return new Response('Not a file', { status: 400 })
+          }
+        } catch (statError) {
+          console.error('File stat error:', statError)
+          return new Response('File not accessible', { status: 404 })
         }
-      }
 
-      // Get stats for the actual file we're serving
-      const actualStats =
-        actualFilePath !== filePath ? await stat(actualFilePath) : stats
+        // Determine MIME type based on file extension
+        const mimeType = filePath.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+        debug('MIME type:', mimeType)
 
-      // Handle range requests for video seeking
-      const range = request.headers.get('range')
-      if (range) {
-        debug('Range request:', range)
+        // For webm files, try to fix duration metadata
+        let actualFilePath = filePath
+        if (filePath.endsWith('.webm')) {
+          try {
+            actualFilePath = await fixWebmDuration(filePath)
+            debug('Using webm file:', actualFilePath)
+          } catch (error) {
+            debug('Failed to fix webm duration, using original:', error)
+          }
+        }
 
-        const match = range.match(/bytes=(\d+)-(\d*)/)
-        if (match) {
-          const start = parseInt(match[1], 10)
-          const end = match[2] ? parseInt(match[2], 10) : actualStats.size - 1
-          const chunkSize = end - start + 1
+        // Get stats for the actual file we're serving
+        const actualStats =
+          actualFilePath !== filePath ? await stat(actualFilePath) : stats
 
-          debug(`Serving range: ${start}-${end} (${chunkSize} bytes)`)
+        // Handle range requests for video seeking
+        const range = request.headers.get('range')
+        if (range) {
+          debug('Range request:', range)
 
-          const stream = createReadStream(actualFilePath, { start, end })
+          const match = range.match(/bytes=(\d+)-(\d*)/)
+          if (match) {
+            const start = parseInt(match[1], 10)
+            const end = match[2] ? parseInt(match[2], 10) : actualStats.size - 1
+            const chunkSize = end - start + 1
 
-          const headers: Record<string, string> = {
-            'Content-Type': mimeType,
-            'Content-Length': chunkSize.toString(),
-            'Content-Range': `bytes ${start}-${end}/${actualStats.size}`,
-            'Accept-Ranges': 'bytes',
+            debug(`Serving range: ${start}-${end} (${chunkSize} bytes)`)
+
+            const stream = createReadStream(actualFilePath, { start, end })
+
+            const headers: Record<string, string> = {
+              'Content-Type': mimeType,
+              'Content-Length': chunkSize.toString(),
+              'Content-Range': `bytes ${start}-${end}/${actualStats.size}`,
+              'Accept-Ranges': 'bytes',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET',
+              'Access-Control-Allow-Headers': 'Content-Type, Range',
+            }
+
+            return new Response(stream as any, {
+              status: 206, // Partial Content
+              headers,
+            })
+          }
+        }
+
+        // Full file request (no range)
+        debug('Full file request')
+        const stream = createReadStream(actualFilePath)
+
+        const headers: Record<string, string> = {
+          'Content-Type': mimeType,
+          'Content-Length': actualStats.size.toString(),
+          'Accept-Ranges': 'bytes',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Content-Type, Range',
+        }
+
+        return new Response(stream as any, {
+          headers,
+        })
+      },
+      'Error loading video file',
+      500,
+    ),
+  )
+
+  // Register custom protocol to serve thumbnail images
+  protocol.handle(
+    'vlog-thumbnail',
+    withErrorHandling(
+      async (request) => {
+        // Remove the protocol and get the vlog ID
+        const vlogId = request.url
+          .replace('vlog-thumbnail://', '')
+          .replace('/', '')
+          .replace('.jpg', '')
+
+        debug('Thumbnail request URL:', request.url)
+        debug('Vlog ID:', vlogId)
+
+        const filePath = vlogIdToPath.get(vlogId)
+        if (!filePath) {
+          console.error(`Vlog with ID ${vlogId} not found in mapping`)
+          return new Response('Vlog not found', { status: 404 })
+        }
+
+        // Generate thumbnail lazily if it doesn't exist
+        const thumbnailPath = await generateThumbnail(filePath)
+        if (!thumbnailPath) {
+          console.error('Failed to generate thumbnail for:', filePath)
+          return new Response('Thumbnail generation failed', { status: 500 })
+        }
+
+        debug('Resolved thumbnail path:', thumbnailPath)
+
+        let data: Buffer
+        try {
+          data = await readFile(thumbnailPath)
+        } catch (error) {
+          console.error('Error reading thumbnail file:', error)
+          return new Response('Thumbnail file not found', { status: 404 })
+        }
+
+        debug(
+          'Successfully loaded thumbnail:',
+          thumbnailPath,
+          'Size:',
+          data.length,
+          'bytes',
+        )
+
+        return new Response(new Uint8Array(data), {
+          headers: {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': data.length.toString(),
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET',
-            'Access-Control-Allow-Headers': 'Content-Type, Range',
-          }
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        })
+      },
+      'Error loading thumbnail file',
+      404,
+    ),
+  )
+}
 
-          return new Response(stream as any, {
-            status: 206, // Partial Content
-            headers,
-          })
-        }
-      }
-
-      // Full file request (no range)
-      debug('Full file request')
-      const stream = createReadStream(actualFilePath)
-
-      const headers: Record<string, string> = {
-        'Content-Type': mimeType,
-        'Content-Length': actualStats.size.toString(),
-        'Accept-Ranges': 'bytes',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Content-Type, Range',
-      }
-
-      return new Response(stream as any, {
-        headers,
-      })
+// Generic try-catch decorator for protocol handlers
+function withErrorHandling<T extends any[], R>(
+  handler: (...args: T) => Promise<R>,
+  errorMessage: string = 'Internal server error',
+  statusCode: number = 500,
+) {
+  return async (...args: T): Promise<R> => {
+    try {
+      return await handler(...args)
     } catch (error) {
-      console.error('Error loading video file:', error)
-      console.error('Request URL:', request.url)
+      console.error(`${errorMessage}:`, error)
       console.error('Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
       })
-      return new Response('Internal server error', { status: 500 })
-    }
-  })
 
-  // Register custom protocol to serve thumbnail images
-  protocol.handle('vlog-thumbnail', async (request) => {
-    try {
-      // Remove the protocol and get the vlog ID
-      const vlogId = request.url
-        .replace('vlog-thumbnail://', '')
-        .replace('/', '')
-        .replace('.jpg', '')
-
-      debug('Thumbnail request URL:', request.url)
-      debug('Vlog ID:', vlogId)
-
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        return new Response('Vlog not found', { status: 404 })
+      // If the handler returns a Response, return an error response
+      if (
+        args.length > 0 &&
+        args[0] &&
+        typeof args[0] === 'object' &&
+        'url' in args[0]
+      ) {
+        return new Response(errorMessage, { status: statusCode }) as R
       }
 
-      // Generate thumbnail lazily if it doesn't exist
-      const thumbnailPath = await generateThumbnail(filePath)
-      if (!thumbnailPath) {
-        console.error('Failed to generate thumbnail for:', filePath)
-        return new Response('Thumbnail generation failed', { status: 500 })
-      }
-
-      debug('Resolved thumbnail path:', thumbnailPath)
-
-      const data = await readFile(thumbnailPath)
-
-      debug(
-        'Successfully loaded thumbnail:',
-        thumbnailPath,
-        'Size:',
-        data.length,
-        'bytes',
-      )
-
-      return new Response(new Uint8Array(data), {
-        headers: {
-          'Content-Type': 'image/jpeg',
-          'Content-Length': data.length.toString(),
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      })
-    } catch (error) {
-      console.error('Error loading thumbnail file:', error)
-      console.error('Request URL:', request.url)
-      return new Response('Thumbnail not found', { status: 404 })
+      throw error
     }
-  })
+  }
 }

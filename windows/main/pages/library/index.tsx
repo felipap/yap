@@ -33,7 +33,7 @@ export default function Page() {
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
         <div className="flex h-full w-screen overflow-hidden">
-          <div className="overflow-y-auto h-full ">
+          <div className="h-full ">
             <Sidebar
               selectedVlog={vlog ?? null}
               onVideoSelect={handleSelectVlog}

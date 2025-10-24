@@ -195,6 +195,8 @@ export async function recoverIncompleteRecordings(): Promise<string[]> {
 
 // Cleanup method for app shutdown
 export async function cleanup(): Promise<void> {
+  console.log('cleanup')
+
   if (recordingState.isRecording) {
     try {
       await emergencySave()

@@ -38,7 +38,7 @@ export async function generateThumbnail(
     // Try to use ffmpeg if available
     try {
       await execAsync(
-        `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -q:v 2 "${thumbnailPath}"`,
+        `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
       )
       return thumbnailPath
     } catch (ffmpegError) {
@@ -59,7 +59,7 @@ export async function generateThumbnail(
       if (process.platform === 'darwin') {
         // First extract frame using ffmpeg if available, or use a different approach
         await execAsync(
-          `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -f image2pipe -vcodec png - | sips -s format jpeg --out "${thumbnailPath}"`,
+          `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -f image2pipe -vcodec png - | sips -s format jpeg --out "${thumbnailPath}"`,
         )
         return thumbnailPath
       }
