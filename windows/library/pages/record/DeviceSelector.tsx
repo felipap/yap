@@ -31,11 +31,15 @@ export function DeviceSelector({
           {/* Camera Selection */}
           {(recordingMode === 'camera' || recordingMode === 'both') &&
             cameras.length > 0 && (
-              <div className="flex gap-3 items-center">
-                <div className="flex items-center justify-center w-8 h-8">
+              <div className="flex gap-1 items-center">
+                <div className="flex items-center justify-center w-8 h-8 opacity-40">
                   <Camera size={20} />
                 </div>
-                <Select value={selectedCameraId} onChange={onCameraChange}>
+                <Select
+                  className="w-[200px]"
+                  value={selectedCameraId}
+                  onChange={onCameraChange}
+                >
                   {cameras.map((camera) => (
                     <option key={camera.deviceId} value={camera.deviceId}>
                       {camera.label ||
@@ -48,11 +52,13 @@ export function DeviceSelector({
 
           {/* Microphone Selection */}
           {microphones.length > 0 && (
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-1 items-center">
               <div className="flex items-center justify-center w-8 h-8">
-                <Mic size={20} />
+                <Mic className="opacity-40" size={20} />
               </div>
+
               <Select
+                className="w-[200px]"
                 value={selectedMicrophoneId}
                 onChange={onMicrophoneChange}
               >
@@ -64,13 +70,12 @@ export function DeviceSelector({
                 ))}
               </Select>
 
-              {/* Volume Meter */}
               {selectedMicrophoneId && (
                 <VolumeMeter
                   microphoneId={selectedMicrophoneId}
                   size="sm"
                   showLabel={false}
-                  className="w-[20px]"
+                  className="w-[20px] ml-2"
                 />
               )}
             </div>

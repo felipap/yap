@@ -46,16 +46,14 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
           />
         </div>
 
-        <header className="flex flex-row items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <TitleInput
-              vlogId={currentVlog.id}
-              title={currentVlog.title || ''}
-              onLocalTitleChange={(value) =>
-                setCurrentVlog((prev) => ({ ...prev, title: value }))
-              }
-            />
-          </div>
+        <header className="flex flex-col gap-3 w-full">
+          <TitleInput
+            vlogId={currentVlog.id}
+            title={currentVlog.title || ''}
+            onLocalTitleChange={(value) =>
+              setCurrentVlog((prev) => ({ ...prev, title: value }))
+            }
+          />
           <Toolbar vlogId={currentVlog.id} onBack={onBack} />
         </header>
 

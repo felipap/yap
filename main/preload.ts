@@ -60,14 +60,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('stopRecording')
   },
 
-  getRecordingState: (): Promise<any> => {
-    return ipcRenderer.invoke('getRecordingState')
-  },
-
-  emergencySaveRecording: (): Promise<void> => {
-    return ipcRenderer.invoke('emergencySaveRecording')
-  },
-
   store: {
     get: <T>(key: string): Promise<T> => {
       return ipcRenderer.invoke('storeGet', key)
@@ -106,9 +98,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     transcription: string,
   ): Promise<string> => {
     return ipcRenderer.invoke('generateVideoSummary', vlogId, transcription)
-  },
-  saveVideoSummary: (vlogId: string, summary: string): Promise<void> => {
-    return ipcRenderer.invoke('saveVideoSummary', vlogId, summary)
   },
   importVideoFile: (filePath: string): Promise<any> => {
     return ipcRenderer.invoke('importVideoFile', filePath)
@@ -215,17 +204,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   //
 
   // Streaming recording methods
-  startStreamingRecording: (filename: string): Promise<string> => {
-    return ipcRenderer.invoke('startStreamingRecording', filename)
+  startStreamingRecording: (config: any): Promise<string> => {
+    return ipcRenderer.invoke('startStreamingRecording', config)
   },
-  appendRecordingChunk: (
-    recordingId: string,
-    chunk: ArrayBuffer,
-  ): Promise<void> => {
-    return ipcRenderer.invoke('appendRecordingChunk', recordingId, chunk)
+  appendRecordingChunk: (chunk: ArrayBuffer): Promise<void> => {
+    return ipcRenderer.invoke('appendRecordingChunk', chunk)
   },
-  finalizeStreamingRecording: (recordingId: string): Promise<string> => {
-    return ipcRenderer.invoke('finalizeStreamingRecording', recordingId)
+  finalizeStreamingRecording: (): Promise<string> => {
+    return ipcRenderer.invoke('finalizeStreamingRecording')
   },
 } satisfies ExposedElectronAPI)
 

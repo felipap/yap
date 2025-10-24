@@ -1,10 +1,10 @@
 import {
+  ImportResult,
   RecordedFile,
   RecordingMode,
+  SharedIpcMethods,
   TranscriptionResult,
   TranscriptionState,
-  ImportResult,
-  SharedIpcMethods,
 } from '../library/types'
 
 declare global {
@@ -42,23 +42,16 @@ export async function saveRecording(
   return window.electronAPI.saveRecording(filename, buffer)
 }
 
-export async function startStreamingRecording(
-  filename: string,
-): Promise<string> {
-  return window.electronAPI.startStreamingRecording(filename)
+export async function startStreamingRecording(config: any): Promise<string> {
+  return window.electronAPI.startStreamingRecording(config)
 }
 
-export async function appendRecordingChunk(
-  recordingId: string,
-  chunk: ArrayBuffer,
-): Promise<void> {
-  return window.electronAPI.appendRecordingChunk(recordingId, chunk)
+export async function appendRecordingChunk(chunk: ArrayBuffer): Promise<void> {
+  return window.electronAPI.appendRecordingChunk(chunk)
 }
 
-export async function finalizeStreamingRecording(
-  recordingId: string,
-): Promise<string> {
-  return window.electronAPI.finalizeStreamingRecording(recordingId)
+export async function finalizeStreamingRecording(): Promise<string> {
+  return window.electronAPI.finalizeStreamingRecording()
 }
 
 // Store functions
@@ -68,10 +61,6 @@ export async function getStoredValue<T>(key: string): Promise<T> {
 
 export async function setStoredValue(key: string, value: any): Promise<void> {
   return window.electronAPI.store.set(key, value)
-}
-
-export async function getAllStoredValues(): Promise<Record<string, any>> {
-  return window.electronAPI.store.getAll()
 }
 
 // Convenience functions for specific settings
@@ -146,13 +135,6 @@ export async function generateVideoSummary(
   transcription: string,
 ): Promise<string> {
   return window.electronAPI.generateVideoSummary(vlogId, transcription)
-}
-
-export async function saveVideoSummary(
-  vlogId: string,
-  summary: string,
-): Promise<void> {
-  return window.electronAPI.saveVideoSummary(vlogId, summary)
 }
 
 // Import functions

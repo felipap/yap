@@ -103,16 +103,11 @@ export type SharedIpcMethods = {
   getState: () => Promise<State>
   untrackVlog: (vlogId: string) => Promise<boolean>
   saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
-  startStreamingRecording: (filename: string) => Promise<string>
-  appendRecordingChunk: (
-    recordingId: string,
-    chunk: ArrayBuffer,
-  ) => Promise<void>
-  finalizeStreamingRecording: (recordingId: string) => Promise<string>
+  startStreamingRecording: (config: any) => Promise<string>
+  appendRecordingChunk: (chunk: ArrayBuffer) => Promise<void>
+  finalizeStreamingRecording: () => Promise<string>
   startRecording: (config: any) => Promise<string>
   stopRecording: () => Promise<string>
-  getRecordingState: () => Promise<any>
-  emergencySaveRecording: () => Promise<void>
   store: {
     get: <T>(key: string) => Promise<T>
     set: (key: string, value: any) => Promise<void>
@@ -127,7 +122,6 @@ export type SharedIpcMethods = {
     vlogId: string,
     transcription: string,
   ) => Promise<string>
-  saveVideoSummary: (vlogId: string, summary: string) => Promise<void>
   importVideoFile: (filePath: string) => Promise<any>
   saveVideoPosition: (vlogId: string, position: number) => Promise<boolean>
   getVideoPosition: (

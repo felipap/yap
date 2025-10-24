@@ -1,35 +1,18 @@
 import { createHash } from 'crypto'
-import { app, BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
-import { autoUpdater } from 'electron-updater'
-import {
-  access,
-  mkdir,
-  readdir,
-  readFile,
-  stat,
-  unlink,
-  writeFile,
-} from 'fs/promises'
-import { join } from 'path'
-import { State, UserProfile, Vlog } from '../shared-types'
+import { BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
+import { access, mkdir, stat } from 'fs/promises'
+import { State, Vlog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
-import { FILE_PATTERNS, getRecordingsDir, getTempDir } from './lib/config'
+import { getRecordingsDir } from './lib/config'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
 import { generateVideoSummary } from './lib/videoSummary'
 import {
-  emergencySave,
-  getRecordingState,
-  startRecording,
-  stopRecording,
-} from './recording'
-import {
   appendRecordingChunk,
   finalizeStreamingRecording,
   startStreamingRecording,
-} from './recording/background-recording'
-import { RecordingConfig } from './recording/types'
+} from './recording'
 import {
   deleteVlog,
   getAllVlogs,
@@ -160,39 +143,16 @@ export function setupIpcHandlers() {
   //
   //
 
-  ipcMain.handle('startStreamingRecording', async (_, filename: string) => {
-    return startStreamingRecording(filename)
+  ipcMain.handle('startStreamingRecording', async (_, config: any) => {
+    return startStreamingRecording(config)
   })
 
-  ipcMain.handle(
-    'appendRecordingChunk',
-    async (_, recordingId: string, chunk: ArrayBuffer) => {
-      return appendRecordingChunk(recordingId, chunk)
-    },
-  )
-
-  ipcMain.handle(
-    'finalizeStreamingRecording',
-    async (_, recordingId: string) => {
-      return finalizeStreamingRecording(recordingId)
-    },
-  )
-
-  // Recording system handlers
-  ipcMain.handle('startRecording', async (_, config: RecordingConfig) => {
-    return await startRecording(config)
+  ipcMain.handle('appendRecordingChunk', async (_, chunk: ArrayBuffer) => {
+    return appendRecordingChunk(chunk)
   })
 
-  ipcMain.handle('stopRecording', async () => {
-    return await stopRecording()
-  })
-
-  ipcMain.handle('getRecordingState', async () => {
-    return getRecordingState()
-  })
-
-  ipcMain.handle('emergencySaveRecording', async () => {
-    return await emergencySave()
+  ipcMain.handle('finalizeStreamingRecording', async () => {
+    return finalizeStreamingRecording()
   })
 
   //
@@ -396,18 +356,6 @@ export function setupIpcHandlers() {
         return summary
       } catch (error) {
         console.error('Error generating video summary:', error)
-        throw error
-      }
-    },
-  )
-
-  ipcMain.handle(
-    'saveVideoSummary',
-    async (_, vlogId: string, summary: string) => {
-      try {
-        updateVlog(vlogId, { summary })
-      } catch (error) {
-        console.error('Error saving video summary:', error)
         throw error
       }
     },

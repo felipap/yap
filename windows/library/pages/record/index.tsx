@@ -9,28 +9,17 @@ import {
   setSelectedMicrophoneId as saveSelectedMicrophoneId,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
-import { Camera, CameraRef } from '../../components/Camera'
 import { RecordButton } from '../../components/RecordButton'
 import { RecordingMode } from '../../types'
 import { DeviceSelector } from './DeviceSelector'
+import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
+import { Recorder } from './Recorder'
 import { RecordingModeSelector } from './RecordingModeSelector'
-import { ScreenRecorder } from './ScreenRecorder'
 import { VolumeMeter } from './VolumeMeter'
-
-const formatTime = (seconds: number): string => {
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
-
-  if (hrs > 0) {
-    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
 
 export default function Page() {
   const router = useRouter()
-  const [recordingMode, setRecordingMode] = useState<RecordingMode>('screen')
+  const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
@@ -38,11 +27,10 @@ export default function Page() {
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
   const [screenPreviewStream, setScreenPreviewStream] =
     useState<MediaStream | null>(null)
-  const [recorder, setRecorder] = useState<ScreenRecorder | null>(null)
+  const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
-  const cameraRef = useRef<CameraRef | null>(null)
-  const screenRef = useRef<HTMLVideoElement | null>(null)
+  const previewRef = useRef<PreviewScreenRef | null>(null)
 
   useEffect(() => {
     loadCameras()
@@ -154,8 +142,8 @@ export default function Page() {
       })
       setPreviewStream(stream)
 
-      if (cameraRef.current) {
-        cameraRef.current.srcObject = stream
+      if (previewRef.current) {
+        previewRef.current.srcObject = stream
       }
     } catch (error) {
       console.error('Failed to start camera preview:', error)
@@ -206,8 +194,8 @@ export default function Page() {
       })
       setScreenPreviewStream(stream)
 
-      if (screenRef.current) {
-        screenRef.current.srcObject = stream
+      if (previewRef.current) {
+        previewRef.current.srcObject = stream
       }
     } catch (error) {
       console.error('Failed to start screen preview:', error)
@@ -246,8 +234,8 @@ export default function Page() {
       (recordingMode === 'camera' || recordingMode === 'both')
     ) {
       const cameraStream = recorder.getCameraStream()
-      if (cameraRef.current && cameraStream) {
-        cameraRef.current.srcObject = cameraStream
+      if (previewRef.current && cameraStream) {
+        previewRef.current.srcObject = cameraStream
       }
     }
   }, [isRecording, recorder, recordingMode])
@@ -268,7 +256,7 @@ export default function Page() {
   const handleStartRecording = async () => {
     try {
       // Start recording first
-      const newRecorder = new ScreenRecorder(
+      const newRecorder = new Recorder(
         recordingMode,
         selectedCameraId,
         selectedMicrophoneId,
@@ -281,8 +269,8 @@ export default function Page() {
       // Set up camera preview for recording (if camera is involved)
       if (recordingMode === 'camera' || recordingMode === 'both') {
         const cameraStream = newRecorder.getCameraStream()
-        if (cameraRef.current && cameraStream) {
-          cameraRef.current.srcObject = cameraStream
+        if (previewRef.current && cameraStream) {
+          previewRef.current.srcObject = cameraStream
         }
       }
 
@@ -327,53 +315,21 @@ export default function Page() {
             </div>
           ) : null}
 
-          {/* Camera Preview - Dynamic sizing */}
-          {(recordingMode === 'camera' || recordingMode === 'both') && (
-            <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
-              {previewStream || cameraRef.current?.srcObject ? (
-                <Camera ref={cameraRef} />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-8xl">📹</div>
-                </div>
-              )}
+          <div className="relative w-full h-full">
+            <PreviewScreen mode={recordingMode} ref={previewRef} />
 
-              {/* Volume Meter during recording */}
-              {isRecording && selectedMicrophoneId && (
-                <div className="absolute top-4 right-4 z-10">
-                  <VolumeMeter
-                    microphoneId={selectedMicrophoneId}
-                    size="sm"
-                    showLabel={false}
-                    className="w-[20px]"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {recordingMode === 'screen' && (
-            <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
-              {screenPreviewStream || screenRef.current?.srcObject ? (
-                <video
-                  ref={screenRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-contain"
+            {/* Volume Meter during recording */}
+            {isRecording && selectedMicrophoneId && (
+              <div className="absolute top-4 right-4 z-10">
+                <VolumeMeter
+                  microphoneId={selectedMicrophoneId}
+                  size="sm"
+                  showLabel={false}
+                  className="w-[20px]"
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-8xl mb-4">🖥️</div>
-                    <p className="text-xl text-contrast font-semibold">
-                      Screen
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Controls */}
@@ -410,4 +366,15 @@ export default function Page() {
       </div>
     </div>
   )
+}
+
+const formatTime = (seconds: number): string => {
+  const hrs = Math.floor(seconds / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`
 }

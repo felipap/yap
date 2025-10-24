@@ -1,12 +1,5 @@
-import { app, BrowserWindow, Menu, nativeImage, Tray } from 'electron'
+import { app, Menu, nativeImage, Tray } from 'electron'
 import path from 'path'
-import { startRecording, stopRecording } from './recording'
-import {
-  getBackgroundRecordingState,
-  startBackgroundRecording,
-  stopBackgroundRecording,
-} from './recording/background-recording'
-import { RecordingConfig } from './recording/types'
 import { libraryWindow } from './windows'
 
 let tray: Tray | null = null
@@ -48,13 +41,7 @@ function updateTrayMenu(): void {
   const menu = Menu.buildFromTemplate([
     {
       label: isRecording ? 'Stop Recording' : 'Start Recording',
-      click: async () => {
-        if (isRecording) {
-          await handleStopRecording()
-        } else {
-          await handleStartRecording()
-        }
-      },
+      click: async () => {},
     },
     { type: 'separator' },
     {
@@ -73,50 +60,6 @@ function updateTrayMenu(): void {
   ])
 
   tray.setContextMenu(menu)
-}
-
-async function handleStartRecording(): Promise<void> {
-  try {
-    const config: RecordingConfig = {
-      mode: 'screen',
-      cameraId: '',
-      microphoneId: '',
-    }
-
-    // Use background recording when main window is not visible
-    const mainWindow = BrowserWindow.getAllWindows().find(
-      (w) => w === require('./windows').mainWindow,
-    )
-    if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
-      await startBackgroundRecording(config)
-    } else {
-      await startRecording(config)
-    }
-
-    isRecording = true
-    updateTrayIcon()
-    updateTrayMenu()
-  } catch (error) {
-    console.error('Failed to start recording:', error)
-  }
-}
-
-async function handleStopRecording(): Promise<void> {
-  try {
-    // Check if we're using background recording
-    const backgroundState = getBackgroundRecordingState()
-    if (backgroundState.isRecording) {
-      await stopBackgroundRecording()
-    } else {
-      await stopRecording()
-    }
-
-    isRecording = false
-    updateTrayIcon()
-    updateTrayMenu()
-  } catch (error) {
-    console.error('Failed to stop recording:', error)
-  }
 }
 
 function updateTrayIcon(): void {

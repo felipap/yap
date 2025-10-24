@@ -45,7 +45,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   }
 
   return (
-    <div className="no-drag-region flex gap-1.5">
+    <div className="no-drag-region flex gap-1.5 w-full overflow-x-scroll">
       <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
         📁 Show in Finder
       </HeaderButton>

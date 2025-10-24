@@ -1,4 +1,5 @@
-import { useVolumeMeter, VolumeData } from './useVolumeMeter'
+import { twMerge } from 'tailwind-merge'
+import { useVolumeMeter } from './useVolumeMeter'
 
 interface VolumeMeterProps {
   microphoneId?: string
@@ -15,33 +16,7 @@ export function VolumeMeter({
 }: VolumeMeterProps) {
   const { volumeData } = useVolumeMeter({ microphoneId })
 
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm':
-        return 'h-[20px]'
-      case 'md':
-        return 'w-24 h-12'
-      case 'lg':
-        return 'w-32 h-16'
-      default:
-        return 'w-24 h-12'
-    }
-  }
-
-  const getBarCount = () => {
-    switch (size) {
-      case 'sm':
-        return 4
-      case 'md':
-        return 6
-      case 'lg':
-        return 8
-      default:
-        return 6
-    }
-  }
-
-  const barCount = getBarCount()
+  const barCount = getBarCount(size)
   const activeBars = Math.ceil(volumeData.volume * barCount)
 
   const getBarColor = (index: number) => {
@@ -55,7 +30,7 @@ export function VolumeMeter({
   }
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className={twMerge('flex flex-col gap-2', className)}>
       {showLabel && (
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-contrast">
@@ -70,11 +45,16 @@ export function VolumeMeter({
         </div>
       )}
 
-      <div className={`flex items-end gap-1 ${getSizeClasses()}`}>
+      <div
+        className={twMerge('flex items-end gap-1 w-fit', getSizeClasses(size))}
+      >
         {Array.from({ length: barCount }, (_, index) => (
           <div
             key={index}
-            className={`w-[2px] rounded-sm transition-all duration-100 ${getBarColor(index)}`}
+            className={twMerge(
+              'w-[5px] rounded-sm transition-all duration-100',
+              getBarColor(index),
+            )}
             style={{
               height: '100%',
               opacity: index < activeBars ? 1 : 0.3,
@@ -84,4 +64,30 @@ export function VolumeMeter({
       </div>
     </div>
   )
+}
+
+const getSizeClasses = (size: 'sm' | 'md' | 'lg') => {
+  switch (size) {
+    case 'sm':
+      return 'h-[20px]'
+    case 'md':
+      return 'w-24 h-12'
+    case 'lg':
+      return 'w-32 h-16'
+    default:
+      return 'w-24 h-12'
+  }
+}
+
+const getBarCount = (size: 'sm' | 'md' | 'lg') => {
+  switch (size) {
+    case 'sm':
+      return 4
+    case 'md':
+      return 6
+    case 'lg':
+      return 8
+    default:
+      return 6
+  }
 }

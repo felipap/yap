@@ -1,8 +1,13 @@
-import { getScreenSources } from '../../../shared/ipc'
+import {
+  getScreenSources,
+  startStreamingRecording,
+  appendRecordingChunk,
+  finalizeStreamingRecording,
+} from '../../../shared/ipc'
 
 export type RecordingMode = 'screen' | 'camera' | 'both'
 
-export class ScreenRecorder {
+export class Recorder {
   private mediaRecorder: MediaRecorder | null = null
   private stream: MediaStream | null = null
   private cameraStream: MediaStream | null = null
@@ -52,10 +57,29 @@ export class ScreenRecorder {
       this.mediaRecorder = new MediaRecorder(this.stream, options)
       this.isRecording = true
 
-      this.mediaRecorder.ondataavailable = (event) => {
+      // Start streaming recording on backend with actual MediaRecorder config
+      await startStreamingRecording({
+        type: 'camera',
+        mimeType: this.mediaRecorder.mimeType,
+        audioBitsPerSecond: this.mediaRecorder.audioBitsPerSecond,
+        videoBitsPerSecond: this.mediaRecorder.videoBitsPerSecond,
+        audioEnabled: true,
+        videoEnabled: true,
+      })
+      console.log('Started streaming recording')
+
+      this.mediaRecorder.ondataavailable = async (event) => {
         if (event.data.size > 0) {
           console.log('Received data chunk:', event.data.size, 'bytes')
           this.recordedChunks.push(event.data)
+
+          // Send chunk to backend immediately for crash protection
+          try {
+            const arrayBuffer = await event.data.arrayBuffer()
+            await appendRecordingChunk(arrayBuffer)
+          } catch (error) {
+            console.error('Error sending chunk to backend:', error)
+          }
         }
       }
 
@@ -78,7 +102,13 @@ export class ScreenRecorder {
 
       this.mediaRecorder.onstop = async () => {
         try {
-          // Note: Crash protection is now handled by the main process
+          // Finalize streaming recording on backend
+          try {
+            const filepath = await finalizeStreamingRecording()
+            console.log('Streaming recording finalized, saved to:', filepath)
+          } catch (error) {
+            console.error('Error finalizing streaming recording:', error)
+          }
 
           if (this.stream) {
             this.stream.getTracks().forEach((track) => track.stop())
