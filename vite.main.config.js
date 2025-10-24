@@ -23,7 +23,7 @@ export default defineConfig({
     cors: true,
     strictPort: true,
   },
-  optimizeDeps: {
-    include: ['react', 'react-dom'],
-  },
+  // optimizeDeps: {
+  //   include: ['react', 'react-dom'],
+  // },
 })

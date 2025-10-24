@@ -226,57 +226,59 @@ export function setupProtocolHandlers() {
   protocol.handle(
     'vlog-thumbnail',
     withErrorHandling(async (request) => {
-      // Remove the protocol and get the vlog ID
-      const vlogId = request.url
-        .replace('vlog-thumbnail://', '')
-        .replace('/', '')
-        .replace('.jpg', '')
+      return new Response('Thumbnail not available', { status: 404 })
 
-      debug('Thumbnail request URL:', request.url)
-      debug('Vlog ID:', vlogId)
+      // // Remove the protocol and get the vlog ID
+      // const vlogId = request.url
+      //   .replace('vlog-thumbnail://', '')
+      //   .replace('/', '')
+      //   .replace('.jpg', '')
 
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        return new Response('Vlog not found', { status: 404 })
-      }
+      // debug('Thumbnail request URL:', request.url)
+      // debug('Vlog ID:', vlogId)
 
-      // Generate thumbnail lazily if it doesn't exist
-      const thumbnailPath = await generateThumbnail(filePath)
-      if (!thumbnailPath) {
-        console.error('Failed to generate thumbnail for:', filePath)
-        // Return a 404 for missing thumbnails instead of 500
-        // This allows the UI to handle missing thumbnails gracefully
-        return new Response('Thumbnail not available', { status: 404 })
-      }
+      // const filePath = vlogIdToPath.get(vlogId)
+      // if (!filePath) {
+      //   console.error(`Vlog with ID ${vlogId} not found in mapping`)
+      //   return new Response('Vlog not found', { status: 404 })
+      // }
 
-      debug('Resolved thumbnail path:', thumbnailPath)
+      // // Generate thumbnail lazily if it doesn't exist
+      // const thumbnailPath = await generateThumbnail(filePath)
+      // if (!thumbnailPath) {
+      //   console.error('Failed to generate thumbnail for:', filePath)
+      //   // Return a 404 for missing thumbnails instead of 500
+      //   // This allows the UI to handle missing thumbnails gracefully
+      //   return new Response('Thumbnail not available', { status: 404 })
+      // }
 
-      let data: Buffer
-      try {
-        data = await readFile(thumbnailPath)
-      } catch (error) {
-        console.error('Error reading thumbnail file:', thumbnailPath)
-        return new Response('Thumbnail file not found', { status: 404 })
-      }
+      // debug('Resolved thumbnail path:', thumbnailPath)
 
-      debug(
-        'Successfully loaded thumbnail:',
-        thumbnailPath,
-        'Size:',
-        data.length,
-        'bytes',
-      )
+      // let data: Buffer
+      // try {
+      //   data = await readFile(thumbnailPath)
+      // } catch (error) {
+      //   console.error('Error reading thumbnail file:', thumbnailPath)
+      //   return new Response('Thumbnail file not found', { status: 404 })
+      // }
 
-      return new Response(new Uint8Array(data), {
-        headers: {
-          'Content-Type': 'image/jpeg',
-          'Content-Length': data.length.toString(),
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      })
+      // debug(
+      //   'Successfully loaded thumbnail:',
+      //   thumbnailPath,
+      //   'Size:',
+      //   data.length,
+      //   'bytes',
+      // )
+
+      // return new Response(new Uint8Array(data), {
+      //   headers: {
+      //     'Content-Type': 'image/jpeg',
+      //     'Content-Length': data.length.toString(),
+      //     'Access-Control-Allow-Origin': '*',
+      //     'Access-Control-Allow-Methods': 'GET',
+      //     'Access-Control-Allow-Headers': 'Content-Type',
+      //   },
+      // })
     }),
   )
 }

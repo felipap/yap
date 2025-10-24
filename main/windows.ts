@@ -11,6 +11,7 @@ export let recordingWindow: BrowserWindow | null = null
 
 export function createMainWindow(): BrowserWindow {
   if (mainWindow) {
+    console.log('MainWindow already created, skipping...')
     throw new Error('MainWindow already created')
   }
 
@@ -18,7 +19,7 @@ export function createMainWindow(): BrowserWindow {
 
   // Check if window was last focused (only relevant in development)
   const wasLastFocused = store.get('wasLastFocused', false)
-  const shouldShow = process.env.NODE_ENV !== 'development' || wasLastFocused
+  const shouldShow = true // process.env.NODE_ENV !== 'development' || wasLastFocused
 
   const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: windowBounds.width,
@@ -88,15 +89,15 @@ export function createMainWindow(): BrowserWindow {
     })
   }
 
-  // Load recording handler script
-  mainWindow.webContents.once('dom-ready', () => {
-    mainWindow.webContents.executeJavaScript(`
-      // Load the recording handler script
-      const script = document.createElement('script');
-      script.src = './recording-handler.js';
-      document.head.appendChild(script);
-    `)
-  })
+  // // Load recording handler script
+  // mainWindow.webContents.once('dom-ready', () => {
+  //   mainWindow.webContents.executeJavaScript(`
+  //     // Load the recording handler script
+  //     const script = document.createElement('script');
+  //     script.src = './recording-handler.js';
+  //     document.head.appendChild(script);
+  //   `)
+  // })
 
   return mainWindow
 }

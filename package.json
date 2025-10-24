@@ -5,7 +5,7 @@
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"bun run watch:main\" \"bun run dev:renderer:main\" \"bun run dev:renderer:settings\" \"bun run dev:electron\"",
-    "dev:electron": "wait-on http://localhost:4000 dist/main/main.js && NODE_ENV=development nodemon --watch dist/main/main.js --signal SIGTERM --exec \"electron .\"",
+    "dev:electron": "wait-on http://localhost:4000 dist/main/main.js && NODE_ENV=development nodemon --watch dist/main/main.js --exec \"electron dist/main/main.js\"",
     "build": "bun run build:main && bun run build:renderer && bun run build:recording",
     "build:recording": "mkdir -p dist/windows/recording && cp -r windows/recording/* dist/windows/recording/",
     "build:main": "tsc -p tsconfig.main.json",

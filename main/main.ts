@@ -11,6 +11,7 @@ import {
   createRecordingWindow,
   createSettingsWindow,
   getMainWindow,
+  mainWindow,
 } from './windows'
 import { recoverIncompleteRecordings } from './recording'
 
@@ -28,6 +29,8 @@ if (!gotTheLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
+    console.log('Second instance detected, focusing main window')
+
     // Someone tried to run a second instance, focus our window instead
     const mainWindow = getMainWindow()
     if (mainWindow) {
@@ -52,15 +55,16 @@ app.whenReady().then(async () => {
 
   setupIpcHandlers()
 
-  // Create main window
-  const mainWindow = createMainWindow()
-  createSettingsWindow()
-  createRecordingWindow()
+  // Create windows
+  createMainWindow()
+  // createSettingsWindow()
+  // createRecordingWindow()
   createTray()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow()
+      mainWindow?.show()
+      // createMainWindow()
     }
   })
 })
