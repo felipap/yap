@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/felipap/vlogger/compare/v1.3.0...v1.4.0) (2025-10-24)
+
+
+### Features
+
+* always saving data ([420d543](https://github.com/felipap/vlogger/commit/420d5433285d5b39377599b5562f35687d3d9aee))
+
 ## [1.3.0](https://github.com/felipap/vlogger/compare/v1.2.3...v1.3.0) (2025-10-23)
 
 
