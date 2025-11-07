@@ -1,10 +1,18 @@
 import { useEffect, useMemo } from 'react'
 import { useVlogData } from '../../../../shared/useVlogData'
 import { RecordedFile } from '../../../types'
+import { FilterBox } from './FilterBox'
+import { buildSearchableDate, formatDateOrRelative } from './formatters'
 import { Item } from './Item'
+import { useVlogFilter } from './useVlogFilter'
 import { useSidebarShortcuts } from './useSidebarShortcuts'
 
-export type SidebarItem = RecordedFile & { dayIndex?: number }
+export type SidebarItem = RecordedFile & {
+  dayIndex?: number
+  displayTitle: string
+  searchableText: string
+}
+export { useVlogFilter } from './useVlogFilter'
 
 interface Props {
   selectedVlog: RecordedFile | null
@@ -14,28 +22,43 @@ interface Props {
 
 export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   const { displayVlogs } = useIndexedVlogData()
+  const { filteredVlogs, filterText, setFilterText } =
+    useVlogFilter(displayVlogs)
 
-  useSidebarShortcuts({ displayVlogs, onVideoSelect, selectedVlog })
+  const selectedSidebarItem = useMemo(
+    () => displayVlogs.find((v) => v.id === selectedVlog?.id),
+    [displayVlogs, selectedVlog?.id],
+  )
+
+  useSidebarShortcuts({
+    displayVlogs: filteredVlogs,
+    onVideoSelect,
+    selectedVlog: selectedSidebarItem,
+  })
 
   return (
-    <div className="w-[220px] h-full border-r overflow-y-auto bg-two pb-5">
-      <div className="flex flex-col gap-0 divide-y divide-three/20">
-        {displayVlogs.map((vlog) => (
-          <Item
-            key={vlog.id}
-            data={vlog}
-            selected={selectedVlog?.id === vlog.id}
-            onClick={() => {
-              onVideoSelect(vlog)
-            }}
-          />
-        ))}
-        {displayVlogs.length === 0 && (
-          <div className="text-center text-sm text-secondary p-4 track-10">
-            No vlogs yet
-          </div>
-        )}
+    <div className="w-[220px] h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-0 divide-y divide-contrast/20">
+          {filteredVlogs.map((vlog) => (
+            <Item
+              key={vlog.id}
+              data={vlog}
+              selected={selectedVlog?.id === vlog.id}
+              onClick={() => {
+                onVideoSelect(vlog)
+              }}
+            />
+          ))}
+          {filteredVlogs.length === 0 && (
+            <div className="text-center text-xs text-secondary/50 p-4 track-10">
+              {filterText ? 'Nothing found' : 'No vlogs yet'}
+            </div>
+          )}
+        </div>
       </div>
+
+      <FilterBox value={filterText} onChange={setFilterText} />
     </div>
   )
 }
@@ -75,11 +98,26 @@ function useIndexedVlogData() {
       idToDayIndex.set(file.id, next)
     }
 
-    // Map back to original order with computed indices
-    return vlogs.map((file: RecordedFile) => ({
-      ...file,
-      dayIndex: idToDayIndex.get(file.id),
-    }))
+    // Map back to original order with computed indices and display title
+    return vlogs.map((file: RecordedFile) => {
+      const displayTitle = file.title || formatDateOrRelative(file.created)
+      const searchableDate = buildSearchableDate(file.created)
+      const searchableText = [
+        displayTitle,
+        file.title || '',
+        file.name || '',
+        searchableDate,
+      ]
+        .join(' ')
+        .toLowerCase()
+
+      return {
+        ...file,
+        dayIndex: idToDayIndex.get(file.id),
+        displayTitle,
+        searchableText,
+      }
+    })
   }, [vlogs])
 
   return { displayVlogs }

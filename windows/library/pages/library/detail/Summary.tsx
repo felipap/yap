@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Clock, RotateCcw } from 'lucide-react'
+import { ClockIcon, RefreshIcon } from '../../../../shared/icons'
 import { generateVideoSummary } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
 import { RecordedFile } from '../../../types'
@@ -57,12 +57,12 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
         >
           {isGenerating ? (
             <>
-              <Clock className="w-3 h-3" />
+              <ClockIcon className="w-3 h-3" />
               Generating...
             </>
           ) : (
             <>
-              <RotateCcw className="w-3 h-3" />
+              <RefreshIcon className="w-3 h-3" />
               Regenerate
             </>
           )}

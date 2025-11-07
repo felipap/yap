@@ -18,7 +18,7 @@ export function TitleInput({
         'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-2 ml-[-5px] py-1 text-[20px] h-7 font-bold transition',
         title.length > 0
           ? ''
-          : 'placeholder:text-contrast opacity-30 focus:opacity-80',
+          : 'placeholder:text-contrast opacity-10 focus:opacity-80',
       )}
       placeholder="Name your vlog"
       value={title}

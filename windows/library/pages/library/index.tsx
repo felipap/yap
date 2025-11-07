@@ -1,4 +1,4 @@
-import { Film } from 'lucide-react'
+import { MdMovie } from 'react-icons/md'
 import { useState } from 'react'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { useVlog } from '../../../shared/useVlogData'
@@ -19,7 +19,7 @@ export default function Page() {
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
         <div className="flex h-full w-screen overflow-hidden">
-          <div className="h-full ">
+          <div className="h-full border-r border-contrast/10 bg-sidebar">
             <Sidebar
               selectedVlog={vlog ?? null}
               onVideoSelect={handleSelectVlog}
@@ -28,7 +28,7 @@ export default function Page() {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col h-full overflow-hidden  dark:bg-[#202020]">
             {vlog ? (
               <DetailPage
                 key={vlog.id}
@@ -39,9 +39,9 @@ export default function Page() {
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center flex flex-col gap-2">
                   <div className=" flex justify-center">
-                    <Film size={40} className="text-secondary" />
+                    <MdMovie size={40} className="text-secondary/80" />
                   </div>
-                  <h3 className="text-[15px] font-medium text-secondary mb-2">
+                  <h3 className="text-[15px] text-secondary/80 mb-2">
                     Select a vlog or drag video files here
                   </h3>
                 </div>

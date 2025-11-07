@@ -1,3 +1,13 @@
+import {
+  MdMovie,
+  MdSearch,
+  MdVideocam,
+  MdMic,
+  MdLibraryBooks,
+  MdAccessTime,
+  MdRefresh,
+} from 'react-icons/md'
+
 interface IconProps {
   size?: number
   className?: string
@@ -18,4 +28,31 @@ export function SolidSquare({ size = 16, className }: IconProps) {
   )
 }
 
+export function MovieIcon({ size = 16, className }: IconProps) {
+  return <MdMovie size={size} className={className} />
+}
+
+export function SearchIcon({ size = 16, className }: IconProps) {
+  return <MdSearch size={size} className={className} />
+}
+
+export function VideocamIcon({ size = 16, className }: IconProps) {
+  return <MdVideocam size={size} className={className} />
+}
+
+export function MicIcon({ size = 16, className }: IconProps) {
+  return <MdMic size={size} className={className} />
+}
+
+export function LibraryIcon({ size = 16, className }: IconProps) {
+  return <MdLibraryBooks size={size} className={className} />
+}
+
+export function ClockIcon({ size = 16, className }: IconProps) {
+  return <MdAccessTime size={size} className={className} />
+}
+
+export function RefreshIcon({ size = 16, className }: IconProps) {
+  return <MdRefresh size={size} className={className} />
+}
 

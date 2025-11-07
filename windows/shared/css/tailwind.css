@@ -34,9 +34,8 @@
 
 @theme {
   /* Colors */
-  --text-color-contrast: #000;
+  --color-contrast: #000;
   --text-color-secondary: #888;
-  --text-color-tertiary: #aaa;
   --text-color-inverted: #fff;
   --background-color-one: #f4f6f6;
   --background-color-two: #eee;
@@ -47,42 +46,20 @@
 
   /*  */
   --color-nav: #f0f0f0;
-  --color-background: #eee;
-  --color-tab-active: #eaeaeb;
+  --color-sidebar: #ffffff30;
   --border-color-one: #eaeaea;
   --border-color-two: #ddd;
-  --color-btn: #fff;
   --color-input: #fff;
-  --color-tertiary: #f0f0f0;
-
-  /* Apple colors */
-  --color-apple-system: var(--bg-apple-system-light);
-  --color-apple-secondary-system: var(--bg-apple-secondary-system-light);
-  --color-apple-tertiary-system: var(--bg-apple-tertiary-system-light);
-  --color-apple-system-grouped: var(--bg-apple-system-grouped-light);
-  --color-apple-secondary-system-grouped: var(
-    --color-apple-secondary-system-grouped-light
-  );
-  --color-apple-tertiary-system-grouped: var(
-    --color-apple-tertiary-system-grouped-light
-  );
-  --color-apple-system-gray-1: var(--apple-system-gray-1-light);
-  --color-apple-system-gray-2: var(--apple-system-gray-2-light);
-  --color-apple-system-gray-3: var(--apple-system-gray-3-light);
-  --color-apple-system-gray-4: var(--apple-system-gray-4-light);
-  --color-apple-system-gray-5: var(--apple-system-gray-5-light);
-  --color-apple-system-gray-6: var(--apple-system-gray-6-light);
-  --color-apple-highlight-color: var(--apple-highlight-color-light);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text-color-contrast: #fff;
+    --color-contrast: #fff;
     --text-color-primary: #fff;
     --text-color-link: #6fb4ff;
     --text-color-secondary: #aaa;
-    --text-color-tertiary: #666;
     --text-color-inverted: #000;
+    --color-sidebar: #222;
     --background-color-one: #202020;
     --background-color-two: #161616;
     --background-color-three: #2a2a2a;
@@ -92,28 +69,8 @@
 
     /* Apple colors */
     --color-nav: var(--apple-system-gray-4-dark);
-    --color-background: var(--apple-system-gray-5-dark);
-    --color-tab-active: var(--apple-system-gray-3-dark);
-    --color-btn: var(--apple-system-gray-4-dark);
     --color-input: var(--apple-system-gray-4-dark);
-    --color-tertiary: var(--apple-system-gray-3-dark);
 
-    --color-apple-system: var(--bg-apple-system-dark);
-    --color-apple-secondary-system: var(--bg-apple-secondary-system-dark);
-    --color-apple-tertiary-system: var(--bg-apple-tertiary-system-dark);
-    --color-apple-system-grouped: var(--bg-apple-system-grouped-dark);
-    --color-apple-secondary-system-grouped: var(
-      --bg-apple-secondary-system-grouped-dark
-    );
-    --color-apple-tertiary-system-grouped: var(
-      --bg-apple-tertiary-system-grouped-dark
-    );
-    --color-apple-system-gray-1: var(--apple-system-gray-1-dark);
-    --color-apple-system-gray-2: var(--apple-system-gray-2-dark);
-    --color-apple-system-gray-3: var(--apple-system-gray-3-dark);
-    --color-apple-system-gray-4: var(--apple-system-gray-4-dark);
-    --color-apple-system-gray-5: var(--apple-system-gray-5-dark);
-    --color-apple-system-gray-6: var(--apple-system-gray-6-dark);
     --color-apple-highlight-color: var(--apple-highlight-color-dark);
   }
 }

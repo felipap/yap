@@ -1,4 +1,4 @@
-import { Library, Video } from 'lucide-react'
+import { LibraryIcon, VideocamIcon } from '../icons'
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
@@ -46,7 +46,7 @@ export function TopNav({ currentTab }: TopNavProps) {
               router.navigate({ name: 'library' })
             }}
           >
-            <Library className="w-4 h-4" />
+            <LibraryIcon className="w-4 h-4" />
             Library
           </TabButton>
           <TabButton
@@ -55,7 +55,7 @@ export function TopNav({ currentTab }: TopNavProps) {
               router.navigate({ name: 'record' })
             }}
           >
-            <Video className="w-4 h-4" />
+            <VideocamIcon className="w-4 h-4" />
             Record
           </TabButton>
         </div>

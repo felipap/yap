@@ -27,7 +27,7 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
     }))
 
     return (
-      <div className="relative w-full flex-1 min-h-0 bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
+      <div className="relative w-full flex-1 min-h-0 max-h-[1000px] bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
         {hasVideo ? (
           <video
             ref={videoRef}

@@ -1,6 +1,6 @@
 import { Select } from '../../../shared/ui/Select'
 import { VolumeMeter } from './VolumeMeter'
-import { Camera, Mic } from 'lucide-react'
+import { VideocamIcon, MicIcon } from '../../../shared/icons'
 
 interface DeviceSelectorProps {
   cameras: MediaDeviceInfo[]
@@ -33,7 +33,7 @@ export function DeviceSelector({
             cameras.length > 0 && (
               <div className="flex gap-1 items-center">
                 <div className="flex items-center justify-center w-8 h-8 opacity-40">
-                  <Camera size={20} />
+                  <VideocamIcon size={20} />
                 </div>
                 <Select
                   className="w-[200px]"
@@ -54,7 +54,7 @@ export function DeviceSelector({
           {microphones.length > 0 && (
             <div className="flex gap-1 items-center">
               <div className="flex items-center justify-center w-8 h-8">
-                <Mic className="opacity-40" size={20} />
+                <MicIcon className="opacity-40" size={20} />
               </div>
 
               <Select

@@ -15,7 +15,7 @@ export function createLibraryWindow(): BrowserWindow {
     throw new Error('Library window already created')
   }
 
-  const windowBounds = store.get('windowBounds', { width: 700, height: 500 })
+  const windowBounds = store.get('windowBounds', { width: 800, height: 500 })
 
   // Check if window was last focused (only relevant in development)
   const wasLastFocused = store.get('wasLastFocused', false)
@@ -26,10 +26,10 @@ export function createLibraryWindow(): BrowserWindow {
     height: windowBounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    minWidth: 700,
+    minWidth: 800,
     minHeight: 500,
     center: true,
-    maxWidth: 700,
+    maxWidth: 800,
     maxHeight: 1000,
     // Only show window in development if it was last focused
     show: shouldShow,
@@ -39,7 +39,7 @@ export function createLibraryWindow(): BrowserWindow {
       preload: join(__dirname, 'preload.js'),
     },
     titleBarStyle: 'hiddenInset',
-    vibrancy: 'under-window',
+    vibrancy: 'fullscreen-ui',
     visualEffectState: 'active',
   }
 
@@ -150,8 +150,10 @@ export function createSettingsWindow(): BrowserWindow {
   const settingsWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 500,
     height: 400,
-    minWidth: 400,
-    minHeight: 300,
+    minWidth: 500,
+    minHeight: 400,
+    maxWidth: 500,
+    maxHeight: 500,
     center: true,
     resizable: true,
     webPreferences: {
@@ -160,7 +162,7 @@ export function createSettingsWindow(): BrowserWindow {
       preload: join(__dirname, 'preload.js'),
     },
     titleBarStyle: 'default',
-    vibrancy: 'under-window',
+    vibrancy: 'fullscreen-ui',
     visualEffectState: 'active',
     show: false,
     // parent: libraryWindow,

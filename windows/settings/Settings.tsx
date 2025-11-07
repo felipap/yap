@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../shared/ui/Button'
 
-export function App() {
+export function Settings() {
   const [apiKey, setApiKey] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -29,7 +29,7 @@ export function App() {
   }
 
   return (
-    <div className="h-screen bg-one p-4">
+    <div className="h-screen bg-two/80 p-4">
       <h1 className="text-lg font-medium mb-8 text-contrast">Settings</h1>
 
       <div className="space-y-8">
