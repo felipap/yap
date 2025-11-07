@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.3](https://github.com/felipap/vlogger/compare/v0.9.2...v0.9.3) (2025-11-07)
+
+
+### Features
+
+* audio support ([57ce8e3](https://github.com/felipap/vlogger/commit/57ce8e3ab728cfaf74c380d3b9a41a4f33f058f6))
+
 ### 0.9.1 (2025-10-24)
 
 ### Features
