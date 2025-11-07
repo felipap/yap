@@ -1,4 +1,4 @@
-import { LibraryIcon, VideocamIcon } from '../icons'
+import { LibraryIcon, RecordIcon } from '../icons'
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
@@ -39,14 +39,14 @@ export function TopNav({ currentTab }: TopNavProps) {
   return (
     <div className="drag-region">
       <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-three border-b">
-        <div className="flex items-center gap-3 pl-20">
+        <div className="flex items-center gap-3 pl-20 justify-between w-full">
           <TabButton
             active={currentTab === 'library'}
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
           >
-            <LibraryIcon className="w-4 h-4" />
+            <LibraryIcon className="w-3 h-3" />
             Library
           </TabButton>
           <TabButton
@@ -54,9 +54,10 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'record' })
             }}
+            className="border dark:border-white/10 pr-2 hover:text-red-400"
           >
-            <VideocamIcon className="w-4 h-4" />
             Record
+            <RecordIcon className="w-4 h-4" />
           </TabButton>
         </div>
       </div>
@@ -68,14 +69,21 @@ interface TabButtonProps {
   onClick: () => void
   active?: boolean
   children: React.ReactNode
+  className?: string
 }
 
-function TabButton({ onClick, active = false, children }: TabButtonProps) {
+function TabButton({
+  onClick,
+  active = false,
+  children,
+  className,
+}: TabButtonProps) {
   return (
     <button
       className={twMerge(
-        'no-drag-region px-3 h-7 text-sm font-medium transition-colors rounded-md hover:bg-two flex items-center gap-2',
+        'no-drag-region px-3 h-7 text-[13px] tracking-normal font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
         active ? 'text-contrast bg-two' : 'text-secondary',
+        className,
       )}
       onClick={onClick}
     >

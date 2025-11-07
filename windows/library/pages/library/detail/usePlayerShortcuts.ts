@@ -1,26 +1,26 @@
 import { useEffect, useCallback } from 'react'
-import { VideoRef } from './Video'
+import { PlayerRef } from './Player'
 import { usePlaybackPreferences } from '../../../../shared/PlaybackPreferencesProvider'
 
 interface Args {
-  videoRef: React.RefObject<VideoRef>
+  playerRef: React.RefObject<PlayerRef>
 }
 
-export function useVideoShortcuts({ videoRef }: Args) {
+export function usePlayerShortcuts({ playerRef }: Args) {
   const { toggleMute, playbackSpeed, setPlaybackSpeed } =
     usePlaybackPreferences()
 
   const togglePlayPause = useCallback(() => {
-    if (!videoRef.current) {
+    if (!playerRef.current) {
       return
     }
 
-    if (videoRef.current.paused) {
-      videoRef.current.play()
+    if (playerRef.current.paused) {
+      playerRef.current.play()
     } else {
-      videoRef.current.pause()
+      playerRef.current.pause()
     }
-  }, [videoRef])
+  }, [playerRef])
 
   const cyclePlaybackSpeed = useCallback(() => {
     const speeds = [1.0, 1.5, 2.0, 3.0]

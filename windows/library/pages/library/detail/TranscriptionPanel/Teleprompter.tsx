@@ -1,13 +1,18 @@
 import { useRef } from 'react'
 import { TranscriptionResult } from '../../../../types'
-import { VideoRef } from '../Video'
+import { PlayerRef } from '../Player'
 
 interface TeleprompterProps {
+  isVideo: boolean
   transcription: TranscriptionResult
-  videoRef: React.RefObject<VideoRef>
+  playerRef: React.RefObject<PlayerRef>
 }
 
-export function Teleprompter({ transcription, videoRef }: TeleprompterProps) {
+export function Teleprompter({
+  isVideo,
+  transcription,
+  playerRef,
+}: TeleprompterProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const formatTime = (seconds: number): string => {
@@ -17,17 +22,17 @@ export function Teleprompter({ transcription, videoRef }: TeleprompterProps) {
   }
 
   const handleSegmentClick = (startTime: number) => {
-    if (videoRef.current) {
-      videoRef.current.seekTo(startTime)
+    if (playerRef.current) {
+      playerRef.current.seekTo(startTime)
     }
   }
 
   const syncToVideo = () => {
-    if (!videoRef.current || !containerRef.current) {
+    if (!playerRef.current || !containerRef.current) {
       return
     }
 
-    const currentTime = videoRef.current.currentTime
+    const currentTime = playerRef.current.currentTime
 
     const currentSegment = transcription.segments.find(
       (segment: TranscriptionResult['segments'][number]) =>
@@ -62,10 +67,10 @@ export function Teleprompter({ transcription, videoRef }: TeleprompterProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={syncToVideo}
-          className="btn-secondary text-sm"
+          className="btn-secondary text-sm font-medium"
           title="Sync transcript to current video position"
         >
-          ⏯️ Sync to Video
+          ⏯Sync to {isVideo ? 'video' : 'audio'}
         </button>
       </div>
 

@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { withBoundary } from '../../../../../shared/withBoundary'
-import { VideoRef } from '../Video'
+import { RecordedFile } from '../../../../types'
+import { PlayerRef } from '../Player'
 import { Teleprompter } from './Teleprompter'
 import { TranscribeButton } from './TranscribeButton'
 import { useTranscriptionState } from './useTranscriptionState'
 
 interface Props {
+  log: RecordedFile
   vlogId: string
-  videoRef: React.RefObject<VideoRef>
+  playerRef: React.RefObject<PlayerRef>
 }
 
 export const TranscriptionPanel = withBoundary(function ({
+  log,
   vlogId,
-  videoRef,
+  playerRef,
 }: Props) {
   const {
     transcription,
@@ -42,9 +45,11 @@ export const TranscriptionPanel = withBoundary(function ({
   }
 
   return (
-    <div className="bg-two rounded-lg p-4 border w-full">
+    <div className="bg-two rounded-lg p-3 border w-full">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-contrast m-0">Transcript</h3>
+        <h3 className="text-[15px] font-medium text-contrast m-0">
+          Transcript
+        </h3>
 
         <div className="flex items-center gap-2">
           {transcription && (
@@ -69,19 +74,21 @@ export const TranscriptionPanel = withBoundary(function ({
       </div>
 
       {transcriptionError && (
-        <div className="mb-3 text-[var(--text-danger)] text-sm">
-          {transcriptionError}
-        </div>
+        <div className="mb-3 text-red-400 text-sm">{transcriptionError}</div>
       )}
 
       {!transcription && !isTranscribing && (
-        <div className="text-sm text-[var(--text-secondary)]">
+        <div className="text-sm text-secondary/80">
           No transcript yet. Click "Transcribe" to generate one.
         </div>
       )}
 
       {transcription && (
-        <Teleprompter transcription={transcription} videoRef={videoRef} />
+        <Teleprompter
+          isVideo={!log.isAudioOnly}
+          transcription={transcription}
+          playerRef={playerRef}
+        />
       )}
     </div>
   )

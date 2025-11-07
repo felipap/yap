@@ -26,6 +26,17 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
       },
     }))
 
+    // For audio mode, don't show a video preview at all
+    if (props.mode === 'audio') {
+      return (
+        <div className="relative w-full flex-1 min-h-0 max-h-[1000px] bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
+          <div className="w-full flex items-center justify-center h-[340px]">
+            <div className="text-8xl">🎤</div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="relative w-full flex-1 min-h-0 max-h-[1000px] bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
         {hasVideo ? (

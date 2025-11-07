@@ -1,20 +1,82 @@
 import { spawn } from 'child_process'
 import { protocol } from 'electron'
 import { createReadStream } from 'fs'
-import { readFile, stat } from 'fs/promises'
+import { access, open, readFile, stat } from 'fs/promises'
 import { vlogIdToPath } from './ipc'
 import { debug } from './lib/logger'
 import { generateThumbnail } from './lib/thumbnails'
 import { getVideoDuration } from './lib/transcription'
+import { getVlog } from './store'
 
 // Cache for fixed webm files to avoid reprocessing
 const fixedWebmCache = new Map<string, string>()
+
+// Helper function to check if a file is actually readable (not just a cloud placeholder)
+async function isFileActuallyReadable(filePath: string): Promise<boolean> {
+  // Check for cloud storage paths
+  const isCloudPath =
+    filePath.includes('/CloudStorage/') ||
+    filePath.includes('/Google Drive/') ||
+    filePath.includes('/Dropbox/') ||
+    filePath.includes('/OneDrive/')
+
+  if (isCloudPath) {
+    debug('Detected cloud storage path, performing read test:', filePath)
+  }
+
+  try {
+    // Try to actually open and read the first few KB of the file with a timeout
+    // This will fail if the file is just a cloud placeholder or takes too long to fetch
+    const readPromise = (async () => {
+      const fileHandle = await open(filePath, 'r')
+      try {
+        const buffer = Buffer.allocUnsafe(8192) // Try to read 8KB
+        const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0)
+
+        if (bytesRead === 0) {
+          debug('File exists but has no content:', filePath)
+          return false
+        }
+
+        return true
+      } finally {
+        await fileHandle.close()
+      }
+    })()
+
+    // Add a 2-second timeout for the read operation
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        debug('File read test timed out after 2s:', filePath)
+        resolve(false)
+      }, 2000)
+    })
+
+    return await Promise.race([readPromise, timeoutPromise])
+  } catch (error) {
+    debug('File read test failed:', filePath, error)
+    return false
+  }
+}
 
 // Function to fix webm files by adding duration metadata
 async function fixWebmDuration(inputPath: string): Promise<string> {
   // Check if we've already fixed this file
   if (fixedWebmCache.has(inputPath)) {
     return fixedWebmCache.get(inputPath)!
+  }
+
+  // Check if source video file is actually readable
+  const isReadable = await isFileActuallyReadable(inputPath)
+  if (!isReadable) {
+    debug(
+      'Cannot read video file for webm duration fix (may be cloud storage placeholder):',
+      inputPath,
+    )
+    // If file is not accessible, just return original path
+    // The video player will handle the error
+    fixedWebmCache.set(inputPath, inputPath)
+    return inputPath
   }
 
   try {
@@ -90,7 +152,7 @@ export function registerProtocols() {
   // Register the custom protocol as a standard scheme before app is ready
   protocol.registerSchemesAsPrivileged([
     {
-      scheme: 'vlog-video',
+      scheme: 'log-media',
       privileges: {
         standard: true,
         secure: true,
@@ -116,11 +178,11 @@ export function registerProtocols() {
 export function setupProtocolHandlers() {
   // Register custom protocol to serve local video files
   protocol.handle(
-    'vlog-video',
+    'log-media',
     withErrorHandling(async (request) => {
       // Remove the protocol and get the vlog ID
       const vlogId = request.url
-        .replace('vlog-video://', '')
+        .replace('log-media://', '')
         .replace('/', '')
         .replace(/(\.mp4)|(\.webm)/, '')
 
@@ -239,6 +301,15 @@ export function setupProtocolHandlers() {
       if (!filePath) {
         console.error(`Vlog with ID ${vlogId} not found in mapping`)
         return new Response('Vlog not found', { status: 404 })
+      }
+
+      // Check if this is an audio-only file
+      const vlog = getVlog(vlogId)
+      if (vlog?.isAudioOnly) {
+        debug('Skipping thumbnail generation for audio-only file:', filePath)
+        return new Response('Thumbnail not available for audio-only files', {
+          status: 404,
+        })
       }
 
       // Generate thumbnail lazily if it doesn't exist

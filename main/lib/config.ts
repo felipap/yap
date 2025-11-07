@@ -1,6 +1,8 @@
 import { join } from 'path'
 import { homedir } from 'os'
 
+export const DEBUG = false
+
 // Application paths
 export const PATHS = {
   // User data directory

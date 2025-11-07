@@ -20,6 +20,7 @@ export function RecordingModeSelector({
         <Button onClick={() => onModeChange('camera')}>Camera</Button>
         <Button onClick={() => onModeChange('screen')}>Screen</Button>
         <Button onClick={() => onModeChange('both')}>Both</Button>
+        <Button onClick={() => onModeChange('audio')}>Audio</Button>
       </div>
     </div>
   )

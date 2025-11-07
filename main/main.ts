@@ -1,17 +1,15 @@
 import 'source-map-support/register'
 
 import { IPCMode, init as SentryInit } from '@sentry/electron/main'
+import { app } from 'electron'
 import started from 'electron-squirrel-startup'
-import { app, BrowserWindow } from 'electron'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
 import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
 import {
   createLibraryWindow,
-  createRecordingWindow,
   createSettingsWindow,
-  getMainWindow,
   libraryWindow,
 } from './windows'
 

@@ -33,6 +33,16 @@ function generateVlogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
 }
 
+// Helper function to detect if a file is audio-only
+function isAudioOnlyFile(filePath: string): boolean {
+  const audioExtensions = ['.mp3', '.m4a', '.wav', '.aac', '.ogg', '.flac']
+  const ext = filePath.toLowerCase().slice(filePath.lastIndexOf('.'))
+  const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || ''
+
+  // Check if it's an audio file extension or an "Audio Log" recording
+  return audioExtensions.includes(ext) || fileName.startsWith('Audio ')
+}
+
 // IPC handlers
 export function setupIpcHandlers() {
   ipcMain.handle('getScreenSources', async () => {
@@ -91,6 +101,7 @@ export function setupIpcHandlers() {
               duration: vlog.duration, // Use cached duration if available
               summary: vlog.summary,
               transcription: vlog.transcription?.result || undefined,
+              isAudioOnly: vlog.isAudioOnly,
             }
           } catch (error) {
             // File doesn't exist anymore, skip it
@@ -393,6 +404,7 @@ export function setupIpcHandlers() {
             thumbnailPath: `vlog-thumbnail://${id}.jpg`,
             summary: existingVlog.summary,
             transcription: existingVlog.transcription,
+            isAudioOnly: existingVlog.isAudioOnly,
           },
         }
       }
@@ -430,6 +442,7 @@ export function setupIpcHandlers() {
         name: fileName,
         path: filePath,
         timestamp: createdDate.toISOString(),
+        isAudioOnly: isAudioOnlyFile(filePath),
       }
       setVlog(vlog)
 
@@ -449,6 +462,7 @@ export function setupIpcHandlers() {
           thumbnailPath: `vlog-thumbnail://${id}.jpg`,
           summary: vlog.summary,
           transcription: vlog.transcription,
+          isAudioOnly: vlog.isAudioOnly,
         },
       }
     } catch (error) {

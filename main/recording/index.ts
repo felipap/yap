@@ -17,7 +17,7 @@ let recordingState: RecordingState = {
 
 // Configuration for streaming recording
 interface StreamingRecordingConfig {
-  type: 'camera' | 'screen' | 'both'
+  type: 'camera' | 'screen' | 'both' | 'audio'
   mimeType?: string
   audioBitsPerSecond?: number
   videoBitsPerSecond?: number
@@ -60,8 +60,11 @@ function generateRecordingFilename(config: StreamingRecordingConfig): string {
       ? 'Camera'
       : config.type === 'screen'
         ? 'Screen'
-        : 'Both'
+        : config.type === 'audio'
+          ? 'Audio'
+          : 'Both'
 
+  // Use .webm extension for all recordings (audio and video both use webm)
   return `${typePrefix} Log ${year}-${month}-${day} at ${hour12}.${minutes}.${seconds} ${ampm}.webm`
 }
 
@@ -127,6 +130,7 @@ export async function finalizeStreamingRecording(): Promise<string> {
     name: filename,
     path: filepath,
     timestamp: new Date().toISOString(),
+    isAudioOnly: currentStreamingRecording.config.type === 'audio',
   }
   setVlog(vlog)
 

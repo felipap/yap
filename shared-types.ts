@@ -17,6 +17,7 @@ export interface Vlog {
   lastPosition?: number
   lastPositionTimestamp?: string
   duration?: number // Cached video duration in seconds
+  isAudioOnly?: boolean
 }
 
 export interface UserProfile {
@@ -29,7 +30,7 @@ export interface UserProfile {
 
 export interface State {
   selectedCameraId: string
-  recordingMode: 'camera' | 'screen' | 'both'
+  recordingMode: 'camera' | 'screen' | 'both' | 'audio'
   globalVideoMute: boolean
   globalPlaybackSpeed: number
   openaiApiKey?: string
@@ -83,9 +84,10 @@ export interface RecordedFile {
   duration?: number
   transcription?: TranscriptionResult
   summary?: string
+  isAudioOnly?: boolean
 }
 
-export type RecordingMode = 'screen' | 'camera' | 'both'
+export type RecordingMode = 'screen' | 'camera' | 'both' | 'audio'
 
 export interface ImportResult {
   success: boolean

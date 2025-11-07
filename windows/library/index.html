@@ -12,6 +12,18 @@
         padding: 10px;
         font-family: Arial, sans-serif;
       }
+
+      body {
+        /* Overriden inside of tailwind.css. It's weird to have a completely
+        transparent background while the app is loading, or when it fails to
+        load. */
+        background-color: #f0f0f0;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #202020;
+        }
+      }
     </style>
   </head>
   <body>

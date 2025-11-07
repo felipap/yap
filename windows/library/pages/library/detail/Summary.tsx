@@ -70,7 +70,9 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
       </header>
 
       {summary ? (
-        <div className="text-sm text-contrast leading-relaxed">{summary}</div>
+        <div className="text-sm text-contrast border dark:bg-white/5 p-3 leading-[1.45] track-20 rounded-md">
+          {summary}
+        </div>
       ) : (
         <div className="p-3 flex items-center justify-center text-text-secondary">
           <div className="text-sm">Click 'Regenerate' to create a summary</div>

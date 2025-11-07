@@ -219,6 +219,10 @@ export default function Page() {
       } else if (recordingMode === 'screen') {
         startScreenPreview()
         stopCameraPreview()
+      } else if (recordingMode === 'audio') {
+        // Audio mode doesn't need any preview
+        stopCameraPreview()
+        stopScreenPreview()
       }
     } else {
       stopCameraPreview()
@@ -280,9 +284,15 @@ export default function Page() {
       console.error('Failed to start recording:', error)
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error occurred'
-      alert(
-        `Failed to start recording: ${errorMessage}\n\nPlease check:\n1. Camera/Screen recording permissions are granted\n2. No other apps are using the camera/screen`,
-      )
+
+      let errorContext = ''
+      if (recordingMode === 'audio') {
+        errorContext = '\n\nPlease check:\n1. Microphone permissions are granted\n2. No other apps are using the microphone'
+      } else {
+        errorContext = '\n\nPlease check:\n1. Camera/Screen recording permissions are granted\n2. No other apps are using the camera/screen'
+      }
+
+      alert(`Failed to start recording: ${errorMessage}${errorContext}`)
     }
   }
 

@@ -1,6 +1,53 @@
 import { spawn } from 'child_process'
-import { unlink, access } from 'fs/promises'
+import { unlink, access, open } from 'fs/promises'
 import { constants } from 'fs'
+
+// Helper function to check if a file is actually readable (not just a cloud placeholder)
+async function isFileActuallyReadable(filePath: string): Promise<boolean> {
+  // Check for cloud storage paths
+  const isCloudPath = filePath.includes('/CloudStorage/') ||
+                      filePath.includes('/Google Drive/') ||
+                      filePath.includes('/Dropbox/') ||
+                      filePath.includes('/OneDrive/')
+
+  if (isCloudPath) {
+    console.log('Detected cloud storage path, performing read test:', filePath)
+  }
+
+  try {
+    // Try to actually open and read the first few KB of the file with a timeout
+    // This will fail if the file is just a cloud placeholder or takes too long to fetch
+    const readPromise = (async () => {
+      const fileHandle = await open(filePath, 'r')
+      try {
+        const buffer = Buffer.allocUnsafe(8192) // Try to read 8KB
+        const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0)
+
+        if (bytesRead === 0) {
+          console.log('File exists but has no content:', filePath)
+          return false
+        }
+
+        return true
+      } finally {
+        await fileHandle.close()
+      }
+    })()
+
+    // Add a 2-second timeout for the read operation
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        console.log('File read test timed out after 2s:', filePath)
+        resolve(false)
+      }, 2000)
+    })
+
+    return await Promise.race([readPromise, timeoutPromise])
+  } catch (error) {
+    console.log('File read test failed:', filePath, error)
+    return false
+  }
+}
 
 export class VideoConverter {
   private static ffmpegPath: string | null = null
@@ -68,6 +115,14 @@ export class VideoConverter {
     inputPath: string,
     outputPath: string,
   ): Promise<void> {
+    // Check if source video file is actually readable
+    const isReadable = await isFileActuallyReadable(inputPath)
+    if (!isReadable) {
+      throw new Error(
+        `Cannot read video file for conversion: ${inputPath}. This file appears to be in cloud storage (Google Drive, Dropbox, etc.) and is not fully downloaded locally. Please ensure the file is available offline before processing.`,
+      )
+    }
+
     const ffmpegPath = await this.findFFmpegPath()
 
     if (!ffmpegPath) {
@@ -126,6 +181,14 @@ export class VideoConverter {
     outputPath: string,
     onProgress?: (progress: number) => void,
   ): Promise<void> {
+    // Check if source video file is actually readable
+    const isReadable = await isFileActuallyReadable(inputPath)
+    if (!isReadable) {
+      throw new Error(
+        `Cannot read video file for conversion: ${inputPath}. This file appears to be in cloud storage (Google Drive, Dropbox, etc.) and is not fully downloaded locally. Please ensure the file is available offline before processing.`,
+      )
+    }
+
     const ffmpegPath = await this.findFFmpegPath()
 
     if (!ffmpegPath) {

@@ -4,28 +4,31 @@ import { loadVideoDuration } from '../../../../shared/ipc'
 import { useVlog } from '../../../../shared/useVlogData'
 import { withBoundary } from '../../../../shared/withBoundary'
 import { RecordedFile } from '../../../types'
+import { Player, PlayerRef } from './Player'
 import { Summary } from './Summary'
 import { TitleInput } from './TitleInput'
 import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
-import { useVideoShortcuts } from './useVideoShortcuts'
-import { Video, VideoRef } from './Video'
+import { usePlayerShortcuts } from './usePlayerShortcuts'
 
 interface Props {
-  vlog: RecordedFile
+  log: RecordedFile
   onBack: () => void
 }
 
-export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
-  const videoRef = useRef<VideoRef>(null)
-  const [currentVlog, setCurrentVlog] = useState<RecordedFile>(vlog)
+export const DetailPage = withBoundary(function ({
+  log: log__,
+  onBack,
+}: Props) {
+  const playerRef = useRef<PlayerRef | null>(null)
+  const [log, setCurrentVlog] = useState<RecordedFile>(log__)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  useMaybeCalculateDurationOnce(currentVlog.id)
+  useMaybeCalculateDurationOnce(log.id)
 
   // Transcription state now lives inside TranscriptionPanel
 
-  useVideoShortcuts({ videoRef })
+  usePlayerShortcuts({ playerRef })
 
   // actions moved into Toolbar
 
@@ -38,31 +41,34 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
     >
       <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen pb-5">
         <div className="w-full max-w-5xl">
-          <Video
-            ref={videoRef}
-            vlogId={currentVlog.id}
-            src={`vlog-video://${currentVlog.id}`}
-            className="max-h-[500px] w-full rounded-md"
+          <Player
+            ref={playerRef}
+            vlogId={log.id}
+            src={`log-media://${log.id}`}
+            className={twMerge(
+              'w-full rounded-md',
+              log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[500px]',
+            )}
           />
         </div>
 
         <header className="flex flex-col gap-3 w-full">
           <TitleInput
-            vlogId={currentVlog.id}
-            title={currentVlog.title || ''}
+            vlogId={log.id}
+            title={log.title || ''}
             onLocalTitleChange={(value) =>
               setCurrentVlog((prev) => ({ ...prev, title: value }))
             }
           />
-          <Toolbar vlogId={currentVlog.id} onBack={onBack} />
+          <Toolbar vlogId={log.id} onBack={onBack} />
         </header>
 
         <div className="gap-4 w-full">
-          <Summary vlog={currentVlog} />
+          <Summary vlog={log} />
         </div>
 
         <div className="flex flex-col gap-4 w-full">
-          <TranscriptionPanel vlogId={currentVlog.id} videoRef={videoRef} />
+          <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
         </div>
       </main>
     </div>
@@ -71,16 +77,16 @@ export const DetailPage = withBoundary(function ({ vlog, onBack }: Props) {
 
 // HeaderButton moved into Toolbar
 
-function VideoExtensionTag({ currentVlog }: { currentVlog: RecordedFile }) {
+function VideoExtensionTag({ log }: { log: RecordedFile }) {
   let color = 'bg-blue-100 text-blue-800'
   let inner
-  if (currentVlog.path.endsWith('.webm')) {
+  if (log.path.endsWith('.webm')) {
     inner = 'webm'
     color = 'bg-green-100 text-green-800'
-  } else if (currentVlog.path.endsWith('.mp4')) {
+  } else if (log.path.endsWith('.mp4')) {
     inner = 'mp4'
     color = 'bg-yellow-100 text-yellow-800'
-  } else if (currentVlog.path.endsWith('.mov')) {
+  } else if (log.path.endsWith('.mov')) {
     inner = 'mov'
     color = 'bg-purple-100 text-purple-800'
   } else {

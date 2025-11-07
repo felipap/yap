@@ -38,17 +38,20 @@ export function DragDropWrapper({
       setIsDragOver(false)
 
       const files = Array.from(e.dataTransfer?.files || [])
-      const videoFiles = files.filter(
+      const mediaFiles = files.filter(
         (file) =>
           file.type.startsWith('video/') ||
-          file.name.match(/\.(mp4|webm|mov|avi|mkv)$/i),
+          file.type.startsWith('audio/') ||
+          file.name.match(
+            /\.(mp4|webm|mov|avi|mkv|mp3|m4a|wav|ogg|aac|flac)$/i,
+          ),
       )
 
-      if (videoFiles.length > 0) {
-        console.log('Dropped video files:')
+      if (mediaFiles.length > 0) {
+        console.log('Dropped media files:')
         const results: ImportResult[] = []
 
-        for (const file of videoFiles) {
+        for (const file of mediaFiles) {
           try {
             console.log(`- Importing: ${file.name}`)
             // Use file.path to get the full file path (available in Electron)
@@ -78,7 +81,7 @@ export function DragDropWrapper({
             results.push({
               file: file.name,
               status: 'error',
-              message: `Failed to import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              message: error instanceof Error ? error.message : 'Unknown error',
             })
           }
         }
@@ -90,7 +93,8 @@ export function DragDropWrapper({
         const duplicateCount = results.filter(
           (r) => r.status === 'duplicate',
         ).length
-        const errorCount = results.filter((r) => r.status === 'error').length
+        const errorResults = results.filter((r) => r.status === 'error')
+        const errorCount = errorResults.length
 
         let summaryMessage = `Import complete: ${successCount} imported`
         if (duplicateCount > 0) {
@@ -98,6 +102,12 @@ export function DragDropWrapper({
         }
         if (errorCount > 0) {
           summaryMessage += `, ${errorCount} failed`
+
+          // Add detailed error messages
+          summaryMessage += '\n\nErrors:'
+          errorResults.forEach((result) => {
+            summaryMessage += `\n• ${result.file}: ${result.message}`
+          })
         }
 
         alert(summaryMessage)
@@ -121,15 +131,18 @@ export function DragDropWrapper({
   }, [onImportComplete])
 
   return (
-    <div
-      className={twMerge(
-        'h-full w-full transition-colors duration-200',
-        isDragOver
-          ? 'bg-blue-500/10 border-2 border-dashed border-blue-500'
-          : '',
-      )}
-    >
-      {children}
+    <div className="relative h-full w-full">
+      <div
+        className={twMerge(
+          'absolute inset-0 transition-colors duration-200 flex items-center justify-center',
+          isDragOver ? 'bg-blue-500/30 border-2 border-blue-500 z-10 ' : '',
+        )}
+      >
+        <div className="text-[30px] text-blue-800 dark:text-blue-300">
+          Drop media file
+        </div>
+      </div>
+      <div className="relative h-full w-full">{children}</div>
     </div>
   )
 }

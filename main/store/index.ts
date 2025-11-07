@@ -13,7 +13,7 @@ const schema: Schema<State> = {
   },
   recordingMode: {
     type: 'string',
-    enum: ['camera', 'screen', 'both'],
+    enum: ['camera', 'screen', 'both', 'audio'],
     default: 'camera',
   },
   globalVideoMute: {

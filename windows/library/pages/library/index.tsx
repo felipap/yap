@@ -19,7 +19,7 @@ export default function Page() {
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
         <div className="flex h-full w-screen overflow-hidden">
-          <div className="h-full border-r border-contrast/10 bg-sidebar">
+          <div className="h-full border-r bg-sidebar">
             <Sidebar
               selectedVlog={vlog ?? null}
               onVideoSelect={handleSelectVlog}
@@ -32,17 +32,17 @@ export default function Page() {
             {vlog ? (
               <DetailPage
                 key={vlog.id}
-                vlog={vlog}
+                log={vlog}
                 onBack={() => setSelectedVlogId(null)}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center select-none">
                 <div className="text-center flex flex-col gap-2">
                   <div className=" flex justify-center">
                     <MdMovie size={40} className="text-secondary/80" />
                   </div>
                   <h3 className="text-[15px] text-secondary/80 mb-2">
-                    Select a vlog or drag video files here
+                    Select a vlog or drag a file here
                   </h3>
                 </div>
               </div>

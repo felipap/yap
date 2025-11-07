@@ -21,7 +21,7 @@ export function Item({ data, selected, onClick }: Props) {
           : 'text-contrast',
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* Thumbnail */}
         <div className="relative x2 w-[70px] h-12 bg-gray-900 rounded overflow-hidden flex-shrink-0">
           <ItemImage data={data} />
@@ -29,7 +29,7 @@ export function Item({ data, selected, onClick }: Props) {
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-col min-w-0">
-            <div className="font-medium text-sm truncate flex items-center gap-1 pr-4">
+            <div className="font-medium text-md truncate flex items-center gap-1 pr-4">
               <span className="truncate">{data.displayTitle}</span>
               {!data.title && data.dayIndex && (
                 <span className="opacity-30 tracking-wider ml-0">
@@ -89,7 +89,7 @@ function ItemImage({ data }: { data: SidebarItem }) {
         className="w-full h-full flex items-center justify-center"
         style={{ display: data.thumbnailPath ? 'none' : 'flex' }}
       >
-        <div className="text-2xl">🎬</div>
+        <div className="text-2xl">{data.isAudioOnly ? '🎙️' : '🎬'}</div>
       </div>
 
       {data.duration && (

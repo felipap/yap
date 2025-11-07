@@ -37,9 +37,9 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   })
 
   return (
-    <div className="w-[220px] h-full flex flex-col">
+    <div className="w-[240px] h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-0 divide-y divide-contrast/20">
+        <div className="flex flex-col gap-0 divide-y divide/20">
           {filteredVlogs.map((vlog) => (
             <Item
               key={vlog.id}

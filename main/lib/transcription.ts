@@ -1,6 +1,6 @@
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
-import { access, mkdir, readFile, unlink } from 'fs/promises'
+import { access, mkdir, open, readFile, unlink } from 'fs/promises'
 import { createReadStream } from 'fs'
 import { OpenAI } from 'openai'
 import { homedir } from 'os'
@@ -9,6 +9,53 @@ import { store } from '../store'
 import { getTempDir } from './config'
 
 const OPENAI_API_KEY = store.get('openaiApiKey') || null
+
+// Helper function to check if a file is actually readable (not just a cloud placeholder)
+async function isFileActuallyReadable(filePath: string): Promise<boolean> {
+  // Check for cloud storage paths
+  const isCloudPath = filePath.includes('/CloudStorage/') ||
+                      filePath.includes('/Google Drive/') ||
+                      filePath.includes('/Dropbox/') ||
+                      filePath.includes('/OneDrive/')
+
+  if (isCloudPath) {
+    console.log('Detected cloud storage path, performing read test:', filePath)
+  }
+
+  try {
+    // Try to actually open and read the first few KB of the file with a timeout
+    // This will fail if the file is just a cloud placeholder or takes too long to fetch
+    const readPromise = (async () => {
+      const fileHandle = await open(filePath, 'r')
+      try {
+        const buffer = Buffer.allocUnsafe(8192) // Try to read 8KB
+        const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0)
+
+        if (bytesRead === 0) {
+          console.log('File exists but has no content:', filePath)
+          return false
+        }
+
+        return true
+      } finally {
+        await fileHandle.close()
+      }
+    })()
+
+    // Add a 2-second timeout for the read operation
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        console.log('File read test timed out after 2s:', filePath)
+        resolve(false)
+      }, 2000)
+    })
+
+    return await Promise.race([readPromise, timeoutPromise])
+  } catch (error) {
+    console.log('File read test failed:', filePath, error)
+    return false
+  }
+}
 
 export interface TranscriptionSegment {
   start: number
@@ -56,6 +103,14 @@ export async function extractAudioFromVideo(
     return audioPath
   } catch {
     // Audio doesn't exist, extract it
+  }
+
+  // Check if source video file is actually readable
+  const isReadable = await isFileActuallyReadable(videoPath)
+  if (!isReadable) {
+    throw new Error(
+      `Cannot read video file for audio extraction: ${videoPath}. This file appears to be in cloud storage (Google Drive, Dropbox, etc.) and is not fully downloaded locally. Please ensure the file is available offline before processing.`,
+    )
   }
 
   console.log(`Extracting audio from video: ${videoPath}`)
@@ -438,6 +493,14 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
   const isAvailable = await checkFFmpegAvailable()
   if (!isAvailable) {
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
+  }
+
+  // Check if source video file is actually readable
+  const isReadable = await isFileActuallyReadable(videoPath)
+  if (!isReadable) {
+    throw new Error(
+      `Cannot read video file for duration check: ${videoPath}. This file appears to be in cloud storage (Google Drive, Dropbox, etc.) and is not fully downloaded locally. Please ensure the file is available offline before processing.`,
+    )
   }
 
   // Helper: run ffprobe and parse JSON

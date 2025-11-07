@@ -10,7 +10,7 @@ import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreference
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
 
-interface VideoProps {
+interface PlayerProps {
   vlogId: string
   src: string
   className?: string
@@ -21,7 +21,7 @@ interface VideoProps {
   onSeeked?: (currentTime: number) => void
 }
 
-export interface VideoRef {
+export interface PlayerRef {
   currentTime: number
   paused: boolean
   play: () => Promise<void>
@@ -29,8 +29,8 @@ export interface VideoRef {
   seekTo: (time: number) => void
 }
 
-export const Video = withBoundary(
-  forwardRef<VideoRef, VideoProps>(
+export const Player = withBoundary(
+  forwardRef<PlayerRef, PlayerProps>(
     (
       {
         vlogId,
@@ -275,4 +275,4 @@ export const Video = withBoundary(
   ),
 )
 
-Video.displayName = 'Video'
+Player.displayName = 'Video'

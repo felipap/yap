@@ -1,5 +1,6 @@
 import { app, Menu, nativeImage, Tray } from 'electron'
 import path from 'path'
+import { debug } from './lib/logger'
 import { libraryWindow } from './windows'
 
 let tray: Tray | null = null
@@ -11,7 +12,7 @@ export function createTray(): Tray {
   }
 
   const iconPath = getImagePath('tray-default.png')
-  console.log('iconPath', iconPath)
+  debug('iconPath', iconPath)
   const icon = nativeImage.createFromPath(iconPath)
   // if you want to resize it, be careful, it creates a copy
   const trayIcon = icon.resize({ width: 18, quality: 'best' })

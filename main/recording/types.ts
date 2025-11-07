@@ -1,4 +1,4 @@
-export type RecordingMode = 'screen' | 'camera' | 'both'
+export type RecordingMode = 'screen' | 'camera' | 'both' | 'audio'
 
 export interface RecordingConfig {
   mode: RecordingMode

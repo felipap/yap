@@ -9,7 +9,7 @@ interface DeviceSelectorProps {
   selectedMicrophoneId: string
   onCameraChange: (cameraId: string) => void
   onMicrophoneChange: (microphoneId: string) => void
-  recordingMode: 'screen' | 'camera' | 'both'
+  recordingMode: 'screen' | 'camera' | 'both' | 'audio'
   isRecording: boolean
 }
 

@@ -56,3 +56,18 @@ export function RefreshIcon({ size = 16, className }: IconProps) {
   return <MdRefresh size={size} className={className} />
 }
 
+export function RecordIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <circle cx="8" cy="8" r="6" fill="currentColor" />
+    </svg>
+  )
+}
+
