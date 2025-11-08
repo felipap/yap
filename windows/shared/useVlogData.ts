@@ -54,6 +54,7 @@ export function useBackendState() {
 export function useVlogData() {
   const { stateCount } = useBackendState()
 
+  const [loading, setLoading] = useState(false)
   const [vlogs, setVlogs] = useState<RecordedFile[]>([])
 
   useEffect(() => {
@@ -76,14 +77,17 @@ export function useVlogData() {
 
   const loadVlogs = async () => {
     try {
+      setLoading(true)
       const files = await getRecordedFiles()
       setVlogs(files)
     } catch (error) {
       console.error('Failed to load vlogs:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  return { vlogs }
+  return { vlogs, loading }
 }
 
 export function useVlog(vlogId: string | null) {

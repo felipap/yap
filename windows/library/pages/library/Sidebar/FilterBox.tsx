@@ -8,7 +8,7 @@ interface Props {
 
 export function FilterBox({ value, onChange }: Props) {
   return (
-    <div className="border-t  p-1.5 bg-sidebar group">
+    <div className="border-t  p-1 bg-sidebar group">
       <div className="relative">
         <SearchIcon
           className={twMerge(

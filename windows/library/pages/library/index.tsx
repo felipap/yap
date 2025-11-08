@@ -28,7 +28,7 @@ export default function Page() {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden  dark:bg-[#202020]">
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#202020]">
             {vlog ? (
               <DetailPage
                 key={vlog.id}

@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
-  const { displayVlogs } = useIndexedVlogData()
+  const { displayVlogs, loading } = useIndexedVlogData()
   const { filteredVlogs, filterText, setFilterText } =
     useVlogFilter(displayVlogs)
 
@@ -52,7 +52,11 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
           ))}
           {filteredVlogs.length === 0 && (
             <div className="text-center text-xs text-secondary/50 p-4 track-10">
-              {filterText ? 'Nothing found' : 'No vlogs yet'}
+              {filterText
+                ? 'Nothing found'
+                : loading
+                  ? 'Loading...'
+                  : 'No vlogs yet'}
             </div>
           )}
         </div>
@@ -64,7 +68,7 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
 }
 
 function useIndexedVlogData() {
-  const { vlogs } = useVlogData()
+  const { vlogs, loading } = useVlogData()
 
   function getKeyForDate(date: Date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -120,5 +124,5 @@ function useIndexedVlogData() {
     })
   }, [vlogs])
 
-  return { displayVlogs }
+  return { displayVlogs, loading }
 }
