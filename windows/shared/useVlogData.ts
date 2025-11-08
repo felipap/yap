@@ -136,5 +136,9 @@ export function useVlog(vlogId: string | null) {
     void load()
   }
 
+  useEffect(() => {
+    void load()
+  }, [vlogId])
+
   return { vlog, loading, refresh }
 }

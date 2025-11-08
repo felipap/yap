@@ -122,7 +122,8 @@ export class Recorder {
             const filepath = await finalizeStreamingRecording()
             console.log('Streaming recording finalized, saved to:', filepath)
           } catch (error) {
-            console.error('Error finalizing streaming recording:', error)
+            // Silently handle errors (e.g., recording too short)
+            console.log('Recording not saved:', error)
           }
 
           if (this.stream) {

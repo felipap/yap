@@ -1,4 +1,4 @@
-import { appendFile, mkdir, writeFile } from 'fs/promises'
+import { appendFile, mkdir, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { createHash } from 'crypto'
 import { getRecordingsDir } from '../lib/config'
@@ -6,6 +6,7 @@ import { libraryWindow } from '../windows'
 import { RecordingState } from './types'
 import { Vlog } from '../../shared-types'
 import { setVlog } from '../store'
+import { getVideoDuration } from '../lib/transcription'
 
 // Global recording state - only one recording at a time
 let recordingState: RecordingState = {
@@ -120,6 +121,17 @@ export async function finalizeStreamingRecording(): Promise<string> {
 
   const filepath = currentStreamingRecording.filepath
   const filename = currentStreamingRecording.filename
+
+  // Check video duration - don't save if less than 5 seconds
+  const duration = await getVideoDuration(filepath)
+  if (duration < 5) {
+    console.log(
+      `Recording too short (${duration}s), deleting file: ${filepath}`,
+    )
+    await unlink(filepath)
+    currentStreamingRecording = null
+    throw new Error('Recording too short (less than 5 seconds)')
+  }
 
   // Generate unique ID for the vlog
   const id = generateVlogId(filepath)
