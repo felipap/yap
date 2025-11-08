@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.4](https://github.com/felipap/vlogger/compare/v0.9.3...v0.9.4) (2025-11-08)
+
+
+### Bug Fixes
+
+* slow to load new videos ([64f7475](https://github.com/felipap/vlogger/commit/64f74756f142132e272e356c96d0e4f805cfd81b))
+
 ### [0.9.3](https://github.com/felipap/vlogger/compare/v0.9.2...v0.9.3) (2025-11-07)
 
 
