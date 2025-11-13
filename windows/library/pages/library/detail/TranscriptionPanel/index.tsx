@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { withBoundary } from '../../../../../shared/withBoundary'
-import { RecordedFile } from '../../../../types'
+import { EnrichedLog } from '../../../../types'
 import { PlayerRef } from '../Player'
 import { Teleprompter } from './Teleprompter'
 import { TranscribeButton } from './TranscribeButton'
 import { useTranscriptionState } from './useTranscriptionState'
 
 interface Props {
-  log: RecordedFile
+  log: EnrichedLog
   vlogId: string
   playerRef: React.RefObject<PlayerRef>
 }

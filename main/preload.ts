@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import {
   ExposedElectronAPI,
-  RecordedFile,
+  EnrichedLog,
   ScreenSource,
   SharedIpcMethods,
   State,
@@ -35,8 +35,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('getScreenSources')
   },
 
-  getRecordedFiles: (): Promise<RecordedFile[]> => {
-    return ipcRenderer.invoke('getRecordedFiles')
+  getEnrichedLogs: (): Promise<EnrichedLog[]> => {
+    return ipcRenderer.invoke('getEnrichedLogs')
   },
 
   openFileLocation: (vlogId: string): Promise<void> => {
@@ -89,6 +89,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getVlog: (vlogId: string) => {
     return ipcRenderer.invoke('getVlog', vlogId)
+  },
+  getEnrichedLog: (vlogId: string) => {
+    return ipcRenderer.invoke('getEnrichedLog', vlogId)
   },
   updateVlog: (vlogId: string, updates: any) => {
     return ipcRenderer.invoke('updateVlog', vlogId, updates)
@@ -155,6 +158,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('openSettingsWindow')
   },
 
+  hideSettingsWindow: (): Promise<void> => {
+    return ipcRenderer.invoke('hideSettingsWindow')
+  },
+
   getGeminiApiKey: (): Promise<string> => {
     return ipcRenderer.invoke('getGeminiApiKey')
   },
@@ -165,10 +172,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getRecordingsFolder: (): Promise<string> => {
     return ipcRenderer.invoke('getRecordingsFolder')
-  },
-
-  setRecordingsFolder: (folderPath: string): Promise<boolean> => {
-    return ipcRenderer.invoke('setRecordingsFolder', folderPath)
   },
 
   openFolderPicker: (): Promise<string | null> => {
@@ -208,6 +211,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   removeConversionProgressListener: () => {
     ipcRenderer.removeAllListeners('conversion-progress')
+  },
+
+  // Move to default folder
+  moveToDefaultFolder: (
+    vlogId: string,
+  ): Promise<{
+    success: boolean
+    message: string
+    newPath?: string
+  }> => {
+    return ipcRenderer.invoke('moveToDefaultFolder', vlogId)
   },
 
   //

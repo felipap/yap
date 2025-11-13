@@ -1,5 +1,7 @@
 # Agent Development Rules
 
+- NEVER run the electron app yourself.
+
 ## TypeScript Type Safety
 
 - NEVER use `as any` in TypeScript code

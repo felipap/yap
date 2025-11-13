@@ -1,11 +1,12 @@
 import { exec } from 'child_process'
 import { createHash } from 'crypto'
-import { access, mkdir, open } from 'fs/promises'
+import { access, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { promisify } from 'util'
 import { getCacheDir } from './config'
 import { debug } from './logger'
 import { findFFmpegPath, getFFmpegEnv } from './ffmpeg'
+import { isFileActuallyReadable } from './file-utils'
 
 const execAsync = promisify(exec)
 
@@ -13,54 +14,6 @@ const execAsync = promisify(exec)
 const CACHE_DIR = join(getCacheDir(), 'thumbnails')
 
 // Cache directory initialization is handled by the centralized config
-
-// Helper function to check if a file is actually readable (not just a cloud placeholder)
-async function isFileActuallyReadable(filePath: string): Promise<boolean> {
-  // Check for cloud storage paths
-  const isCloudPath =
-    filePath.includes('/CloudStorage/') ||
-    filePath.includes('/Google Drive/') ||
-    filePath.includes('/Dropbox/') ||
-    filePath.includes('/OneDrive/')
-
-  if (isCloudPath) {
-    debug('Detected cloud storage path, performing read test:', filePath)
-  }
-
-  try {
-    // Try to actually open and read the first few KB of the file with a timeout
-    // This will fail if the file is just a cloud placeholder or takes too long to fetch
-    const readPromise = (async () => {
-      const fileHandle = await open(filePath, 'r')
-      try {
-        const buffer = Buffer.allocUnsafe(8192) // Try to read 8KB
-        const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0)
-
-        if (bytesRead === 0) {
-          debug('File exists but has no content:', filePath)
-          return false
-        }
-
-        return true
-      } finally {
-        await fileHandle.close()
-      }
-    })()
-
-    // Add a 2-second timeout for the read operation
-    const timeoutPromise = new Promise<boolean>((resolve) => {
-      setTimeout(() => {
-        debug('File read test timed out after 2s:', filePath)
-        resolve(false)
-      }, 2000)
-    })
-
-    return await Promise.race([readPromise, timeoutPromise])
-  } catch (error) {
-    debug('File read test failed:', filePath, error)
-    return false
-  }
-}
 
 // Helper function to generate thumbnail for a video file
 export async function generateThumbnail(

@@ -45,8 +45,9 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
+            className="text-[14px]"
           >
-            <LibraryIcon className="w-3 h-3" />
+            <LibraryIcon className="w-3 h-3 mr-1" />
             Library
           </TabButton>
           <TabButton
@@ -54,10 +55,13 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'record' })
             }}
-            className="border dark:border-white/10 pr-2 hover:text-red-400"
+            className={twMerge(
+              'text-[14px] border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
+              currentTab === 'record' && 'text-red-500 dark:text-red-400',
+            )}
           >
             Record
-            <RecordIcon className="w-4 h-4" />
+            <RecordIcon className="w-4 h-4 ml-1" />
           </TabButton>
         </div>
       </div>

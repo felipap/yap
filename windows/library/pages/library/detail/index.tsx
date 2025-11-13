@@ -3,7 +3,9 @@ import { twMerge } from 'tailwind-merge'
 import { loadVideoDuration } from '../../../../shared/ipc'
 import { useVlog } from '../../../../shared/useVlogData'
 import { withBoundary } from '../../../../shared/withBoundary'
-import { RecordedFile } from '../../../types'
+import { EnrichedLog } from '../../../types'
+import { JsonViewer } from './JsonViewer'
+import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
 import { Summary } from './Summary'
 import { TitleInput } from './TitleInput'
@@ -12,7 +14,7 @@ import { TranscriptionPanel } from './TranscriptionPanel'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
 
 interface Props {
-  log: RecordedFile
+  log: EnrichedLog
   onBack: () => void
 }
 
@@ -21,16 +23,18 @@ export const DetailPage = withBoundary(function ({
   onBack,
 }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
-  const [log, setCurrentVlog] = useState<RecordedFile>(log__)
+  const [log, setCurrentVlog] = useState<EnrichedLog>(log__)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useMaybeCalculateDurationOnce(log.id)
 
-  // Transcription state now lives inside TranscriptionPanel
-
   usePlayerShortcuts({ playerRef })
 
-  // actions moved into Toolbar
+  const isMissing = !log.fileExists
+
+  if (isMissing) {
+    return <MissingFileDetailPage log={log} onBack={onBack} />
+  }
 
   return (
     <div
@@ -70,6 +74,10 @@ export const DetailPage = withBoundary(function ({
         <div className="flex flex-col gap-4 w-full">
           <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
         </div>
+
+        <div className="w-full">
+          <JsonViewer log={log} />
+        </div>
       </main>
     </div>
   )
@@ -77,7 +85,7 @@ export const DetailPage = withBoundary(function ({
 
 // HeaderButton moved into Toolbar
 
-function VideoExtensionTag({ log }: { log: RecordedFile }) {
+function VideoExtensionTag({ log }: { log: EnrichedLog }) {
   let color = 'bg-blue-100 text-blue-800'
   let inner
   if (log.path.endsWith('.webm')) {

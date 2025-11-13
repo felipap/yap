@@ -6,11 +6,15 @@ export interface TranscriptionState {
   startTime?: number
 }
 
-export interface Vlog {
+/**
+ * Vlog type - the raw data structure stored in data.json
+ * This is the persisted representation of a recording.
+ */
+export interface Log {
   id: string
   name: string
   path: string
-  timestamp: string
+  timestamp: string // ISO 8601 string
   title?: string
   transcription?: TranscriptionState
   summary?: string
@@ -41,7 +45,7 @@ export interface State {
     x?: number
     y?: number
   }
-  vlogs?: Record<string, Vlog>
+  vlogs?: Record<string, Log>
   transcriptionSpeedUp?: boolean
   userProfile?: UserProfile
   wasLastFocused?: boolean
@@ -73,19 +77,26 @@ export interface TranscriptionResult {
   duration: number
 }
 
-export interface RecordedFile {
+/**
+ * EnrichedLog type - the enriched data structure returned to the frontend
+ * This is computed from Vlog + file system stats at runtime.
+ * Used by the UI but not stored directly in data.json.
+ */
+export interface EnrichedLog {
   id: string
   name: string
   path: string
-  size: number
-  created: Date
+  size: number // Computed from file stats
+  created: Date // Computed from Vlog.timestamp
   title?: string
-  modified: Date
-  thumbnailPath?: string
+  modified: Date // Computed from file stats
+  thumbnailPath?: string // Computed as vlog-thumbnail://{id}.jpg
   duration?: number
   transcription?: TranscriptionResult
   summary?: string
   isAudioOnly?: boolean
+  fileExists: boolean // Computed at runtime - true if file exists on disk
+  isInDefaultFolder: boolean // Computed at runtime - true if file is in default recordings folder
 }
 
 export type RecordingMode = 'screen' | 'camera' | 'both' | 'audio'
@@ -94,13 +105,13 @@ export interface ImportResult {
   success: boolean
   isDuplicate: boolean
   message: string
-  vlog?: RecordedFile
-  existingVlog?: RecordedFile
+  vlog?: EnrichedLog
+  existingVlog?: EnrichedLog
 }
 
 export type SharedIpcMethods = {
   getScreenSources: () => Promise<ScreenSource[]>
-  getRecordedFiles: () => Promise<RecordedFile[]>
+  getEnrichedLogs: () => Promise<EnrichedLog[]>
   openFileLocation: (vlogId: string) => Promise<void>
   setPartialState: (state: Partial<State>) => Promise<void>
   getState: () => Promise<State>
@@ -120,6 +131,7 @@ export type SharedIpcMethods = {
   loadVideoDuration: (vlogId: string) => Promise<number>
   getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
   getVlog: (vlogId: string) => Promise<any>
+  getEnrichedLog: (vlogId: string) => Promise<EnrichedLog>
   updateVlog: (vlogId: string, updates: any) => Promise<boolean>
   generateVideoSummary: (
     vlogId: string,
@@ -146,10 +158,10 @@ export type SharedIpcMethods = {
   onVlogUpdated: (callback: (vlogId: string) => void) => void
   removeVlogUpdatedListener: () => void
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
+  hideSettingsWindow: () => Promise<void>
   getGeminiApiKey: () => Promise<string>
   setGeminiApiKey: (apiKey: string) => Promise<boolean>
   getRecordingsFolder: () => Promise<string>
-  setRecordingsFolder: (folderPath: string) => Promise<boolean>
   openFolderPicker: () => Promise<string | null>
   convertToMp4: (vlogId: string) => Promise<{
     success: boolean
@@ -165,6 +177,11 @@ export type SharedIpcMethods = {
     callback: (vlogId: string, progress: number) => void,
   ) => void
   removeConversionProgressListener: () => void
+  moveToDefaultFolder: (vlogId: string) => Promise<{
+    success: boolean
+    message: string
+    newPath?: string
+  }>
 }
 
 export type ExposedElectronAPI = SharedIpcMethods & {

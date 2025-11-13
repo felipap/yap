@@ -10,6 +10,8 @@ interface Props {
 }
 
 export function Item({ data, selected, onClick }: Props) {
+  const isMissing = !data.fileExists
+
   return (
     <button
       onClick={onClick}
@@ -19,12 +21,13 @@ export function Item({ data, selected, onClick }: Props) {
         selected
           ? '!bg-blue-500 dark:!bg-blue-500/20 hover:dark:!bg-blue-500/25 text-white'
           : 'text-contrast',
+        isMissing && 'opacity-60',
       )}
     >
       <div className="flex items-center gap-2.5">
         {/* Thumbnail */}
         <div className="relative x2 w-[70px] h-12 bg-gray-900 rounded overflow-hidden flex-shrink-0">
-          <ItemImage data={data} />
+          <ItemImage data={data} isMissing={isMissing} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -34,6 +37,14 @@ export function Item({ data, selected, onClick }: Props) {
               {!data.title && data.dayIndex && (
                 <span className="opacity-30 tracking-wider ml-0">
                   #{data.dayIndex}
+                </span>
+              )}
+              {isMissing && (
+                <span
+                  className="text-[10px] px-1 py-0.5 rounded bg-red-500/20 text-red-500 dark:text-red-400"
+                  title="File not found on disk"
+                >
+                  ⚠
                 </span>
               )}
             </div>
@@ -65,10 +76,16 @@ const formatDuration = (duration: number) => {
   }
 }
 
-function ItemImage({ data }: { data: SidebarItem }) {
+function ItemImage({
+  data,
+  isMissing,
+}: {
+  data: SidebarItem
+  isMissing: boolean
+}) {
   return (
     <>
-      {data.thumbnailPath ? (
+      {data.thumbnailPath && !isMissing ? (
         <img
           src={data.thumbnailPath}
           alt={(data.title || formatDate(data.created) || data.name) as string}
@@ -87,14 +104,22 @@ function ItemImage({ data }: { data: SidebarItem }) {
       {/* Fallback when no thumbnail or thumbnail fails to load */}
       <div
         className="w-full h-full flex items-center justify-center"
-        style={{ display: data.thumbnailPath ? 'none' : 'flex' }}
+        style={{ display: data.thumbnailPath && !isMissing ? 'none' : 'flex' }}
       >
-        <div className="text-2xl">{data.isAudioOnly ? '🎙️' : '🎬'}</div>
+        <div className="text-2xl">
+          {isMissing ? '🔗💔' : data.isAudioOnly ? '🎙️' : '🎬'}
+        </div>
       </div>
 
-      {data.duration && (
+      {data.duration && !isMissing && (
         <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">
           {formatDuration(data.duration)}
+        </div>
+      )}
+
+      {isMissing && (
+        <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
+          <div className="text-red-500 dark:text-red-400 text-lg">⚠</div>
         </div>
       )}
     </>

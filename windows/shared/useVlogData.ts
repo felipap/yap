@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  getRecordedFiles,
+  getEnrichedLogs,
   getVlog,
   onStateChange,
   onVlogUpdated,
   removeVlogUpdatedListener,
 } from './ipc'
-import { RecordedFile, State } from '../library/types'
+import { EnrichedLog, State } from '../library/types'
 
 export async function setPartialState(state: Partial<State>) {
   return await window.electronAPI.setPartialState(state)
@@ -55,7 +55,7 @@ export function useVlogData() {
   const { stateCount } = useBackendState()
 
   const [loading, setLoading] = useState(false)
-  const [vlogs, setVlogs] = useState<RecordedFile[]>([])
+  const [vlogs, setVlogs] = useState<EnrichedLog[]>([])
 
   useEffect(() => {
     loadVlogs()
@@ -78,7 +78,7 @@ export function useVlogData() {
   const loadVlogs = async () => {
     try {
       setLoading(true)
-      const files = await getRecordedFiles()
+      const files = await getEnrichedLogs()
       setVlogs(files)
     } catch (error) {
       console.error('Failed to load vlogs:', error)
@@ -91,7 +91,7 @@ export function useVlogData() {
 }
 
 export function useVlog(vlogId: string | null) {
-  const [vlog, setVlog] = useState<RecordedFile | undefined>(undefined)
+  const [vlog, setVlog] = useState<EnrichedLog | undefined>(undefined)
   const [loading, setLoading] = useState(false)
 
   const load = async () => {

@@ -21,6 +21,20 @@ export function Settings() {
     loadSettings()
   }, [])
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === ',') {
+        event.preventDefault()
+        window.electronAPI.hideSettingsWindow()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   const handleSelectFolder = async () => {
     try {
       const selectedFolder = await window.electronAPI.openFolderPicker()

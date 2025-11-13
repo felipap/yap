@@ -1,76 +1,19 @@
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
-import { access, mkdir, open, readFile, stat, unlink } from 'fs/promises'
 import { createReadStream } from 'fs'
+import { access, mkdir, stat, unlink } from 'fs/promises'
 import { OpenAI } from 'openai'
-import { homedir } from 'os'
 import { join } from 'path'
+import type {
+  TranscriptionResult,
+  TranscriptionSegment,
+} from '../../shared-types'
 import { store } from '../store'
 import { getTempDir } from './config'
 import { findFFmpegPath, getFFmpegEnv, isFFmpegAvailable } from './ffmpeg'
+import { isFileActuallyReadable } from './file-utils'
 
 const OPENAI_API_KEY = store.get('openaiApiKey') || null
-
-// Helper function to check if a file is actually readable (not just a cloud placeholder)
-async function isFileActuallyReadable(filePath: string): Promise<boolean> {
-  // Check for cloud storage paths
-  const isCloudPath =
-    filePath.includes('/CloudStorage/') ||
-    filePath.includes('/Google Drive/') ||
-    filePath.includes('/Dropbox/') ||
-    filePath.includes('/OneDrive/')
-
-  if (isCloudPath) {
-    console.log('Detected cloud storage path, performing read test:', filePath)
-  }
-
-  try {
-    // Try to actually open and read the first few KB of the file with a timeout
-    // This will fail if the file is just a cloud placeholder or takes too long to fetch
-    const readPromise = (async () => {
-      const fileHandle = await open(filePath, 'r')
-      try {
-        const buffer = Buffer.allocUnsafe(8192) // Try to read 8KB
-        const { bytesRead } = await fileHandle.read(buffer, 0, buffer.length, 0)
-
-        if (bytesRead === 0) {
-          console.log('File exists but has no content:', filePath)
-          return false
-        }
-
-        return true
-      } finally {
-        await fileHandle.close()
-      }
-    })()
-
-    // Add a 2-second timeout for the read operation
-    const timeoutPromise = new Promise<boolean>((resolve) => {
-      setTimeout(() => {
-        console.log('File read test timed out after 2s:', filePath)
-        resolve(false)
-      }, 2000)
-    })
-
-    return await Promise.race([readPromise, timeoutPromise])
-  } catch (error) {
-    console.log('File read test failed:', filePath, error)
-    return false
-  }
-}
-
-export interface TranscriptionSegment {
-  start: number
-  end: number
-  text: string
-}
-
-export interface TranscriptionResult {
-  text: string
-  segments: TranscriptionSegment[]
-  language?: string
-  duration: number
-}
 
 export async function extractAudioFromVideo(
   videoPath: string,

@@ -1,13 +1,13 @@
 import { useEffect, useMemo } from 'react'
 import { useVlogData } from '../../../../shared/useVlogData'
-import { RecordedFile } from '../../../types'
+import { EnrichedLog } from '../../../types'
 import { FilterBox } from './FilterBox'
 import { buildSearchableDate, formatDateOrRelative } from './formatters'
 import { Item } from './Item'
 import { useVlogFilter } from './useVlogFilter'
 import { useSidebarShortcuts } from './useSidebarShortcuts'
 
-export type SidebarItem = RecordedFile & {
+export type SidebarItem = EnrichedLog & {
   dayIndex?: number
   displayTitle: string
   searchableText: string
@@ -15,8 +15,8 @@ export type SidebarItem = RecordedFile & {
 export { useVlogFilter } from './useVlogFilter'
 
 interface Props {
-  selectedVlog: RecordedFile | null
-  onVideoSelect: (file: RecordedFile) => void
+  selectedVlog: EnrichedLog | null
+  onVideoSelect: (file: EnrichedLog) => void
   onClose: () => void
 }
 
@@ -103,7 +103,7 @@ function useIndexedVlogData() {
     }
 
     // Map back to original order with computed indices and display title
-    return vlogs.map((file: RecordedFile) => {
+    return vlogs.map((file: EnrichedLog) => {
       const displayTitle = file.title || formatDateOrRelative(file.created)
       const searchableDate = buildSearchableDate(file.created)
       const searchableText = [

@@ -1,8 +1,10 @@
 import {
+  EnrichedLog,
   ImportResult,
-  RecordedFile,
   RecordingMode,
+  ScreenSource,
   SharedIpcMethods,
+  State,
   TranscriptionResult,
   TranscriptionState,
 } from '../library/types'
@@ -13,18 +15,12 @@ declare global {
   }
 }
 
-export interface ScreenSource {
-  id: string
-  name: string
-  thumbnail: string
-}
-
 export async function getScreenSources(): Promise<ScreenSource[]> {
   return window.electronAPI.getScreenSources()
 }
 
-export async function getRecordedFiles(): Promise<RecordedFile[]> {
-  return window.electronAPI.getRecordedFiles()
+export async function getEnrichedLogs(): Promise<EnrichedLog[]> {
+  return window.electronAPI.getEnrichedLogs()
 }
 
 export async function openFileLocation(vlogId: string): Promise<void> {
@@ -156,8 +152,8 @@ export async function getVideoPosition(
   return window.electronAPI.getVideoPosition(vlogId)
 }
 
-export async function getVlog(vlogId: string): Promise<any> {
-  return window.electronAPI.getVlog(vlogId)
+export async function getVlog(vlogId: string): Promise<EnrichedLog> {
+  return window.electronAPI.getEnrichedLog(vlogId)
 }
 
 export async function setVlogTitle(
@@ -174,7 +170,7 @@ export function onVlogUpdated(callback: (vlogId: string) => void) {
   }
 }
 
-export function onStateChange(callback: () => void) {
+export function onStateChange(callback: (state: State) => void) {
   if (window.electronAPI.onStateChange) {
     window.electronAPI.onStateChange(callback)
   }
@@ -194,6 +190,10 @@ export async function openSettingsWindow(): Promise<{
   return window.electronAPI.openSettingsWindow()
 }
 
+export async function hideSettingsWindow(): Promise<void> {
+  return window.electronAPI.hideSettingsWindow()
+}
+
 export async function getGeminiApiKey(): Promise<string> {
   return window.electronAPI.getGeminiApiKey()
 }
@@ -206,8 +206,10 @@ export async function getRecordingsFolder(): Promise<string> {
   return window.electronAPI.getRecordingsFolder()
 }
 
-export async function setRecordingsFolder(folderPath: string): Promise<boolean> {
-  return window.electronAPI.setRecordingsFolder(folderPath)
+export async function setRecordingsFolder(
+  folderPath: string,
+): Promise<void> {
+  return window.electronAPI.setPartialState({ recordingsFolder: folderPath })
 }
 
 export async function openFolderPicker(): Promise<string | null> {
@@ -229,4 +231,12 @@ export async function getConversionState(vlogId: string): Promise<{
   progress: number | null
 }> {
   return window.electronAPI.getConversionState(vlogId)
+}
+
+export async function moveToDefaultFolder(vlogId: string): Promise<{
+  success: boolean
+  message: string
+  newPath?: string
+}> {
+  return window.electronAPI.moveToDefaultFolder(vlogId)
 }

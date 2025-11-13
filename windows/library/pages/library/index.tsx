@@ -2,7 +2,7 @@ import { MdMovie } from 'react-icons/md'
 import { useState } from 'react'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { useVlog } from '../../../shared/useVlogData'
-import { RecordedFile } from '../../types'
+import { EnrichedLog } from '../../types'
 import { DetailPage } from './detail'
 import { DragDropWrapper } from './DragDropWrapper'
 import { Sidebar } from './Sidebar'
@@ -11,7 +11,7 @@ export default function Page() {
   const [selectedVlogId, setSelectedVlogId] = useState<string | null>(null)
   const { vlog } = useVlog(selectedVlogId)
 
-  function handleSelectVlog(next: RecordedFile) {
+  function handleSelectVlog(next: EnrichedLog) {
     setSelectedVlogId(next.id)
   }
 

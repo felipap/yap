@@ -1,8 +1,9 @@
 // ~/Library/Application Support/yap-camera/data.json
 
 import Store, { Schema } from 'electron-store'
-import { State, Vlog } from '../../shared-types'
+import { State, Log } from '../../shared-types'
 import { app } from 'electron'
+import { createHash } from 'crypto'
 
 export type { State } from '../../shared-types'
 
@@ -88,19 +89,24 @@ export const store = new Store<State>({
 
 console.debug('Store intialized from file:', store.path)
 
+// Helper function to generate a unique ID for a log
+export function generateLogId(filePath: string): string {
+  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
+}
+
 // Vlog management functions
-export function getVlog(vlogId: string): Vlog | null {
+export function getLog(vlogId: string): Log | null {
   const vlogs = store.get('vlogs') || {}
   return vlogs[vlogId] || null
 }
 
-export function setVlog(vlog: Vlog): void {
+export function setVlog(vlog: Log): void {
   const vlogs = store.get('vlogs') || {}
   vlogs[vlog.id] = vlog
   store.set('vlogs', vlogs)
 }
 
-export function updateVlog(vlogId: string, updates: Partial<Vlog>): void {
+export function updateVlog(vlogId: string, updates: Partial<Log>): void {
   const vlogs = store.get('vlogs') || {}
   const existing = vlogs[vlogId] || {}
   vlogs[vlogId] = { ...existing, ...updates }
@@ -113,6 +119,6 @@ export function deleteVlog(vlogId: string): void {
   store.set('vlogs', vlogs)
 }
 
-export function getAllVlogs(): Record<string, Vlog> {
+export function getAllVlogs(): Record<string, Log> {
   return store.get('vlogs') || {}
 }

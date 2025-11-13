@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { ClockIcon, RefreshIcon } from '../../../../shared/icons'
 import { generateVideoSummary } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
-import { RecordedFile } from '../../../types'
+import { EnrichedLog } from '../../../types'
 
 interface Props {
-  vlog: RecordedFile
+  vlog: EnrichedLog
 }
 
 export const Summary = withBoundary(function ({ vlog }: Props) {
@@ -23,7 +23,10 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
       return
     }
 
-    if (!vlog.transcription.text || vlog.transcription.text.trim().length === 0) {
+    if (
+      !vlog.transcription.text ||
+      vlog.transcription.text.trim().length === 0
+    ) {
       setError('Transcription is empty. Please transcribe the video first.')
       return
     }

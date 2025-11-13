@@ -1,7 +1,14 @@
 import { createHash } from 'crypto'
-import { BrowserWindow, desktopCapturer, dialog, ipcMain, shell } from 'electron'
-import { access, mkdir, stat } from 'fs/promises'
-import { State, Vlog } from '../shared-types'
+import {
+  BrowserWindow,
+  desktopCapturer,
+  dialog,
+  ipcMain,
+  shell,
+} from 'electron'
+import { access, copyFile, mkdir, rename, stat } from 'fs/promises'
+import { dirname, join, basename, resolve } from 'path'
+import { State, Log, EnrichedLog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { getDefaultRecordingsDir, getRecordingsDir } from './lib/config'
 import { debug } from './lib/logger'
@@ -15,12 +22,14 @@ import {
 } from './recording'
 import {
   deleteVlog,
+  generateLogId,
   getAllVlogs,
-  getVlog,
+  getLog,
   setVlog,
   store,
   updateVlog,
 } from './store'
+import { getActiveRecordingsDir } from './store/default-folder'
 import * as ephemeral from './store/ephemeral'
 import { libraryWindow, settingsWindow } from './windows'
 
@@ -43,19 +52,86 @@ function isAudioOnlyFile(filePath: string): boolean {
   return audioExtensions.includes(ext) || fileName.startsWith('Audio ')
 }
 
+/**
+ * Converts a persisted Log to an EnrichedLog with file system stats
+ * Checks if the file exists and enriches with stats accordingly
+ * @param log - The persisted Log from data.json
+ */
+async function enrichLog(log: Log): Promise<EnrichedLog> {
+  const createdDate = new Date(log.timestamp)
+
+  // Check if file is in default folder
+  const recordingsDir = getActiveRecordingsDir()
+  const defaultDir = resolve(recordingsDir)
+  const fileDir = resolve(dirname(log.path))
+
+  // Compare normalized paths (handle case sensitivity on macOS)
+  const isInDefaultFolder = fileDir.toLowerCase() === defaultDir.toLowerCase()
+
+  try {
+    // Try to get file stats
+    await access(log.path)
+    const stats = await stat(log.path)
+
+    return {
+      id: log.id,
+      name: log.name,
+      title: log.title,
+      path: log.path,
+      size: stats.size,
+      created: createdDate,
+      modified: stats.mtime,
+      thumbnailPath: `vlog-thumbnail://${log.id}.jpg`,
+      duration: log.duration,
+      summary: log.summary,
+      transcription: log.transcription?.result || undefined,
+      isAudioOnly: log.isAudioOnly,
+      fileExists: true,
+      isInDefaultFolder,
+    }
+  } catch (error) {
+    // File doesn't exist, return with missing file indicator
+    return {
+      id: log.id,
+      name: log.name,
+      title: log.title,
+      path: log.path,
+      size: 0,
+      created: createdDate,
+      modified: createdDate, // Fallback to created date
+      thumbnailPath: `vlog-thumbnail://${log.id}.jpg`,
+      duration: log.duration,
+      summary: log.summary,
+      transcription: log.transcription?.result || undefined,
+      isAudioOnly: log.isAudioOnly,
+      fileExists: false,
+      isInDefaultFolder,
+    }
+  }
+}
+
+/**
+ * Gets an enriched log by ID
+ */
+async function getEnrichedLog(vlogId: string): Promise<EnrichedLog | null> {
+  const log = getLog(vlogId)
+  if (!log) {
+    return null
+  }
+  return await enrichLog(log)
+}
+
 // IPC handlers
 export function setupIpcHandlers() {
-  ipcMain.handle('getScreenSources', async () => {
-    try {
+  ipcMain.handle(
+    'getScreenSources',
+    tryCatchIpcMain(async () => {
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
       })
       return sources
-    } catch (error) {
-      console.error('Error getting screen sources:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
   ipcMain.handle('getState', async () => {
     return store.store
@@ -65,90 +141,56 @@ export function setupIpcHandlers() {
     store.set(state)
   })
 
-  ipcMain.handle('getRecordedFiles', async () => {
-    try {
-      const customFolder = store.get('recordingsFolder')
-      const documentsPath = getRecordingsDir(customFolder)
+  ipcMain.handle(
+    'getEnrichedLogs',
+    tryCatchIpcMain(async () => {
+      const documentsPath = getActiveRecordingsDir()
 
-      // Create directory if it doesn't exist
       await mkdir(documentsPath, { recursive: true })
 
-      // Get existing vlog data from store
       const storedVlogs = getAllVlogs()
 
-      // Get all vlogs from store and check if files still exist
-      debug(`Found ${Object.keys(storedVlogs).length} vlogs in store`)
-      const allVlogs = await Promise.all(
-        Object.entries(storedVlogs).map(async ([id, vlog]) => {
-          try {
-            debug(`Checking file: ${vlog.path}`)
-            // Check if file still exists
-            await access(vlog.path)
-            const stats = await stat(vlog.path)
-            debug(`File exists and accessible: ${vlog.name}`)
+      debug(`Found ${Object.keys(storedVlogs).length} logs in store`)
+      const enrichedLogs = await Promise.all(
+        Object.entries(storedVlogs).map(async ([id, log]) => {
+          debug(`Processing log: ${log.path}`)
 
-            // Update the mapping
-            vlogIdToPath.set(id, vlog.path)
+          vlogIdToPath.set(id, log.path)
 
-            return {
-              id: vlog.id,
-              name: vlog.name,
-              title: (vlog as any).title,
-              path: vlog.path,
-              size: stats.size,
-              created: new Date(vlog.timestamp), // Use stored timestamp
-              modified: stats.mtime,
-              thumbnailPath: `vlog-thumbnail://${id}.jpg`,
-              duration: vlog.duration, // Use cached duration if available
-              summary: vlog.summary,
-              transcription: vlog.transcription?.result || undefined,
-              isAudioOnly: vlog.isAudioOnly,
-            }
-          } catch (error) {
-            // File doesn't exist anymore, skip it
-            debug(`Skipping missing file: ${vlog.path} - Error: ${error}`)
-            return null
-          }
+          return enrichLog(log)
         }),
       )
 
-      // Filter out null entries (missing files) and sort by creation date
-      const validVlogs = allVlogs
-        .filter((vlog): vlog is NonNullable<typeof vlog> => vlog !== null)
-        .sort((a, b) => b.created.getTime() - a.created.getTime())
+      const sortedEnrichedLogs = enrichedLogs.sort(
+        (a, b) => b.created.getTime() - a.created.getTime(),
+      )
 
-      debug(`Returning ${validVlogs.length} valid vlogs`)
-      return validVlogs
-    } catch (error) {
-      console.error('Error getting recorded files:', error)
-      return []
-    }
-  })
+      debug(
+        `Returning ${sortedEnrichedLogs.length} enriched logs (including missing files)`,
+      )
+      return sortedEnrichedLogs
+    }),
+  )
 
-  ipcMain.handle('openFileLocation', async (_, vlogId: string) => {
-    try {
+  ipcMain.handle(
+    'openFileLocation',
+    tryCatchIpcMain(async (_, vlogId: string) => {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
       await shell.showItemInFolder(filePath)
-    } catch (error) {
-      console.error('Error opening vlog location:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
-  ipcMain.handle('untrackVlog', async (_, vlogId: string) => {
-    try {
-      // Remove from vlog store (but keep the file)
+  ipcMain.handle(
+    'untrackVlog',
+    tryCatchIpcMain(async (_, vlogId: string) => {
       deleteVlog(vlogId)
       vlogIdToPath.delete(vlogId)
       return true
-    } catch (error) {
-      console.error('Error untracking vlog:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
   //
   //
@@ -181,91 +223,74 @@ export function setupIpcHandlers() {
     store.set(key, value)
   })
 
-  // Transcription handlers
-  ipcMain.handle('transcribeVideo', async (_, vlogId: string) => {
-    try {
+  ipcMain.handle(
+    'transcribeVideo',
+    tryCatchIpcMain(async (_, vlogId: string) => {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      // Set ephemeral transcription state
       ephemeral.setTranscriptionProgress(vlogId, 0)
 
-      // Get speed-up setting
       const speedUp = store.get('transcriptionSpeedUp') || false
-      const result = await transcribeVideo(filePath, speedUp, (progress) => {
-        // Update progress in ephemeral state only
-        ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
 
-        // Notify renderer of progress update
-        libraryWindow?.webContents.send(
-          'transcription-progress-updated',
-          vlogId,
-          Math.round(progress),
-        )
-      })
-
-      // Clean up ephemeral state
-      ephemeral.removeTranscription(vlogId)
-
-      // Save the transcription result to persistent store
-      updateVlog(vlogId, {
-        transcription: {
-          status: 'completed',
-          result,
-        }
-      })
-
-      // Automatically generate summary if transcription was successful
       try {
-        console.log(`Auto-generating summary for vlog ${vlogId}`)
-        const summary = await generateVideoSummary(vlogId, result.text)
-        updateVlog(vlogId, { summary })
+        const result = await transcribeVideo(filePath, speedUp, (progress) => {
+          ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+          libraryWindow?.webContents.send(
+            'transcription-progress-updated',
+            vlogId,
+            Math.round(progress),
+          )
+        })
 
-        // Notify renderer that summary was generated
-        libraryWindow?.webContents.send('summary-generated', vlogId, summary)
-        console.log(`Summary generated and saved for vlog ${vlogId}`)
-      } catch (summaryError) {
-        console.error('Error generating automatic summary:', summaryError)
-        // Don't fail the transcription if summary generation fails
-        // Just log the error and continue
+        ephemeral.removeTranscription(vlogId)
+
+        updateVlog(vlogId, {
+          transcription: {
+            status: 'completed',
+            result,
+          },
+        })
+
+        try {
+          const summary = await generateVideoSummary(vlogId, result.text)
+          updateVlog(vlogId, { summary })
+          libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+        } catch (summaryError) {
+          console.error('Error generating automatic summary:', summaryError)
+        }
+
+        return result
+      } catch (error) {
+        ephemeral.removeTranscription(vlogId)
+
+        const errorState = {
+          status: 'error' as const,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }
+        updateVlog(vlogId, { transcription: errorState })
+
+        throw error
       }
+    }),
+  )
 
-      return result
-    } catch (error) {
-      console.error('Error transcribing video:', error)
-
-      // Clean up ephemeral state on error
-      ephemeral.removeTranscription(vlogId)
-
-      // Save error state to persistent store
-      const errorState = {
-        status: 'error' as const,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
-      updateVlog(vlogId, { transcription: errorState })
-
-      throw error
-    }
-  })
-
-  ipcMain.handle('getTranscription', async (_, vlogId: string) => {
-    try {
-      const vlog = getVlog(vlogId)
+  ipcMain.handle(
+    'getTranscription',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      const vlog = getLog(vlogId)
       if (!vlog || !vlog.transcription) {
         return null
       }
       return vlog.transcription
-    } catch (error) {
-      console.error('Error getting transcription:', error)
-      return null
-    }
-  })
+    }),
+  )
 
-  ipcMain.handle('getTranscriptionState', async (_, vlogId: string) => {
-    try {
-      // Check ephemeral state first (for active transcriptions)
+  ipcMain.handle(
+    'getTranscriptionState',
+    tryCatchIpcMain(async (_, vlogId: string) => {
       if (ephemeral.isTranscriptionActive(vlogId)) {
         const progress = ephemeral.getTranscriptionProgress(vlogId)
         return {
@@ -274,8 +299,7 @@ export function setupIpcHandlers() {
         }
       }
 
-      // Fall back to persistent state (for completed transcriptions)
-      const vlog = getVlog(vlogId)
+      const vlog = getLog(vlogId)
       if (vlog?.transcription) {
         return {
           status: 'completed',
@@ -284,80 +308,56 @@ export function setupIpcHandlers() {
       }
 
       return { status: 'idle' }
-    } catch (error) {
-      console.error('Error getting transcription state:', error)
-      throw error
-    }
-  })
-
-  // Load and cache video duration on demand (performance optimization)
-  // This avoids calculating duration for all videos on load, which would be very slow
-  // Duration is only calculated when the user actually opens/selects a video
-  ipcMain.handle(
-    'loadVideoDuration',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      console.log('loadVideoDuration', vlogId)
-
-      try {
-        const vlog = getVlog(vlogId)
-        if (!vlog) {
-          console.log('vlog not found for vlog', vlogId)
-          throw new Error(`Vlog with ID ${vlogId} not found`)
-        }
-
-        console.log('vlog', vlog)
-
-        // Return cached duration if available
-        if (vlog.duration !== undefined) {
-          return vlog.duration
-        }
-
-        // Calculate and cache duration
-        const filePath = vlogIdToPath.get(vlogId)
-        if (!filePath) {
-          console.log('filePath not found for vlog', vlogId)
-          throw new Error(`File path not found for vlog ${vlogId}`)
-        }
-
-        console.log('filePath', filePath)
-
-        const duration = await getVideoDuration(filePath)
-        console.log('duration', duration)
-
-        // Cache the duration in the store
-        if (duration) {
-          updateVlog(vlogId, { duration })
-        }
-
-        return duration
-      } catch (error) {
-        console.error('Error loading video duration:', error)
-        throw error
-      }
     }),
   )
 
-  // Vlog management handlers
-  ipcMain.handle('getVlog', async (_, vlogId: string) => {
-    try {
-      return getVlog(vlogId)
-    } catch (error) {
-      console.error('Error getting vlog:', error)
-      throw error
-    }
-  })
+  ipcMain.handle(
+    'loadVideoDuration',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      const vlog = getLog(vlogId)
+      if (!vlog) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      if (vlog.duration !== undefined) {
+        return vlog.duration
+      }
+
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`File path not found for vlog ${vlogId}`)
+      }
+
+      const duration = await getVideoDuration(filePath)
+
+      if (duration) {
+        updateVlog(vlogId, { duration })
+      }
+
+      return duration
+    }),
+  )
+
+  ipcMain.handle(
+    'getVlog',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      return getLog(vlogId)
+    }),
+  )
+
+  ipcMain.handle(
+    'getEnrichedLog',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      return await getEnrichedLog(vlogId)
+    }),
+  )
 
   ipcMain.handle(
     'updateVlog',
-    async (_, vlogId: string, updates: Partial<Vlog>) => {
-      try {
-        updateVlog(vlogId, updates)
-        return true
-      } catch (error) {
-        console.error('Error updating vlog:', error)
-        throw error
-      }
-    },
+    tryCatchIpcMain(async (_, vlogId: string, updates: Partial<Log>) => {
+      updateVlog(vlogId, updates)
+      return true
+    }),
   )
 
   // Transcription settings handlers
@@ -366,62 +366,36 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'generateVideoSummary',
-    async (_, vlogId: string, transcription: string) => {
-      try {
-        const summary = await generateVideoSummary(vlogId, transcription)
-
-        // Save the generated summary in the Vlog object
-        updateVlog(vlogId, { summary })
-
-        return summary
-      } catch (error) {
-        console.error('Error generating video summary:', error)
-        throw error
-      }
-    },
+    tryCatchIpcMain(async (_, vlogId: string, transcription: string) => {
+      const summary = await generateVideoSummary(vlogId, transcription)
+      updateVlog(vlogId, { summary })
+      return summary
+    }),
   )
 
-  // Import external video file handler
-  ipcMain.handle('importVideoFile', async (_, filePath: string) => {
-    try {
-      // Check if file exists
+  ipcMain.handle(
+    'importVideoFile',
+    tryCatchIpcMain(async (_, filePath: string) => {
       await access(filePath)
 
-      // Get file stats
       const stats = await stat(filePath)
       const fileName =
         filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'
 
-      // Generate unique ID for the file
-      const id = generateVlogId(filePath)
+      const id = generateLogId(filePath)
 
-      // Check if file already exists
-      const existingVlog = getVlog(id)
-      if (existingVlog) {
+      const existingLog = getLog(id)
+      if (existingLog) {
         return {
           success: false,
           isDuplicate: true,
           message: `"${fileName}" is already in your library`,
-          existingVlog: {
-            id: existingVlog.id,
-            name: existingVlog.name,
-            title: (existingVlog as any).title,
-            path: existingVlog.path,
-            size: stats.size,
-            created: new Date(existingVlog.timestamp),
-            modified: stats.mtime,
-            thumbnailPath: `vlog-thumbnail://${id}.jpg`,
-            summary: existingVlog.summary,
-            transcription: existingVlog.transcription,
-            isAudioOnly: existingVlog.isAudioOnly,
-          },
+          existingVlog: await enrichLog(existingLog),
         }
       }
 
-      // Store the mapping
       vlogIdToPath.set(id, filePath)
 
-      // Extract date from title using AI - fail if no date found
       const dateResult = await extractDateFromTitle(fileName)
       if ('error' in dateResult) {
         throw new Error(
@@ -434,7 +408,6 @@ export function setupIpcHandlers() {
         )
       }
 
-      // Create date from components (all required now)
       const createdDate = new Date(
         dateResult.year,
         dateResult.month - 1,
@@ -445,72 +418,50 @@ export function setupIpcHandlers() {
         0,
       )
 
-      // Create vlog entry
-      const vlog: Vlog = {
+      const log: Log = {
         id,
         name: fileName,
         path: filePath,
         timestamp: createdDate.toISOString(),
         isAudioOnly: isAudioOnlyFile(filePath),
       }
-      setVlog(vlog)
+      setVlog(log)
 
       debug(`Imported video file: ${filePath}`)
       return {
         success: true,
         isDuplicate: false,
         message: `Successfully imported "${fileName}"`,
-        vlog: {
-          id,
-          name: fileName,
-          title: (vlog as any).title,
-          path: filePath,
-          size: stats.size,
-          created: createdDate,
-          modified: stats.mtime,
-          thumbnailPath: `vlog-thumbnail://${id}.jpg`,
-          summary: vlog.summary,
-          transcription: vlog.transcription,
-          isAudioOnly: vlog.isAudioOnly,
-        },
+        vlog: await enrichLog(log),
       }
-    } catch (error) {
-      console.error('Error importing video file:', error)
-      throw error
-    }
-  })
-
-  // Video position handlers
-  ipcMain.handle(
-    'saveVideoPosition',
-    async (_, vlogId: string, position: number) => {
-      try {
-        const now = new Date().toISOString()
-        updateVlog(vlogId, {
-          lastPosition: position,
-          lastPositionTimestamp: now,
-        })
-        return true
-      } catch (error) {
-        console.error('Error saving video position:', error)
-        throw error
-      }
-    },
+    }),
   )
 
-  ipcMain.handle('getVideoPosition', async (_, vlogId: string) => {
-    try {
-      const vlog = getVlog(vlogId)
+  ipcMain.handle(
+    'saveVideoPosition',
+    tryCatchIpcMain(async (_, vlogId: string, position: number) => {
+      const now = new Date().toISOString()
+      updateVlog(vlogId, {
+        lastPosition: position,
+        lastPositionTimestamp: now,
+      })
+      return true
+    }),
+  )
+
+  ipcMain.handle(
+    'getVideoPosition',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      const vlog = getLog(vlogId)
       if (!vlog) {
         return null
       }
 
-      // Check if position is less than 30 minutes old
       if (vlog.lastPositionTimestamp) {
         const lastPositionTime = new Date(vlog.lastPositionTimestamp)
         const now = new Date()
         const timeDiff = now.getTime() - lastPositionTime.getTime()
-        const thirtyMinutes = 30 * 60 * 1000 // 30 minutes in milliseconds
+        const thirtyMinutes = 30 * 60 * 1000
 
         if (timeDiff < thirtyMinutes && vlog.lastPosition !== undefined) {
           return {
@@ -521,67 +472,51 @@ export function setupIpcHandlers() {
       }
 
       return null
-    } catch (error) {
-      console.error('Error getting video position:', error)
-      return null
-    }
-  })
+    }),
+  )
 
   // Auto-updater handlers
 
-  // Settings window handlers
-  ipcMain.handle('openSettingsWindow', async () => {
-    try {
+  ipcMain.handle(
+    'openSettingsWindow',
+    tryCatchIpcMain(async () => {
       settingsWindow?.show()
       return { success: true, windowId: settingsWindow?.id || 0 }
-    } catch (error) {
-      console.error('Error opening settings window:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
-  // Gemini API key handlers
-  ipcMain.handle('getGeminiApiKey', async () => {
-    try {
+  ipcMain.handle(
+    'hideSettingsWindow',
+    tryCatchIpcMain(async () => {
+      settingsWindow?.hide()
+    }),
+  )
+
+  ipcMain.handle(
+    'getGeminiApiKey',
+    tryCatchIpcMain(async () => {
       return store.get('geminiApiKey') || ''
-    } catch (error) {
-      console.error('Error getting Gemini API key:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
-  ipcMain.handle('setGeminiApiKey', async (_, apiKey: string) => {
-    try {
+  ipcMain.handle(
+    'setGeminiApiKey',
+    tryCatchIpcMain(async (_, apiKey: string) => {
       store.set('geminiApiKey', apiKey)
       return true
-    } catch (error) {
-      console.error('Error setting Gemini API key:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
-  // Recordings folder handlers
-  ipcMain.handle('getRecordingsFolder', async () => {
-    try {
-      return store.get('recordingsFolder') || getDefaultRecordingsDir()
-    } catch (error) {
-      console.error('Error getting recordings folder:', error)
-      throw error
-    }
-  })
+  ipcMain.handle(
+    'getRecordingsFolder',
+    tryCatchIpcMain(async () => {
+      return getActiveRecordingsDir()
+    }),
+  )
 
-  ipcMain.handle('setRecordingsFolder', async (_, folderPath: string) => {
-    try {
-      store.set('recordingsFolder', folderPath)
-      return true
-    } catch (error) {
-      console.error('Error setting recordings folder:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('openFolderPicker', async () => {
-    try {
+  ipcMain.handle(
+    'openFolderPicker',
+    tryCatchIpcMain(async () => {
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: 'Select Recordings Folder',
@@ -592,119 +527,102 @@ export function setupIpcHandlers() {
       }
 
       return result.filePaths[0]
-    } catch (error) {
-      console.error('Error opening folder picker:', error)
-      throw error
-    }
-  })
+    }),
+  )
 
-  // MP4 conversion handler
-  ipcMain.handle('convertToMp4', async (_, vlogId: string) => {
-    try {
+  ipcMain.handle(
+    'convertToMp4',
+    tryCatchIpcMain(async (_, vlogId: string) => {
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      // Check if file is webm
       if (!filePath.toLowerCase().endsWith('.webm')) {
         throw new Error('Only WebM files can be converted to MP4')
       }
 
-      // Create output path with .mp4 extension
       const outputPath = filePath.replace(/\.webm$/i, '.mp4')
 
-      // Check if output file already exists
       try {
         await access(outputPath)
         throw new Error('MP4 file already exists')
       } catch (err: any) {
-        // File doesn't exist, which is what we want
         if (err.code !== 'ENOENT') {
           throw err
         }
       }
 
-      // Run ffmpeg conversion using hardware acceleration on macOS
-      console.log('Converting video to MP4:', filePath)
-
-      // Mark conversion as active
       ephemeral.setConversionProgress(vlogId, 0)
 
-      await VideoConverter.convertToMP4(filePath, outputPath, (progress) => {
-        console.log(`[IPC] Conversion progress for ${vlogId}: ${progress}%`)
-        // Update ephemeral state
-        ephemeral.setConversionProgress(vlogId, progress)
-        // Send progress updates to renderer
-        libraryWindow?.webContents.send('conversion-progress', vlogId, progress)
-      })
+      try {
+        await VideoConverter.convertToMP4(filePath, outputPath, (progress) => {
+          ephemeral.setConversionProgress(vlogId, progress)
+          libraryWindow?.webContents.send(
+            'conversion-progress',
+            vlogId,
+            progress,
+          )
+        })
 
-      // Remove from active conversions
-      ephemeral.removeConversion(vlogId)
+        ephemeral.removeConversion(vlogId)
 
-      // Create a new vlog entry for the converted file
-      const stats = await stat(outputPath)
-      const fileName =
-        outputPath.split('/').pop() || outputPath.split('\\').pop() || 'unknown'
-      const id = generateVlogId(outputPath)
+        const stats = await stat(outputPath)
+        const fileName =
+          outputPath.split('/').pop() ||
+          outputPath.split('\\').pop() ||
+          'unknown'
+        const id = generateLogId(outputPath)
 
-      // Get the original vlog's timestamp
-      const originalVlog = getVlog(vlogId)
-      const timestamp = originalVlog?.timestamp || new Date().toISOString()
+        const originalVlog = getLog(vlogId)
+        const timestamp = originalVlog?.timestamp || new Date().toISOString()
 
-      // Store the mapping
-      vlogIdToPath.set(id, outputPath)
+        vlogIdToPath.set(id, outputPath)
 
-      // Create vlog entry with the same timestamp as original
-      const vlog: Vlog = {
-        id,
-        name: fileName,
-        path: outputPath,
-        timestamp: timestamp,
-      }
-      setVlog(vlog)
-
-      debug(`Converted video to MP4: ${outputPath}`)
-
-      // Ask user if they want to delete the original webm file
-      const originalFileName =
-        filePath.split('/').pop() || filePath.split('\\').pop() || 'file'
-      const response = await dialog.showMessageBox(libraryWindow, {
-        type: 'question',
-        buttons: ['Keep Original', 'Move to Trash'],
-        defaultId: 1,
-        title: 'Delete Original File?',
-        message: 'Conversion complete!',
-        detail: `Do you want to move the original WebM file "${originalFileName}" to trash? The new MP4 file has been created.`,
-      })
-
-      // If user clicked "Move to Trash" (button index 1)
-      if (response.response === 1) {
-        try {
-          await shell.trashItem(filePath)
-          // Also delete the vlog entry for the webm file
-          deleteVlog(vlogId)
-          vlogIdToPath.delete(vlogId)
-          debug(`Moved original WebM to trash: ${filePath}`)
-        } catch (trashError) {
-          console.error('Failed to move original file to trash:', trashError)
-          // Don't fail the whole operation if trash fails
+        const vlog: Log = {
+          id,
+          name: fileName,
+          path: outputPath,
+          timestamp: timestamp,
         }
-      }
+        setVlog(vlog)
 
-      return {
-        success: true,
-        message: `Successfully converted to MP4`,
-        newVlogId: id,
-        outputPath: outputPath,
+        debug(`Converted video to MP4: ${outputPath}`)
+
+        const originalFileName =
+          filePath.split('/').pop() || filePath.split('\\').pop() || 'file'
+        const response = await dialog.showMessageBox(libraryWindow, {
+          type: 'question',
+          buttons: ['Keep Original', 'Move to Trash'],
+          defaultId: 1,
+          title: 'Delete Original File?',
+          message: 'Conversion complete!',
+          detail: `Do you want to move the original WebM file "${originalFileName}" to trash? The new MP4 file has been created.`,
+        })
+
+        if (response.response === 1) {
+          try {
+            await shell.trashItem(filePath)
+            deleteVlog(vlogId)
+            vlogIdToPath.delete(vlogId)
+            debug(`Moved original WebM to trash: ${filePath}`)
+          } catch (trashError) {
+            console.error('Failed to move original file to trash:', trashError)
+          }
+        }
+
+        return {
+          success: true,
+          message: `Successfully converted to MP4`,
+          newVlogId: id,
+          outputPath: outputPath,
+        }
+      } catch (error) {
+        ephemeral.removeConversion(vlogId)
+        throw error
       }
-    } catch (error) {
-      console.error('Error converting to MP4:', error)
-      // Remove from active conversions on error
-      ephemeral.removeConversion(vlogId)
-      throw error
-    }
-  })
+    }),
+  )
 
   // Get conversion state
   ipcMain.handle('getConversionState', async (_, vlogId: string) => {
@@ -713,6 +631,73 @@ export function setupIpcHandlers() {
       progress: ephemeral.getConversionProgress(vlogId),
     }
   })
+
+  ipcMain.handle(
+    'moveToDefaultFolder',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      const filePath = vlogIdToPath.get(vlogId)
+      if (!filePath) {
+        throw new Error(`Vlog with ID ${vlogId} not found`)
+      }
+
+      const recordingsDir = getActiveRecordingsDir()
+      const fileName = basename(filePath)
+      const newPath = join(recordingsDir, fileName)
+
+      const currentDir = resolve(dirname(filePath))
+      const targetDir = resolve(recordingsDir)
+      if (currentDir.toLowerCase() === targetDir.toLowerCase()) {
+        return {
+          success: false,
+          message: 'File is already in the recordings folder',
+        }
+      }
+
+      await mkdir(recordingsDir, { recursive: true })
+
+      try {
+        await access(newPath)
+        throw new Error(
+          `A file named "${fileName}" already exists in the recordings folder`,
+        )
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') {
+          throw err
+        }
+      }
+
+      await copyFile(filePath, newPath)
+
+      debug(`Copied video to recordings folder: ${newPath}`)
+
+      vlogIdToPath.set(vlogId, newPath)
+      updateVlog(vlogId, { path: newPath, name: fileName })
+
+      const response = await dialog.showMessageBox(libraryWindow, {
+        type: 'question',
+        buttons: ['Keep Original', 'Move to Trash'],
+        defaultId: 0,
+        title: 'Delete Original File?',
+        message: 'File copied successfully!',
+        detail: `The file has been copied to the recordings folder. Do you want to move the original file "${fileName}" to trash?`,
+      })
+
+      if (response.response === 1) {
+        try {
+          await shell.trashItem(filePath)
+          debug(`Moved original file to trash: ${filePath}`)
+        } catch (trashError) {
+          console.error('Failed to move original file to trash:', trashError)
+        }
+      }
+
+      return {
+        success: true,
+        message: `Successfully copied to recordings folder`,
+        newPath: newPath,
+      }
+    }),
+  )
 
   // Set up state change listener
   store.onDidAnyChange((state) => {
@@ -768,7 +753,7 @@ function tryCatchIpcMain(handler: (...args: any[]) => Promise<any>) {
       return await handler(...args)
     } catch (error) {
       console.error('Error in IPC handler:', error)
-      throw error
+      return { error: error instanceof Error ? error.message : String(error) }
     }
   }
 }

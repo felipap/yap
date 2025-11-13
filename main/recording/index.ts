@@ -1,11 +1,11 @@
 import { appendFile, mkdir, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { createHash } from 'crypto'
-import { getRecordingsDir } from '../lib/config'
 import { libraryWindow } from '../windows'
 import { RecordingState } from './types'
-import { Vlog } from '../../shared-types'
-import { setVlog, store } from '../store'
+import { Log } from '../../shared-types'
+import { setVlog } from '../store'
+import { getActiveRecordingsDir } from '../store/default-folder'
 import { getVideoDuration } from '../lib/transcription'
 
 // Global recording state - only one recording at a time
@@ -86,8 +86,7 @@ export async function startStreamingRecording(
   const filename = generateRecordingFilename(config)
 
   // Create empty file to start with
-  const customFolder = store.get('recordingsFolder')
-  const recordingsDir = getRecordingsDir(customFolder)
+  const recordingsDir = getActiveRecordingsDir()
   await mkdir(recordingsDir, { recursive: true })
   const filepath = join(recordingsDir, filename)
   await writeFile(filepath, Buffer.alloc(0))
@@ -138,7 +137,7 @@ export async function finalizeStreamingRecording(): Promise<string> {
   const id = generateVlogId(filepath)
 
   // Create vlog entry
-  const vlog: Vlog = {
+  const vlog: Log = {
     id,
     name: filename,
     path: filepath,
