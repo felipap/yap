@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.6](https://github.com/felipap/vlogger/compare/v0.9.5...v0.9.6) (2025-11-13)
+
+
+### Bug Fixes
+
+* many ([5d8a2d4](https://github.com/felipap/vlogger/commit/5d8a2d4a11cf31b75e7a0349f429d979258d2707))
+* many ([f7ce2cc](https://github.com/felipap/vlogger/commit/f7ce2cc873f6e9be3778473d91d5805a3560641b))
+
 ### [0.9.5](https://github.com/felipap/vlogger/compare/v0.9.4...v0.9.5) (2025-11-13)
 
 ### [0.9.4](https://github.com/felipap/vlogger/compare/v0.9.3...v0.9.4) (2025-11-08)
