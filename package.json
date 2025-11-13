@@ -1,6 +1,6 @@
 {
   "name": "yap-camera",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "A seamless vlogging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
