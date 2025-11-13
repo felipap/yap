@@ -1,3 +1,5 @@
+// This is too much!
+
 import dayjs from 'dayjs'
 
 export function formatDateOrRelative(date: Date) {

@@ -1,22 +1,24 @@
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
-import { access, mkdir, open, readFile, unlink } from 'fs/promises'
+import { access, mkdir, open, readFile, stat, unlink } from 'fs/promises'
 import { createReadStream } from 'fs'
 import { OpenAI } from 'openai'
 import { homedir } from 'os'
 import { join } from 'path'
 import { store } from '../store'
 import { getTempDir } from './config'
+import { findFFmpegPath, getFFmpegEnv, isFFmpegAvailable } from './ffmpeg'
 
 const OPENAI_API_KEY = store.get('openaiApiKey') || null
 
 // Helper function to check if a file is actually readable (not just a cloud placeholder)
 async function isFileActuallyReadable(filePath: string): Promise<boolean> {
   // Check for cloud storage paths
-  const isCloudPath = filePath.includes('/CloudStorage/') ||
-                      filePath.includes('/Google Drive/') ||
-                      filePath.includes('/Dropbox/') ||
-                      filePath.includes('/OneDrive/')
+  const isCloudPath =
+    filePath.includes('/CloudStorage/') ||
+    filePath.includes('/Google Drive/') ||
+    filePath.includes('/Dropbox/') ||
+    filePath.includes('/OneDrive/')
 
   if (isCloudPath) {
     console.log('Detected cloud storage path, performing read test:', filePath)
@@ -70,21 +72,18 @@ export interface TranscriptionResult {
   duration: number
 }
 
-export async function checkFFmpegAvailable(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const ffmpeg = spawn('ffmpeg', ['-version'])
-    ffmpeg.on('error', () => resolve(false))
-    ffmpeg.on('close', (code) => resolve(code === 0))
-  })
-}
-
 export async function extractAudioFromVideo(
   videoPath: string,
   speedUp: boolean = false,
   onProgress?: (progress: number) => void,
 ): Promise<string> {
-  const isAvailable = await checkFFmpegAvailable()
+  const isAvailable = await isFFmpegAvailable()
   if (!isAvailable) {
+    throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
+  }
+
+  const ffmpegPath = await findFFmpegPath()
+  if (!ffmpegPath) {
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
   }
 
@@ -137,7 +136,9 @@ export async function extractAudioFromVideo(
 
     args.push('-y', audioPath) // Overwrite
 
-    const ffmpeg = spawn('ffmpeg', args)
+    const ffmpeg = spawn(ffmpegPath, args, {
+      env: getFFmpegEnv(),
+    })
 
     let errorOutput = ''
     let duration = 0
@@ -176,7 +177,6 @@ export async function extractAudioFromVideo(
         onProgress?.(100)
         // Verify the extracted file exists and has content
         try {
-          const { stat } = await import('fs/promises')
           const stats = await stat(audioPath)
           if (stats.size === 0) {
             reject(
@@ -212,7 +212,6 @@ async function splitAudioIntoChunks(
   audioPath: string,
   maxSizeMB: number = 24, // Leave some margin below 25MB limit
 ): Promise<string[]> {
-  const { stat } = await import('fs/promises')
   const stats = await stat(audioPath)
   const fileSizeMB = stats.size / (1024 * 1024)
 
@@ -227,6 +226,11 @@ async function splitAudioIntoChunks(
   // Get video duration to calculate chunk duration
   const duration = await getAudioDuration(audioPath)
   const chunkDuration = Math.ceil(duration / numChunks)
+
+  const ffmpegPath = await findFFmpegPath()
+  if (!ffmpegPath) {
+    throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
+  }
 
   const tempDir = getTempDir()
   await mkdir(tempDir, { recursive: true })
@@ -261,7 +265,9 @@ async function splitAudioIntoChunks(
         chunkPath,
       ]
 
-      const ffmpeg = spawn('ffmpeg', args)
+      const ffmpeg = spawn(ffmpegPath, args, {
+        env: getFFmpegEnv(),
+      })
       let errorOutput = ''
 
       ffmpeg.stderr.on('data', (data) => {
@@ -340,7 +346,6 @@ export async function transcribeAudio(
 
   try {
     // Verify the audio file exists and has content
-    const { stat } = await import('fs/promises')
     const audioStats = await stat(audioPath)
     if (audioStats.size === 0) {
       throw new Error(
@@ -490,7 +495,7 @@ export async function transcribeVideo(
 }
 
 export async function getVideoDuration(videoPath: string): Promise<number> {
-  const isAvailable = await checkFFmpegAvailable()
+  const isAvailable = await isFFmpegAvailable()
   if (!isAvailable) {
     throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
   }

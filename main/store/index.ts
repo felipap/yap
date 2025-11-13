@@ -71,6 +71,9 @@ const schema: Schema<State> = {
     type: 'boolean',
     default: false,
   },
+  recordingsFolder: {
+    type: 'string',
+  },
 }
 
 app.setName('yap-camera')

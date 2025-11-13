@@ -287,9 +287,11 @@ export default function Page() {
 
       let errorContext = ''
       if (recordingMode === 'audio') {
-        errorContext = '\n\nPlease check:\n1. Microphone permissions are granted\n2. No other apps are using the microphone'
+        errorContext =
+          '\n\nPlease check:\n1. Microphone permissions are granted\n2. No other apps are using the microphone'
       } else {
-        errorContext = '\n\nPlease check:\n1. Camera/Screen recording permissions are granted\n2. No other apps are using the camera/screen'
+        errorContext =
+          '\n\nPlease check:\n1. Camera/Screen recording permissions are granted\n2. No other apps are using the camera/screen'
       }
 
       alert(`Failed to start recording: ${errorMessage}${errorContext}`)

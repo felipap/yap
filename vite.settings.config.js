@@ -20,7 +20,10 @@ export default defineConfig({
     strictPort: true,
   },
   optimizeDeps: {
-    // include: ['react', 'react-dom'],
+    include: ['react', 'react-dom'],
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     sourcemap: true,

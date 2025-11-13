@@ -23,13 +23,18 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
       return
     }
 
+    if (!vlog.transcription.text || vlog.transcription.text.trim().length === 0) {
+      setError('Transcription is empty. Please transcribe the video first.')
+      return
+    }
+
     setIsGenerating(true)
     setError(null)
 
     try {
       const generatedSummary = await generateVideoSummary(
         vlog.id,
-        vlog.transcription.text || '',
+        vlog.transcription.text,
       )
       setSummary(generatedSummary)
     } catch (error) {

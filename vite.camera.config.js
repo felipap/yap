@@ -3,9 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [
-    // react({
-    //   fastRefresh: true,
-    // }),
+    react(),
   ],
   root: 'windows/camera',
   base: './',
@@ -19,7 +17,10 @@ export default defineConfig({
     strictPort: true,
   },
   optimizeDeps: {
-    // include: ['react', 'react-dom'],
+    include: ['react', 'react-dom'],
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     sourcemap: true,

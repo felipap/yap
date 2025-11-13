@@ -5,6 +5,7 @@ import { join } from 'path'
 import { promisify } from 'util'
 import { getCacheDir } from './config'
 import { debug } from './logger'
+import { findFFmpegPath, getFFmpegEnv } from './ffmpeg'
 
 const execAsync = promisify(exec)
 
@@ -94,10 +95,20 @@ export async function generateThumbnail(
       return null
     }
 
+    // Get ffmpeg path
+    const ffmpegPath = await findFFmpegPath()
+    if (!ffmpegPath) {
+      console.log('ffmpeg not available')
+      return null
+    }
+
+    const ffmpegEnv = getFFmpegEnv()
+
     // Try to use ffmpeg if available
     try {
       await execAsync(
-        `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        { env: ffmpegEnv },
       )
       return thumbnailPath
     } catch (ffmpegError) {
@@ -115,7 +126,8 @@ export async function generateThumbnail(
         try {
           console.log('Trying ffmpeg with error recovery options...')
           await execAsync(
-            `ffmpeg -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            `"${ffmpegPath}" -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            { env: ffmpegEnv },
           )
           return thumbnailPath
         } catch (recoveryError) {
@@ -131,7 +143,8 @@ export async function generateThumbnail(
       // Try extracting from the very beginning (frame 0) which is more likely to work
       console.log('Trying to extract frame from beginning of video...')
       await execAsync(
-        `ffmpeg -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        { env: ffmpegEnv },
       )
       return thumbnailPath
     } catch (beginningError) {
@@ -142,7 +155,8 @@ export async function generateThumbnail(
       // Try with different codec options
       try {
         await execAsync(
-          `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
+          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
+          { env: ffmpegEnv },
         )
         return thumbnailPath
       } catch (codecError) {
@@ -153,7 +167,8 @@ export async function generateThumbnail(
         // Final fallback: try without seeking (just take first frame)
         try {
           await execAsync(
-            `ffmpeg -i "${videoPath}" -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            `"${ffmpegPath}" -i "${videoPath}" -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            { env: ffmpegEnv },
           )
           return thumbnailPath
         } catch (finalError) {

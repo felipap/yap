@@ -45,6 +45,7 @@ export interface State {
   transcriptionSpeedUp?: boolean
   userProfile?: UserProfile
   wasLastFocused?: boolean
+  recordingsFolder?: string
 }
 
 //
@@ -147,6 +148,9 @@ export type SharedIpcMethods = {
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
   getGeminiApiKey: () => Promise<string>
   setGeminiApiKey: (apiKey: string) => Promise<boolean>
+  getRecordingsFolder: () => Promise<string>
+  setRecordingsFolder: (folderPath: string) => Promise<boolean>
+  openFolderPicker: () => Promise<string | null>
   convertToMp4: (vlogId: string) => Promise<{
     success: boolean
     message: string

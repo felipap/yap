@@ -5,7 +5,7 @@ import { getRecordingsDir } from '../lib/config'
 import { libraryWindow } from '../windows'
 import { RecordingState } from './types'
 import { Vlog } from '../../shared-types'
-import { setVlog } from '../store'
+import { setVlog, store } from '../store'
 import { getVideoDuration } from '../lib/transcription'
 
 // Global recording state - only one recording at a time
@@ -86,7 +86,8 @@ export async function startStreamingRecording(
   const filename = generateRecordingFilename(config)
 
   // Create empty file to start with
-  const recordingsDir = getRecordingsDir()
+  const customFolder = store.get('recordingsFolder')
+  const recordingsDir = getRecordingsDir(customFolder)
   await mkdir(recordingsDir, { recursive: true })
   const filepath = join(recordingsDir, filename)
   await writeFile(filepath, Buffer.alloc(0))

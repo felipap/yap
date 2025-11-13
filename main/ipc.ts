@@ -1,9 +1,9 @@
 import { createHash } from 'crypto'
-import { BrowserWindow, desktopCapturer, ipcMain, shell } from 'electron'
+import { BrowserWindow, desktopCapturer, dialog, ipcMain, shell } from 'electron'
 import { access, mkdir, stat } from 'fs/promises'
 import { State, Vlog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
-import { getRecordingsDir } from './lib/config'
+import { getDefaultRecordingsDir, getRecordingsDir } from './lib/config'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
@@ -67,7 +67,8 @@ export function setupIpcHandlers() {
 
   ipcMain.handle('getRecordedFiles', async () => {
     try {
-      const documentsPath = getRecordingsDir()
+      const customFolder = store.get('recordingsFolder')
+      const documentsPath = getRecordingsDir(customFolder)
 
       // Create directory if it doesn't exist
       await mkdir(documentsPath, { recursive: true })
@@ -208,12 +209,13 @@ export function setupIpcHandlers() {
       // Clean up ephemeral state
       ephemeral.removeTranscription(vlogId)
 
-      // Save only the final result to persistent store
-      const completedState = {
-        status: 'completed' as const,
-        result: result,
-      }
-      updateVlog(vlogId, { transcription: completedState })
+      // Save the transcription result to persistent store
+      updateVlog(vlogId, {
+        transcription: {
+          status: 'completed',
+          result,
+        }
+      })
 
       // Automatically generate summary if transcription was successful
       try {
@@ -254,7 +256,7 @@ export function setupIpcHandlers() {
       if (!vlog || !vlog.transcription) {
         return null
       }
-      return vlog.transcription.result || null
+      return vlog.transcription
     } catch (error) {
       console.error('Error getting transcription:', error)
       return null
@@ -272,9 +274,16 @@ export function setupIpcHandlers() {
         }
       }
 
-      // Fall back to persistent state (for completed/error states)
+      // Fall back to persistent state (for completed transcriptions)
       const vlog = getVlog(vlogId)
-      return vlog?.transcription || { status: 'idle' }
+      if (vlog?.transcription) {
+        return {
+          status: 'completed',
+          result: vlog.transcription,
+        }
+      }
+
+      return { status: 'idle' }
     } catch (error) {
       console.error('Error getting transcription state:', error)
       throw error
@@ -551,6 +560,44 @@ export function setupIpcHandlers() {
     }
   })
 
+  // Recordings folder handlers
+  ipcMain.handle('getRecordingsFolder', async () => {
+    try {
+      return store.get('recordingsFolder') || getDefaultRecordingsDir()
+    } catch (error) {
+      console.error('Error getting recordings folder:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('setRecordingsFolder', async (_, folderPath: string) => {
+    try {
+      store.set('recordingsFolder', folderPath)
+      return true
+    } catch (error) {
+      console.error('Error setting recordings folder:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('openFolderPicker', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory', 'createDirectory'],
+        title: 'Select Recordings Folder',
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return null
+      }
+
+      return result.filePaths[0]
+    } catch (error) {
+      console.error('Error opening folder picker:', error)
+      throw error
+    }
+  })
+
   // MP4 conversion handler
   ipcMain.handle('convertToMp4', async (_, vlogId: string) => {
     try {
@@ -618,6 +665,33 @@ export function setupIpcHandlers() {
       setVlog(vlog)
 
       debug(`Converted video to MP4: ${outputPath}`)
+
+      // Ask user if they want to delete the original webm file
+      const originalFileName =
+        filePath.split('/').pop() || filePath.split('\\').pop() || 'file'
+      const response = await dialog.showMessageBox(libraryWindow, {
+        type: 'question',
+        buttons: ['Keep Original', 'Move to Trash'],
+        defaultId: 1,
+        title: 'Delete Original File?',
+        message: 'Conversion complete!',
+        detail: `Do you want to move the original WebM file "${originalFileName}" to trash? The new MP4 file has been created.`,
+      })
+
+      // If user clicked "Move to Trash" (button index 1)
+      if (response.response === 1) {
+        try {
+          await shell.trashItem(filePath)
+          // Also delete the vlog entry for the webm file
+          deleteVlog(vlogId)
+          vlogIdToPath.delete(vlogId)
+          debug(`Moved original WebM to trash: ${filePath}`)
+        } catch (trashError) {
+          console.error('Failed to move original file to trash:', trashError)
+          // Don't fail the whole operation if trash fails
+        }
+      }
+
       return {
         success: true,
         message: `Successfully converted to MP4`,

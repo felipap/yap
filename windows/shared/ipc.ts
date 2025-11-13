@@ -202,6 +202,18 @@ export async function setGeminiApiKey(apiKey: string): Promise<boolean> {
   return window.electronAPI.setGeminiApiKey(apiKey)
 }
 
+export async function getRecordingsFolder(): Promise<string> {
+  return window.electronAPI.getRecordingsFolder()
+}
+
+export async function setRecordingsFolder(folderPath: string): Promise<boolean> {
+  return window.electronAPI.setRecordingsFolder(folderPath)
+}
+
+export async function openFolderPicker(): Promise<string | null> {
+  return window.electronAPI.openFolderPicker()
+}
+
 // MP4 conversion
 export async function convertToMp4(vlogId: string): Promise<{
   success: boolean

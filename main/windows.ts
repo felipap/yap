@@ -56,12 +56,15 @@ export function createLibraryWindow(): BrowserWindow {
     libraryWindow.setIcon(iconPath)
   }
 
-  // Save window bounds on close and hide instead of destroy
+  // Save window bounds on close / destroy
+  libraryWindow.on('close', () => {
+    const bounds = libraryWindow.getBounds()
+    store.set('windowBounds', bounds)
+  })
+
+  // Hide instead of destroy
   libraryWindow.on('close', (event) => {
     if (!app.isQuitting) {
-      event.preventDefault()
-      const bounds = libraryWindow.getBounds()
-      store.set('windowBounds', bounds)
       libraryWindow.hide()
       return false
     }

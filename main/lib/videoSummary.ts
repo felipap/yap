@@ -30,6 +30,10 @@ export async function generateVideoSummary(
     throw new Error('Gemini API key is not set')
   }
 
+  if (!transcription || transcription.trim().length === 0) {
+    throw new Error('Cannot generate summary: transcription is empty')
+  }
+
   // Get user profile for personalized context
   const userProfile: UserProfile = store.get('userProfile') || {
     name: 'Felipe',

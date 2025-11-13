@@ -3,13 +3,16 @@ import { homedir } from 'os'
 
 export const DEBUG = false
 
+// Default recording path
+const DEFAULT_RECORDINGS_PATH = join(homedir(), 'Documents', 'YapRecordings')
+
 // Application paths
 export const PATHS = {
   // User data directory
   USER_DATA: join(homedir(), '.yap'),
 
   // Recording directories
-  RECORDINGS: join(homedir(), 'Documents', 'VlogRecordings'),
+  RECORDINGS: DEFAULT_RECORDINGS_PATH,
   TEMP: join(homedir(), '.yap', 'temp'),
 
   // Cache directory
@@ -46,8 +49,12 @@ export function getTempDir(): string {
   return PATHS.TEMP
 }
 
-export function getRecordingsDir(): string {
-  return PATHS.RECORDINGS
+export function getRecordingsDir(customPath?: string): string {
+  return customPath || PATHS.RECORDINGS
+}
+
+export function getDefaultRecordingsDir(): string {
+  return DEFAULT_RECORDINGS_PATH
 }
 
 export function getUserDataDir(): string {

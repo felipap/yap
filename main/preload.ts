@@ -163,6 +163,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('setGeminiApiKey', apiKey)
   },
 
+  getRecordingsFolder: (): Promise<string> => {
+    return ipcRenderer.invoke('getRecordingsFolder')
+  },
+
+  setRecordingsFolder: (folderPath: string): Promise<boolean> => {
+    return ipcRenderer.invoke('setRecordingsFolder', folderPath)
+  },
+
+  openFolderPicker: (): Promise<string | null> => {
+    return ipcRenderer.invoke('openFolderPicker')
+  },
+
   // Auto-updater event listeners
 
   // MP4 conversion

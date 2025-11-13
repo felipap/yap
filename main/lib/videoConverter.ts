@@ -1,14 +1,15 @@
 import { spawn } from 'child_process'
-import { unlink, access, open } from 'fs/promises'
-import { constants } from 'fs'
+import { unlink, open } from 'fs/promises'
+import { findFFmpegPath, getFFmpegEnv } from './ffmpeg'
 
 // Helper function to check if a file is actually readable (not just a cloud placeholder)
 async function isFileActuallyReadable(filePath: string): Promise<boolean> {
   // Check for cloud storage paths
-  const isCloudPath = filePath.includes('/CloudStorage/') ||
-                      filePath.includes('/Google Drive/') ||
-                      filePath.includes('/Dropbox/') ||
-                      filePath.includes('/OneDrive/')
+  const isCloudPath =
+    filePath.includes('/CloudStorage/') ||
+    filePath.includes('/Google Drive/') ||
+    filePath.includes('/Dropbox/') ||
+    filePath.includes('/OneDrive/')
 
   if (isCloudPath) {
     console.log('Detected cloud storage path, performing read test:', filePath)
@@ -50,67 +51,6 @@ async function isFileActuallyReadable(filePath: string): Promise<boolean> {
 }
 
 export class VideoConverter {
-  private static ffmpegPath: string | null = null
-
-  /**
-   * Find the FFmpeg binary path by checking common installation locations
-   */
-  private static async findFFmpegPath(): Promise<string | null> {
-    if (this.ffmpegPath) {
-      return this.ffmpegPath
-    }
-
-    const commonPaths = [
-      '/opt/homebrew/bin/ffmpeg', // Homebrew on Apple Silicon
-      '/usr/local/bin/ffmpeg', // Homebrew on Intel Mac
-      '/usr/bin/ffmpeg', // System installation
-    ]
-
-    for (const path of commonPaths) {
-      try {
-        await access(path, constants.X_OK)
-        this.ffmpegPath = path
-        return path
-      } catch {
-        // Continue to next path
-      }
-    }
-
-    // If not found in common paths, try to use 'which' command
-    return new Promise((resolve) => {
-      const which = spawn('which', ['ffmpeg'])
-      let output = ''
-
-      which.stdout.on('data', (data) => {
-        output += data.toString().trim()
-      })
-
-      which.on('close', (code) => {
-        if (code === 0 && output) {
-          this.ffmpegPath = output
-          resolve(output)
-        } else {
-          resolve(null)
-        }
-      })
-
-      which.on('error', () => resolve(null))
-    })
-  }
-
-  private static async isFFmpegAvailable(): Promise<boolean> {
-    const ffmpegPath = await this.findFFmpegPath()
-    if (!ffmpegPath) {
-      return false
-    }
-
-    return new Promise((resolve) => {
-      const ffmpeg = spawn(ffmpegPath, ['-version'])
-      ffmpeg.on('error', () => resolve(false))
-      ffmpeg.on('close', (code) => resolve(code === 0))
-    })
-  }
-
   static async convertWebMToMP4(
     inputPath: string,
     outputPath: string,
@@ -123,27 +63,33 @@ export class VideoConverter {
       )
     }
 
-    const ffmpegPath = await this.findFFmpegPath()
+    const ffmpegPath = await findFFmpegPath()
 
     if (!ffmpegPath) {
       throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
     }
 
     return new Promise((resolve, reject) => {
-      const ffmpeg = spawn(ffmpegPath, [
-        '-i',
-        inputPath,
-        '-c:v',
-        'libx264', // Use H.264 codec
-        '-preset',
-        'medium', // Balance speed and quality
-        '-crf',
-        '23', // Quality (lower = better, 23 is default)
-        '-movflags',
-        '+faststart', // Optimize for streaming
-        '-y', // Overwrite output file
-        outputPath,
-      ])
+      const ffmpeg = spawn(
+        ffmpegPath,
+        [
+          '-i',
+          inputPath,
+          '-c:v',
+          'libx264', // Use H.264 codec
+          '-preset',
+          'medium', // Balance speed and quality
+          '-crf',
+          '23', // Quality (lower = better, 23 is default)
+          '-movflags',
+          '+faststart', // Optimize for streaming
+          '-y', // Overwrite output file
+          outputPath,
+        ],
+        {
+          env: getFFmpegEnv(),
+        },
+      )
 
       let errorOutput = ''
 
@@ -189,27 +135,33 @@ export class VideoConverter {
       )
     }
 
-    const ffmpegPath = await this.findFFmpegPath()
+    const ffmpegPath = await findFFmpegPath()
 
     if (!ffmpegPath) {
       throw new Error('FFmpeg not installed. Install with: brew install ffmpeg')
     }
 
     return new Promise((resolve, reject) => {
-      const ffmpeg = spawn(ffmpegPath, [
-        '-i',
-        inputPath,
-        '-c:v',
-        'h264_videotoolbox', // Use hardware acceleration on macOS
-        '-b:v',
-        '6000K', // Video bitrate
-        '-c:a',
-        'aac', // Audio codec
-        '-y', // Overwrite output file
-        '-progress',
-        'pipe:1', // Output progress to stdout
-        outputPath,
-      ])
+      const ffmpeg = spawn(
+        ffmpegPath,
+        [
+          '-i',
+          inputPath,
+          '-c:v',
+          'h264_videotoolbox', // Use hardware acceleration on macOS
+          '-b:v',
+          '6000K', // Video bitrate
+          '-c:a',
+          'aac', // Audio codec
+          '-y', // Overwrite output file
+          '-progress',
+          'pipe:1', // Output progress to stdout
+          outputPath,
+        ],
+        {
+          env: getFFmpegEnv(),
+        },
+      )
 
       let errorOutput = ''
       let duration = 0
