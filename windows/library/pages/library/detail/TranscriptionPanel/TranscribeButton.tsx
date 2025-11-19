@@ -1,5 +1,8 @@
+import { Loader2 } from 'lucide-react'
+import { MdClose } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { getVlog } from '../../../../../shared/ipc'
+import { MicIcon } from '../../../../../shared/icons'
 
 interface TranscribeButtonProps {
   vlogId: string
@@ -82,15 +85,22 @@ export function TranscribeButton({
       <button
         onClick={handleTranscribe}
         disabled={computedIsTranscribing || disabled}
-        className={twMerge('btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2 dark:border-white/5', className)}
+        className={twMerge(
+          'btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2 dark:border-white/5',
+          className,
+        )}
       >
         {computedIsTranscribing ? (
           <div className="flex items-center gap-2">
-            <span>⏳ {computedProgressLabel}</span>
+            <Loader2 size={14} strokeWidth={2} className="animate-spin" />
+            <span>{computedProgressLabel}</span>
             <span className="text-xs opacity-75">{computedProgress}%</span>
           </div>
         ) : (
-          '🎤 Transcribe'
+          <div className="flex items-center gap-1.5">
+            <MicIcon size={14} />
+            <span>Transcribe</span>
+          </div>
         )}
       </button>
 
@@ -103,7 +113,7 @@ export function TranscribeButton({
               onClick={computedClearError}
               className="ml-4 text-white hover:text-gray-200"
             >
-              ✕
+              <MdClose size={18} />
             </button>
           </div>
         </div>

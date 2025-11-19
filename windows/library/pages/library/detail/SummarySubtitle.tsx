@@ -71,11 +71,15 @@ export function SummarySubtitle({ vlog }: Props) {
     }
   }
 
-  if (!vlog.transcription) {
-    return null
-  }
-
   if (!summary) {
+    if (!vlog.transcription) {
+      return (
+        <div className="text-[13px] text-contrast opacity-40 italic">
+          Transcribe the video to summarize it
+        </div>
+      )
+    }
+
     return (
       <div className="flex items-center gap-2">
         <div className="text-[13px] text-contrast opacity-40">
@@ -109,28 +113,26 @@ export function SummarySubtitle({ vlog }: Props) {
         ref={textRef}
         onClick={() => {
           if (!isExpanded && isTruncated) {
-            setIsExpanded(true)
+            // setIsExpanded(true)
           }
         }}
         className={twMerge(
           'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
           !isExpanded && 'line-clamp-5',
-          !isExpanded &&
-            isTruncated &&
-            'cursor-pointer hover:opacity-70 transition-opacity',
+          !isExpanded && isTruncated && 'cursor-pointer  transition-opacity',
         )}
       >
         {summary}
       </div>
       <div className="flex items-center gap-2">
-        {isTruncated && !isExpanded && (
+        {isTruncated && (
           <button
             onClick={() => {
-              setIsExpanded(false)
+              setIsExpanded((v) => !v)
             }}
             className={twMerge(
-              'text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity',
-              !isExpanded && 'group-hover:opacity-50',
+              'text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity mr-2',
+              !isExpanded && 'group-hover:opacity-80',
             )}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -141,7 +143,7 @@ export function SummarySubtitle({ vlog }: Props) {
           className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
           title={copied ? 'Copied!' : 'Copy summary'}
         >
-          <CopyIcon className="w-3 h-3" />
+          <CopyIcon className="w-2.5 h-3" />
           {copied ? 'Copied' : 'Copy'}
         </button>
         <button

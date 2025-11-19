@@ -1,6 +1,14 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import { TranscriptionResult } from '../../../../types'
 import { PlayerRef } from '../Player'
+import { twMerge } from 'tailwind-merge'
 
 interface TeleprompterProps {
   isVideo: boolean
@@ -15,6 +23,10 @@ export interface TeleprompterRef {
 export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
   function Teleprompter({ isVideo, transcription, playerRef }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
+    const [activeSegmentIndex, setActiveSegmentIndex] = useState<number | null>(
+      null,
+    )
+    const previousActiveIndexRef = useRef<number | null>(null)
 
     const formatTime = (seconds: number): string => {
       const mins = Math.floor(seconds / 60)
@@ -28,12 +40,17 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       }
     }
 
-    const syncToVideo = () => {
+    const syncToVideo = useCallback(() => {
       if (
         !playerRef.current ||
         !containerRef.current ||
         !transcription.segments
       ) {
+        return
+      }
+
+      // Don't sync if video is paused
+      if (playerRef.current.paused) {
         return
       }
 
@@ -53,6 +70,12 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
           segment === currentSegment,
       )
 
+      // Update active segment index if it changed
+      if (segmentIndex !== previousActiveIndexRef.current) {
+        previousActiveIndexRef.current = segmentIndex
+        setActiveSegmentIndex(segmentIndex)
+      }
+
       const segmentElement = containerRef.current.children[segmentIndex] as
         | HTMLElement
         | undefined
@@ -60,20 +83,44 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
         return
       }
 
-      segmentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      segmentElement.style.backgroundColor = 'var(--bg-hover)'
-      setTimeout(() => {
-        segmentElement.style.backgroundColor = ''
-      }, 2000)
-    }
+      // Scroll within the container only, not the entire page
+      const container = containerRef.current
+      const containerRect = container.getBoundingClientRect()
+      const elementRect = segmentElement.getBoundingClientRect()
+
+      // Calculate the position relative to the container
+      const elementTop =
+        elementRect.top - containerRect.top + container.scrollTop
+      const elementHeight = segmentElement.offsetHeight
+      const containerHeight = container.clientHeight
+
+      // Center the element in the container
+      const scrollPosition =
+        elementTop - containerHeight / 2 + elementHeight / 2
+
+      // Fast scrolling - set scrollTop directly for immediate scrolling
+      container.scrollTop = scrollPosition
+    }, [playerRef, transcription.segments])
 
     useImperativeHandle(ref, () => ({
       syncToVideo,
     }))
 
+    // Automatically sync to video as it plays
+    useEffect(() => {
+      const interval = setInterval(() => {
+        syncToVideo()
+      }, 500) // Check every 100ms
+
+      return () => {
+        clearInterval(interval)
+      }
+    }, [syncToVideo])
+
     return (
-      <div className="flex flex-col gap-3">
-        <div className="h-[400px] overflow-y-auto border-t" ref={containerRef}>
+      <div className="flex flex-col gap-3 p-1 pb-0">
+        <div className="h-[300px] overflow-y-auto border-t dark:border-white/10" ref={containerRef}>
+          <div className="h-[5px]"></div>
           {transcription.segments?.map(
             (
               segment: TranscriptionResult['segments'][number],
@@ -81,7 +128,12 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
             ) => (
               <div
                 key={index}
-                className="p-2 rounded cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className={twMerge(
+                  'p-2 rounded cursor-pointer mb-1 transition-colors leading-[1.1]',
+                  activeSegmentIndex === index
+                    ? 'bg-black/5 dark:bg-white/5'
+                    : 'hover:bg-black/5 dark:hover:bg-white/5',
+                )}
                 onClick={() => handleSegmentClick(segment.start)}
               >
                 <div className="text-xs text-secondary mb-1">
@@ -91,6 +143,7 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
               </div>
             ),
           )}
+          <div className="h-[10px]"></div>
         </div>
       </div>
     )

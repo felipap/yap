@@ -1,4 +1,10 @@
-import { Component, ReactNode, ComponentType } from 'react'
+import {
+  Component,
+  ReactNode,
+  ComponentType,
+  forwardRef,
+  createElement,
+} from 'react'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -50,10 +56,10 @@ export class ErrorBoundary extends Component<
 }
 
 export function withBoundary<P extends object>(
-  Component: ComponentType<P>,
+  ComponentToWrap: ComponentType<P>,
   fallback?: React.ReactNode,
 ): ComponentType<P> {
-  return function WrappedComponent(props: P) {
+  const WrappedComponent = forwardRef<any, P>((props: P, ref) => {
     return (
       <ErrorBoundary
         fallback={fallback || <div>Something went wrong</div>}
@@ -61,8 +67,12 @@ export function withBoundary<P extends object>(
           console.error('Component error:', error)
         }}
       >
-        <Component {...props} />
+        {createElement(ComponentToWrap, { ...props, ref } as any)}
       </ErrorBoundary>
     )
-  }
+  })
+
+  WrappedComponent.displayName = `withBoundary(${ComponentToWrap.displayName || ComponentToWrap.name || 'Component'})`
+
+  return WrappedComponent as ComponentType<P>
 }

@@ -63,11 +63,11 @@ export function useTranscriptionState({ vlogId }: Args): Return {
 
           // Set progress label based on progress range
           if (state.progress && state.progress <= 50) {
-            setProgressLabel('Extracting audio...')
+            setProgressLabel('Extracting audio')
           } else if (state.progress) {
-            setProgressLabel('Transcribing...')
+            setProgressLabel('Transcribing')
           } else {
-            setProgressLabel('Starting...')
+            setProgressLabel('Starting')
           }
         }
       } catch (error) {
@@ -90,13 +90,18 @@ export function useTranscriptionState({ vlogId }: Args): Return {
       updatedProgress: number,
     ) => {
       if (updatedVlogId === vlogId) {
+        // Set transcribing state to true when we receive progress updates (if not already complete)
+        if (updatedProgress < 100) {
+          setIsTranscribing(true)
+        }
+
         setProgress(updatedProgress)
 
         // Set progress label based on progress range
         if (updatedProgress <= 50) {
-          setProgressLabel('Extracting audio...')
+          setProgressLabel('Extracting audio')
         } else {
-          setProgressLabel('Transcribing with AI...')
+          setProgressLabel('Transcribing with AI')
         }
 
         // Reset state when transcription completes

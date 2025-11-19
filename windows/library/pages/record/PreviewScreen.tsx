@@ -1,4 +1,6 @@
+import { Monitor, MonitorSpeaker } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import { MdMic, MdVideocam } from 'react-icons/md'
 import { RecordingMode } from '../../../../shared-types'
 import { twMerge } from 'tailwind-merge'
 
@@ -35,7 +37,7 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
       return (
         <div className="relative w-full flex-1 min-h-0 max-h-[1000px] bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
           <div className="w-full flex items-center justify-center h-[340px]">
-            <div className="text-8xl">🎤</div>
+            <MdMic size={120} className="text-gray-400" />
           </div>
         </div>
       )
@@ -58,9 +60,11 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
         />
         {!hasVideo && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-8xl">
-              {props.mode === 'camera' ? '📹' : '🖥️'}
-            </div>
+            {props.mode === 'camera' ? (
+              <MdVideocam size={120} className="text-gray-400" />
+            ) : (
+              <Monitor size={120} strokeWidth={1.5} className="text-gray-400" />
+            )}
           </div>
         )}
       </div>

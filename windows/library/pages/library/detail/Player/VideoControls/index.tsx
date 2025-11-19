@@ -274,7 +274,7 @@ export function VideoControls({ videoRef, className }: Props) {
     <div
       ref={controlsRef}
       className={twMerge(
-        'absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 transition-opacity duration-300 rounded-lg',
+        'absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 transition-opacity duration-300 rounded-md',
         showControls ? 'opacity-100' : 'opacity-0',
         className,
       )}

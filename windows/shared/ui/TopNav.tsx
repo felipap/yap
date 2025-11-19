@@ -45,25 +45,26 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
-            className="text-[14px] border dark:border-white/10 hover:text-contrast"
+            className={twMerge("border  hover:text-contrast", currentTab === 'record' && 'dark:border-white/10')}
           >
             <LibraryIcon className="w-3 h-3 mr-1" />
             Library
           </TabButton>
-          {currentTab !== 'record' && <TabButton
-            active={currentTab === 'record'}
-            onClick={() => {
-              router.navigate({ name: 'record' })
-            }}
-            className={twMerge(
-              'text-[14px] border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
-              currentTab === 'record' && 'text-red-500 dark:text-red-400',
-            )}
-          >
-            Record
-                <RecordIcon className="w-4 h-4 ml-1" />
+          {currentTab !== 'record' && (
+            <TabButton
+              active={currentTab === 'record'}
+              onClick={() => {
+                router.navigate({ name: 'record' })
+              }}
+              className={twMerge(
+                'border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
+                currentTab === 'record' && 'text-red-500 dark:text-red-400',
+              )}
+            >
+              Record
+              <RecordIcon className="w-4 h-4 ml-1" />
             </TabButton>
-          }
+          )}
         </div>
       </div>
     </div>
@@ -86,7 +87,7 @@ function TabButton({
   return (
     <button
       className={twMerge(
-        'no-drag-region px-3 py-0.5 leading-1 self-stretch text-[13px] tracking-normal font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
+        'no-drag-region px-3 h-[30px]  pb-0.5 leading-1 self-stretch text-[13px] track-10 font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
         active ? 'text-contrast bg-two border' : 'text-secondary',
         className,
       )}

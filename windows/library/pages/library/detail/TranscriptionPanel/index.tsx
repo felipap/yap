@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { IoSync } from 'react-icons/io5'
 import { CopyIcon, RefreshIcon } from '../../../../../shared/icons'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../../types'
@@ -47,12 +46,6 @@ export const TranscriptionPanel = withBoundary(function ({
     }
   }
 
-  const handleSyncToVideo = () => {
-    if (teleprompterRef.current) {
-      teleprompterRef.current.syncToVideo()
-    }
-  }
-
   if (transcriptionError) {
     return (
       <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-600 text-sm">
@@ -63,23 +56,18 @@ export const TranscriptionPanel = withBoundary(function ({
 
   if (!transcription && isTranscribing) {
     return (
-      <div className="border bg-two p-3 rounded-md flex flex-row gap-2 justify-between">
+      <div className="border dark:border-white/5 p-3 rounded-md flex flex-row gap-2 justify-between items-center">
         <div className="text-md font-semibold text-contrast">Transcription</div>
-          <div className="flex items-center gap-2">
-            {/* {isTranscribing && (
-              <div className="text-xs text-secondary">
-                {progressLabel} {progress > 0 && `(${progress}%)`}
-              </div>
-            )} */}
-            <TranscribeButton
-              vlogId={vlogId}
-              useExternal
-              isTranscribing={isTranscribing}
-              progress={progress}
-              progressLabel={progressLabel}
-              hasTranscription={!!transcription}
-              onClick={transcribe}
-            />
+        <div className="flex items-center gap-2">
+          <TranscribeButton
+            vlogId={vlogId}
+            useExternal
+            isTranscribing={isTranscribing}
+            progress={progress}
+            progressLabel={progressLabel}
+            hasTranscription={!!transcription}
+            onClick={transcribe}
+          />
         </div>
       </div>
     )
@@ -88,66 +76,45 @@ export const TranscriptionPanel = withBoundary(function ({
   if (!transcription) {
     return (
       <div className="border bg-two p-3 rounded-md">
-        <header className="flex justify-between items-center mb-3">
-          <div className="text-sm font-semibold text-contrast">Transcript</div>
-          <div className="flex items-center gap-2">
-            {isTranscribing && (
-              <div className="text-xs text-secondary">
-                {progressLabel} {progress > 0 && `(${progress}%)`}
-              </div>
-            )}
-            <TranscribeButton
-              vlogId={vlogId}
-              useExternal
-              isTranscribing={isTranscribing}
-              progress={progress}
-              progressLabel={progressLabel}
-              hasTranscription={!!transcription}
-              onClick={transcribe}
-            />
-          </div>
-        </header>
+        <TranscribeButton
+          vlogId={vlogId}
+          useExternal
+          isTranscribing={isTranscribing}
+          progress={progress}
+          progressLabel={progressLabel}
+          hasTranscription={!!transcription}
+          onClick={transcribe}
+        />
       </div>
     )
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm text-contrast border bg-two  p-3 rounded-md flex flex-col gap-3">
-        <header className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="text-md mr-3 font-semibold text-contrast">
-              Transcript
-            </div>
+      <div className="text-contrast border bg-two rounded-md flex flex-col gap-0">
+        <header className="text-sm flex justify-start gap-2 h-[34px] pt-1 items-center px-3 flex-row ">
+          <div className="text-md mr-1 font-smedium track-20 text-contrast">
+            Transcript
+          </div>
+          {!isTranscribing && (
             <button
-              onClick={handleCopyTranscript}
+              onClick={transcribe}
               className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-              title={copyStatus === 'copied' ? 'Copied!' : 'Copy transcript'}
+              title="Regenerate transcript"
             >
-              <CopyIcon className="w-3 h-3" />
-              {copyStatus === 'copied' ? 'Copied' : 'Copy'}
+              <RefreshIcon className="w-3 h-3" />
+              Redo
             </button>
-            {!isTranscribing && (
-              <button
-                onClick={transcribe}
-                className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-                title="Regenerate transcript"
-              >
-                <RefreshIcon className="w-3 h-3" />
-                Redo
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleSyncToVideo}
-              className="btn-secondary text-sm font-medium flex items-center gap-1.5"
-              title="Sync transcript to current video position"
-            >
-              <IoSync />
-              Sync to {log.isAudioOnly ? 'audio' : 'video'}
-            </button>
-          </div>
+          )}
+          <div className="flex-1"></div>
+          <button
+            onClick={handleCopyTranscript}
+            className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+            title={copyStatus === 'copied' ? 'Copied!' : 'Copy transcript'}
+          >
+            <CopyIcon className="w-2.5 h-3" />
+            {copyStatus === 'copied' ? 'Copied' : 'Copy'}
+          </button>
         </header>
         <Teleprompter
           ref={teleprompterRef}

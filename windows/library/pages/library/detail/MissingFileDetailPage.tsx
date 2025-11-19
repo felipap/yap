@@ -1,3 +1,5 @@
+import { Folder, Loader2 } from 'lucide-react'
+import { MdDelete } from 'react-icons/md'
 import { useState } from 'react'
 import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
@@ -95,14 +97,25 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
               onClick={handleOpenLocation}
               disabled={isDeleting}
             >
-              📁 Show in Finder
+              <Folder size={16} strokeWidth={2} />
+              <span>Show in Finder</span>
             </Button>
             <Button
               variant="header"
               onClick={handleUntrack}
               disabled={isDeleting}
             >
-              {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
+              {isDeleting ? (
+                <>
+                  <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+                  <span>Removing...</span>
+                </>
+              ) : (
+                <>
+                  <MdDelete size={16} />
+                  <span>Remove from Library</span>
+                </>
+              )}
             </Button>
           </div>
 

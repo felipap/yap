@@ -3,7 +3,6 @@ import { twMerge } from 'tailwind-merge'
 import { onViewLogEntry } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../types'
-import { JsonViewer } from './JsonViewer'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
 import { SummarySubtitle } from './SummarySubtitle'
@@ -39,21 +38,21 @@ export const DetailPage = withBoundary(function ({
   return (
     <div
       className={twMerge(
-        'gap-4 overflow-x-hidden overflow-y-scroll w-full pb-4',
+        'gap-4 overflow-x-hidden overflow-y-scroll w-full pb-8',
       )}
     >
       <div className="w-full px-2">
         <Player
           ref={playerRef}
-          vlogId={log.id}
+          logId={log.id}
           src={`log-media://${log.id}`}
           className={twMerge(
             'w-full rounded-md',
-            // log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[400px]',
+            log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[500px]',
           )}
         />
       </div>
-      <main className="flex flex-col items-center gap-8 justify-start mt-4  min-h-screen pb-2">
+      <div className="flex flex-col items-center gap-8 justify-start mt-5">
         <header className="px-2 flex flex-col gap-1 w-full">
           <TitleInput
             vlogId={log.id}
@@ -75,7 +74,7 @@ export const DetailPage = withBoundary(function ({
         <div className="px-2 w-full">
           <Toolbar log={log} onBack={onBack} />
         </div>
-      </main>
+      </div>
     </div>
   )
 })

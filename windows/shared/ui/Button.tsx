@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { twMerge } from 'tailwind-merge'
 
 const buttonVariants = cva(
-  'px-3 h-6 rounded-md font-medium transition-all text-sm text-nowrap flex items-center gap-2',
+  'px-3 h-7 rounded-md font-medium transition-all text-sm text-nowrap flex items-center gap-2',
   {
     variants: {
       variant: {
@@ -15,7 +15,7 @@ const buttonVariants = cva(
         header:
           'text-nowrap text-[13px] rounded-lg flex items-center gap-2 h-8 px-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700',
         danger:
-          'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 border border-red-200 dark:border-red-900/50',
+          'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 border border-red-200 dark:border-red-300/5',
       },
       isActive: {
         true: 'bg-blue-500 text-white shadow-md',

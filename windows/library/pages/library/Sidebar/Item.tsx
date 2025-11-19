@@ -1,4 +1,6 @@
+import { AlertTriangle, Link2, Link2Off } from 'lucide-react'
 import dayjs from 'dayjs'
+import { MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { SidebarItem } from '.'
 import { formatDate, formatDateOrRelative } from './formatters'
@@ -41,10 +43,10 @@ export function Item({ data, selected, onClick }: Props) {
               )}
               {isMissing && (
                 <span
-                  className="text-[10px] px-1 py-0.5 rounded bg-red-500/20 text-red-500 dark:text-red-400"
+                  className="text-[10px] px-1 py-0.5 rounded bg-red-500/20 text-red-500 dark:text-red-400 flex items-center"
                   title="File not found on disk"
                 >
-                  ⚠
+                  <AlertTriangle size={10} strokeWidth={2} />
                 </span>
               )}
             </div>
@@ -106,9 +108,13 @@ function ItemImage({
         className="w-full h-full flex items-center justify-center"
         style={{ display: data.thumbnailPath && !isMissing ? 'none' : 'flex' }}
       >
-        <div className="text-2xl">
-          {isMissing ? '🔗💔' : data.isAudioOnly ? '🎙️' : '🎬'}
-        </div>
+        {isMissing ? (
+          <Link2Off size={24} className="text-gray-400" strokeWidth={1.5} />
+        ) : data.isAudioOnly ? (
+          <MdMic size={24} className="text-gray-400" />
+        ) : (
+          <MdMovie size={24} className="text-gray-400" />
+        )}
       </div>
 
       {data.duration && !isMissing && (
@@ -119,7 +125,11 @@ function ItemImage({
 
       {isMissing && (
         <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
-          <div className="text-red-500 dark:text-red-400 text-lg">⚠</div>
+          <AlertTriangle
+            size={18}
+            strokeWidth={2}
+            className="text-red-500 dark:text-red-400"
+          />
         </div>
       )}
     </>

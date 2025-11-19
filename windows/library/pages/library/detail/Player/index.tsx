@@ -11,9 +11,10 @@ import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
 import { useAudioSilenceDetection } from './useAudioSilenceDetection'
 import { VideoControls } from './VideoControls'
+import { twMerge } from 'tailwind-merge'
 
 interface PlayerProps {
-  vlogId: string
+  logId: string
   src: string
   className?: string
   autoPlay?: boolean
@@ -34,7 +35,7 @@ export const Player = withBoundary(
   forwardRef<PlayerRef, PlayerProps>(
     (
       {
-        vlogId,
+        logId,
         src,
         className = 'w-full max-w-4xl h-auto rounded-lg shadow-lg',
         autoPlay = true,
@@ -61,7 +62,7 @@ export const Player = withBoundary(
       // Handle audio silence detection
       useAudioSilenceDetection({
         videoRef,
-        vlogId,
+        logId,
         skipSilence,
         silenceThreshold,
         minSilenceDuration,
@@ -75,7 +76,7 @@ export const Player = withBoundary(
             return videoRef.current?.currentTime || 0
           },
           get paused() {
-            return videoRef.current?.paused || true
+            return videoRef.current?.paused ?? true
           },
           play: async () => {
             if (videoRef.current) {
@@ -88,6 +89,7 @@ export const Player = withBoundary(
             }
           },
           seekTo: (time: number) => {
+            console.log('seekTo', time)
             if (videoRef.current) {
               videoRef.current.currentTime = time
             }
@@ -96,10 +98,10 @@ export const Player = withBoundary(
         [],
       )
 
-      // Reset restoration state when vlogId changes
+      // Reset restoration state when logId changes
       useEffect(() => {
         setHasRestoredPosition(false)
-      }, [vlogId])
+      }, [logId])
 
       // Restore video position on load
       useEffect(() => {
@@ -109,7 +111,7 @@ export const Player = withBoundary(
           }
 
           try {
-            const positionData = await getVideoPosition(vlogId)
+            const positionData = await getVideoPosition(logId)
             if (positionData && videoRef.current) {
               videoRef.current.currentTime = positionData.position
               setHasRestoredPosition(true)
@@ -135,7 +137,7 @@ export const Player = withBoundary(
               video.removeEventListener('loadeddata', handleLoadedData)
           }
         }
-      }, [vlogId, hasRestoredPosition])
+      }, [logId, hasRestoredPosition])
 
       // Track video position changes
       useEffect(() => {
@@ -155,7 +157,7 @@ export const Player = withBoundary(
           // Save position after 2 seconds of no changes (debounced)
           saveTimeout = setTimeout(() => {
             if (video.currentTime > 0) {
-              saveVideoPosition(vlogId, video.currentTime).catch(
+              saveVideoPosition(logId, video.currentTime).catch(
                 (error: unknown) => {
                   console.error('Failed to save video position:', error)
                 },
@@ -170,7 +172,7 @@ export const Player = withBoundary(
         const handleSeeked = () => {
           // Save position immediately when user seeks
           if (video.currentTime > 0) {
-            saveVideoPosition(vlogId, video.currentTime).catch(
+            saveVideoPosition(logId, video.currentTime).catch(
               (error: unknown) => {
                 console.error('Failed to save video position:', error)
               },
@@ -197,7 +199,7 @@ export const Player = withBoundary(
             clearTimeout(saveTimeout)
           }
         }
-      }, [vlogId, onTimeUpdate, onSeeked, onLoadedData])
+      }, [logId, onTimeUpdate, onSeeked, onLoadedData])
 
       // Sync video element muted state with global state
       useEffect(() => {
@@ -268,11 +270,6 @@ export const Player = withBoundary(
         }
       }, [])
 
-      // Determine video className based on buffering state
-      const videoClassName = isBuffering
-        ? 'w-full max-w-6xl h-auto rounded-lg shadow-lg'
-        : className
-
       const handleVideoClick = () => {
         if (videoRef.current) {
           if (videoRef.current.paused) {
@@ -290,7 +287,13 @@ export const Player = withBoundary(
             controls={false}
             autoPlay={autoPlay}
             muted={isMuted}
-            className={`${videoClassName} cursor-pointer`}
+            className={twMerge(
+              isBuffering
+                ? 'w-full h-auto rounded-lg shadow-lg opacity-50'
+                : 'opacity-100',
+              className,
+              'cursor-pointer',
+            )}
             src={src}
             onClick={handleVideoClick}
           >

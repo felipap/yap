@@ -3,7 +3,7 @@ import { AudioSilenceDetector } from './audioSilenceDetection'
 
 interface UseAudioSilenceDetectionProps {
   videoRef: React.RefObject<HTMLVideoElement>
-  vlogId: string
+  logId: string
   skipSilence: boolean
   silenceThreshold: number
   minSilenceDuration: number
@@ -11,7 +11,7 @@ interface UseAudioSilenceDetectionProps {
 
 export function useAudioSilenceDetection({
   videoRef,
-  vlogId,
+  logId,
   skipSilence,
   silenceThreshold,
   minSilenceDuration,
@@ -62,7 +62,7 @@ export function useAudioSilenceDetection({
         silenceDetectorRef.current = null
       }
     }
-  }, [vlogId, silenceThreshold, minSilenceDuration, videoRef])
+  }, [logId, silenceThreshold, minSilenceDuration, videoRef])
 
   // Update detector config when preferences change
   useEffect(() => {
