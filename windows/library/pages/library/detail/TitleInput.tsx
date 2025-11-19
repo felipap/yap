@@ -28,12 +28,12 @@ export function TitleInput({
     <textarea
       ref={textareaRef}
       className={twMerge(
-        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-2 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words',
+        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-3 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words',
         title.length > 0
           ? ''
           : 'placeholder:text-contrast !opacity-10 focus:opacity-80',
       )}
-      placeholder={isVideo ? "Untitled video" : "Untitled audio"}
+      placeholder={isVideo ? 'Untitled video' : 'Untitled audio'}
       value={title}
       rows={1}
       onChange={(e) => {

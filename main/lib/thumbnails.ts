@@ -52,7 +52,9 @@ export async function generateThumbnail(
 
     // Increment counter at the start of generation
     activeGenerations++
-    debug(`Starting thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`)
+    debug(
+      `Starting thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`,
+    )
 
     try {
       // Check if source video file is actually readable
@@ -142,7 +144,10 @@ export async function generateThumbnail(
             )
             return thumbnailPath
           } catch (finalError) {
-            console.log('All thumbnail generation methods failed for:', videoPath)
+            console.log(
+              'All thumbnail generation methods failed for:',
+              videoPath,
+            )
             console.log('Final error:', finalError)
           }
         }
@@ -152,7 +157,9 @@ export async function generateThumbnail(
     } finally {
       // Always decrement counter when generation completes
       activeGenerations--
-      debug(`Finished thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`)
+      debug(
+        `Finished thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`,
+      )
     }
   } catch (error) {
     console.error('Error generating thumbnail:', error)

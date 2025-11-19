@@ -205,6 +205,3 @@ export class AudioSilenceDetector {
     return rms / 255
   }
 }
-
-
-

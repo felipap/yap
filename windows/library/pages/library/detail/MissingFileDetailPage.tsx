@@ -22,9 +22,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
 
   const handleUntrack = async () => {
     if (
-      !confirm(
-        `Are you sure you want to remove this log from your library?`,
-      )
+      !confirm(`Are you sure you want to remove this log from your library?`)
     ) {
       return
     }
@@ -92,10 +90,18 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
         {/* Actions */}
         <div className="flex flex-col gap-3 w-full mt-4">
           <div className="flex justify-center gap-2">
-            <Button variant="header" onClick={handleOpenLocation} disabled={isDeleting}>
+            <Button
+              variant="header"
+              onClick={handleOpenLocation}
+              disabled={isDeleting}
+            >
               📁 Show in Finder
             </Button>
-            <Button variant="header" onClick={handleUntrack} disabled={isDeleting}>
+            <Button
+              variant="header"
+              onClick={handleUntrack}
+              disabled={isDeleting}
+            >
               {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
             </Button>
           </div>

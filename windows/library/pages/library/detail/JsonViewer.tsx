@@ -12,7 +12,7 @@ export function JsonViewer({ log }: Props) {
   return (
     <div className="w-full">
       <Button onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? '📋 Hide JSON' : '📋 Show JSON'}
+        {isOpen ? 'Hide JSON' : 'Show JSON'}
       </Button>
 
       {isOpen && (

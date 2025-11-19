@@ -23,7 +23,6 @@ export const DetailPage = withBoundary(function ({
 }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
   const [log, setCurrentVlog] = useState<EnrichedLog>(log__)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   // Notify backend when viewing this log entry
   useEffect(() => {
@@ -33,7 +32,6 @@ export const DetailPage = withBoundary(function ({
   usePlayerShortcuts({ playerRef })
 
   const isMissing = !log.fileExists
-
   if (isMissing) {
     return <MissingFileDetailPage log={log} onBack={onBack} />
   }
@@ -41,35 +39,33 @@ export const DetailPage = withBoundary(function ({
   return (
     <div
       className={twMerge(
-        ' gap-4 overflow-x-hidden overflow-y-scroll w-full pb-4',
+        'gap-4 overflow-x-hidden overflow-y-scroll w-full pb-4',
       )}
     >
-      <main className="flex flex-col items-center gap-4 justify-start px-1 bg-one min-h-screen pb-5">
-        <div className="w-full max-w-5xl">
-          <Player
-            ref={playerRef}
+      <div className="w-full px-2">
+        <Player
+          ref={playerRef}
+          vlogId={log.id}
+          src={`log-media://${log.id}`}
+          className={twMerge(
+            'w-full rounded-md',
+            // log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[400px]',
+          )}
+        />
+      </div>
+      <main className="flex flex-col items-center gap-8 justify-start mt-4  min-h-screen pb-2">
+        <header className="px-2 flex flex-col gap-1 w-full">
+          <TitleInput
             vlogId={log.id}
-            src={`log-media://${log.id}`}
-            className={twMerge(
-              'w-full rounded-md',
-              log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[500px]',
-            )}
+            isVideo={!log.isAudioOnly}
+            title={log.title || ''}
+            onLocalTitleChange={(value) =>
+              setCurrentVlog((prev) => ({ ...prev, title: value }))
+            }
           />
-        </div>
-
-        <header className="px-1 flex flex-col gap-10 w-full">
-          <div className="flex flex-col gap-1">
-            <TitleInput
-              vlogId={log.id}
-              isVideo={!log.isAudioOnly}
-              title={log.title || ''}
-              onLocalTitleChange={(value) =>
-                setCurrentVlog((prev) => ({ ...prev, title: value }))
-              }
-            />
-            <div className="px-1"><SummarySubtitle vlog={log} /></div>
+          <div className="px-2">
+            <SummarySubtitle vlog={log} />
           </div>
-          <Toolbar vlogId={log.id} onBack={onBack} />
         </header>
 
         <div className="px-2 flex flex-col gap-4 w-full">
@@ -77,39 +73,9 @@ export const DetailPage = withBoundary(function ({
         </div>
 
         <div className="px-2 w-full">
-          <JsonViewer log={log} />
+          <Toolbar log={log} onBack={onBack} />
         </div>
       </main>
     </div>
   )
 })
-
-// HeaderButton moved into Toolbar
-
-function VideoExtensionTag({ log }: { log: EnrichedLog }) {
-  let color = 'bg-blue-100 text-blue-800'
-  let inner
-  if (log.path.endsWith('.webm')) {
-    inner = 'webm'
-    color = 'bg-green-100 text-green-800'
-  } else if (log.path.endsWith('.mp4')) {
-    inner = 'mp4'
-    color = 'bg-yellow-100 text-yellow-800'
-  } else if (log.path.endsWith('.mov')) {
-    inner = 'mov'
-    color = 'bg-purple-100 text-purple-800'
-  } else {
-    return null
-  }
-
-  return (
-    <span
-      className={twMerge(
-        'px-2 py-1 text-xs font-medium rounded-md border',
-        color,
-      )}
-    >
-      {inner}
-    </span>
-  )
-}

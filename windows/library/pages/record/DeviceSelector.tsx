@@ -33,53 +33,52 @@ export function DeviceSelector({
         {/* Camera Selection */}
         {(recordingMode === 'camera' || recordingMode === 'both') &&
           cameras.length > 0 && (
-              <div className="flex gap-1 items-center">
-                <div className="flex items-center justify-center w-8 h-8 opacity-40">
-                  <VideocamIcon size={20} />
-                </div>
-                <Select
-                  className="w-[200px]"
-                  value={selectedCameraId}
-                  onChange={onCameraChange}
-                >
-                  {cameras.map((camera) => (
-                    <option key={camera.deviceId} value={camera.deviceId}>
-                      {camera.label ||
-                        `Camera ${camera.deviceId.slice(0, 8)}...`}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
-
-          {/* Microphone Selection */}
-          {microphones.length > 0 && (
             <div className="flex gap-1 items-center">
-              <div className="flex items-center justify-center w-8 h-8">
-                <MicIcon className="opacity-40" size={20} />
+              <div className="flex items-center justify-center w-8 h-8 opacity-40">
+                <VideocamIcon size={20} />
               </div>
-
               <Select
                 className="w-[200px]"
-                value={selectedMicrophoneId}
-                onChange={onMicrophoneChange}
+                value={selectedCameraId}
+                onChange={onCameraChange}
               >
-                {microphones.map((microphone) => (
-                  <option key={microphone.deviceId} value={microphone.deviceId}>
-                    {microphone.label ||
-                      `Microphone ${microphone.deviceId.slice(0, 8)}...`}
+                {cameras.map((camera) => (
+                  <option key={camera.deviceId} value={camera.deviceId}>
+                    {camera.label || `Camera ${camera.deviceId.slice(0, 8)}...`}
                   </option>
                 ))}
               </Select>
+            </div>
+          )}
 
-              {selectedMicrophoneId && (
-                <VolumeMeter
-                  microphoneId={selectedMicrophoneId}
-                  size="sm"
-                  showLabel={false}
-                  className="w-[20px] ml-2"
-                />
-              )}
+        {/* Microphone Selection */}
+        {microphones.length > 0 && (
+          <div className="flex gap-1 items-center">
+            <div className="flex items-center justify-center w-8 h-8">
+              <MicIcon className="opacity-40" size={20} />
+            </div>
+
+            <Select
+              className="w-[200px]"
+              value={selectedMicrophoneId}
+              onChange={onMicrophoneChange}
+            >
+              {microphones.map((microphone) => (
+                <option key={microphone.deviceId} value={microphone.deviceId}>
+                  {microphone.label ||
+                    `Microphone ${microphone.deviceId.slice(0, 8)}...`}
+                </option>
+              ))}
+            </Select>
+
+            {selectedMicrophoneId && (
+              <VolumeMeter
+                microphoneId={selectedMicrophoneId}
+                size="sm"
+                showLabel={false}
+                className="w-[20px] ml-2"
+              />
+            )}
           </div>
         )}
       </div>

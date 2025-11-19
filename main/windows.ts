@@ -283,7 +283,7 @@ export function onChangeTopLevelPage(page: 'library' | 'record'): void {
     libraryWindow.setMinimumSize(800, 600)
     libraryWindow.setMaximumSize(800, 600)
     libraryWindow.setSize(800, 600)
-    libraryWindow.center()
+    // libraryWindow.center()
   } else {
     // Restore previous bounds
     const previousBounds = store.get('previousWindowBounds') as any

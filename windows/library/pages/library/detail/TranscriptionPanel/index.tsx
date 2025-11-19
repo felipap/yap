@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { IoSync } from 'react-icons/io5'
 import { CopyIcon, RefreshIcon } from '../../../../../shared/icons'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../../types'
@@ -28,6 +29,7 @@ export const TranscriptionPanel = withBoundary(function ({
   } = useTranscriptionState({ vlogId })
 
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
+  const teleprompterRef = useRef<{ syncToVideo: () => void }>(null)
 
   const handleCopyTranscript = async () => {
     if (!transcription) {
@@ -45,76 +47,98 @@ export const TranscriptionPanel = withBoundary(function ({
     }
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <header className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-semibold text-contrast">Transcript</div>
-          {transcription && (
-            <button
-              onClick={handleCopyTranscript}
-              className="p-1 rounded hover:bg-hover transition-all opacity-60 hover:opacity-100"
-              title={
-                copyStatus === 'copied'
-                  ? 'Copied!'
-                  : 'Copy transcript to clipboard'
-              }
-            >
-              <CopyIcon className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {transcription && !isTranscribing && (
-            <button
-              onClick={transcribe}
-              className="btn-primary text-xs font-medium opacity-70 hover:opacity-100 transition-all flex items-center gap-1"
-              title="Regenerate transcript"
-            >
-              <RefreshIcon className="w-3 h-3" />
-              Redo
-            </button>
-          )}
-          {isTranscribing && (
-            <div className="text-xs text-secondary">
-              {progressLabel} {progress > 0 && `(${progress}%)`}
-            </div>
-          )}
-          <TranscribeButton
-            vlogId={vlogId}
-            useExternal
-            isTranscribing={isTranscribing}
-            progress={progress}
-            progressLabel={progressLabel}
-            hasTranscription={!!transcription}
-            onClick={transcribe}
-          />
-        </div>
-      </header>
+  const handleSyncToVideo = () => {
+    if (teleprompterRef.current) {
+      teleprompterRef.current.syncToVideo()
+    }
+  }
 
-      {transcription ? (
-        <div className="text-sm text-contrast border dark:bg-white/5 p-3 rounded-md">
-          <Teleprompter
-            isVideo={!log.isAudioOnly}
-            transcription={transcription}
-            playerRef={playerRef}
-          />
-        </div>
-      ) : (
-        <div className="p-3 flex items-center justify-center text-text-secondary">
+  if (transcriptionError) {
+    return (
+      <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-600 text-sm">
+        {transcriptionError}
+      </div>
+    )
+  }
+
+  if (!transcription) {
+    return (
+      <div className="border bg-two p-3 rounded-md">
+        <header className="flex justify-between items-center mb-3">
+          <div className="text-sm font-semibold text-contrast">Transcript</div>
+          <div className="flex items-center gap-2">
+            {isTranscribing && (
+              <div className="text-xs text-secondary">
+                {progressLabel} {progress > 0 && `(${progress}%)`}
+              </div>
+            )}
+            <TranscribeButton
+              vlogId={vlogId}
+              useExternal
+              isTranscribing={isTranscribing}
+              progress={progress}
+              progressLabel={progressLabel}
+              hasTranscription={!!transcription}
+              onClick={transcribe}
+            />
+          </div>
+        </header>
+        <div className="flex items-center justify-center text-text-secondary">
           <div className="text-sm">
             {isTranscribing
               ? 'Transcribing...'
               : "Click 'Transcribe' to generate a transcript"}
           </div>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {transcriptionError && (
-        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-600 text-sm">
-          {transcriptionError}
-        </div>
-      )}
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-sm text-contrast border bg-two  p-3 rounded-md flex flex-col gap-3">
+        <header className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="text-md mr-3 font-semibold text-contrast">
+              Transcript
+            </div>
+            <button
+              onClick={handleCopyTranscript}
+              className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+              title={copyStatus === 'copied' ? 'Copied!' : 'Copy transcript'}
+            >
+              <CopyIcon className="w-3 h-3" />
+              {copyStatus === 'copied' ? 'Copied' : 'Copy'}
+            </button>
+            {!isTranscribing && (
+              <button
+                onClick={transcribe}
+                className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+                title="Regenerate transcript"
+              >
+                <RefreshIcon className="w-3 h-3" />
+                Redo
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSyncToVideo}
+              className="btn-secondary text-sm font-medium flex items-center gap-1.5"
+              title="Sync transcript to current video position"
+            >
+              <IoSync />
+              Sync to {log.isAudioOnly ? 'audio' : 'video'}
+            </button>
+          </div>
+        </header>
+        <Teleprompter
+          ref={teleprompterRef}
+          isVideo={!log.isAudioOnly}
+          transcription={transcription}
+          playerRef={playerRef}
+        />
+      </div>
     </div>
   )
 })

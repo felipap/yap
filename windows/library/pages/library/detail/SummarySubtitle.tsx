@@ -20,7 +20,9 @@ export function SummarySubtitle({ vlog }: Props) {
 
   useEffect(() => {
     if (textRef.current) {
-      setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight)
+      setIsTruncated(
+        textRef.current.scrollHeight > textRef.current.clientHeight,
+      )
     }
   }, [summary])
 
@@ -96,17 +98,13 @@ export function SummarySubtitle({ vlog }: Props) {
             </>
           )}
         </button>
-        {error && (
-          <div className="text-xs text-red-600">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 group">
       <div
         ref={textRef}
         onClick={() => {
@@ -117,7 +115,9 @@ export function SummarySubtitle({ vlog }: Props) {
         className={twMerge(
           'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
           !isExpanded && 'line-clamp-5',
-          !isExpanded && isTruncated && 'cursor-pointer hover:opacity-70 transition-opacity',
+          !isExpanded &&
+            isTruncated &&
+            'cursor-pointer hover:opacity-70 transition-opacity',
         )}
       >
         {summary}
@@ -128,9 +128,12 @@ export function SummarySubtitle({ vlog }: Props) {
             onClick={() => {
               setIsExpanded(false)
             }}
-            className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity"
+            className={twMerge(
+              'text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity',
+              !isExpanded && 'group-hover:opacity-50',
+            )}
           >
-            {isExpanded ? "Show less" : "Show more"}
+            {isExpanded ? 'Show less' : 'Show more'}
           </button>
         )}
         <button
@@ -158,13 +161,8 @@ export function SummarySubtitle({ vlog }: Props) {
             </>
           )}
         </button>
-        {error && (
-          <div className="text-xs text-red-600">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
     </div>
   )
 }
-

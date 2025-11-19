@@ -44,17 +44,14 @@ export async function extractVideoMetadata(
 
     ffprobe.on('close', (code) => {
       if (code !== 0) {
-        reject(
-          new Error(`ffprobe failed with code ${code}: ${errorOutput}`),
-        )
+        reject(new Error(`ffprobe failed with code ${code}: ${errorOutput}`))
         return
       }
 
       try {
         const data = JSON.parse(output)
         const creationTime =
-          data?.format?.tags?.creation_time ||
-          data?.format?.tags?.CREATION_TIME
+          data?.format?.tags?.creation_time || data?.format?.tags?.CREATION_TIME
 
         if (creationTime) {
           const date = new Date(creationTime)
@@ -104,9 +101,7 @@ export function parseDateFromPrompt(dateString: string): Date | null {
   }
 
   // Try parsing manually
-  const match = dateString.match(
-    /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/,
-  )
+  const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/)
   if (match) {
     const [, year, month, day, hours, minutes] = match
     const date = new Date(
@@ -123,4 +118,3 @@ export function parseDateFromPrompt(dateString: string): Date | null {
 
   return null
 }
-

@@ -1,7 +1,7 @@
 import { Button } from '../../shared/ui/Button'
 import { SolidSquare } from '../../shared/icons'
 
-interface RecordButtonProps {
+interface Props {
   isRecording: boolean
   onStartRecording: () => void
   onStopRecording: () => void
@@ -11,7 +11,7 @@ export const RecordButton = ({
   isRecording,
   onStartRecording,
   onStopRecording,
-}: RecordButtonProps) => {
+}: Props) => {
   if (isRecording) {
     return (
       <Button variant="stop" onClick={onStopRecording}>
@@ -25,7 +25,7 @@ export const RecordButton = ({
 
   return (
     <Button variant="recording" onClick={onStartRecording}>
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center w-full justify-center gap-3">
         <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
         Record
       </div>

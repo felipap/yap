@@ -10,13 +10,13 @@ import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreference
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
 import { useAudioSilenceDetection } from './useAudioSilenceDetection'
+import { VideoControls } from './VideoControls'
 
 interface PlayerProps {
   vlogId: string
   src: string
   className?: string
   autoPlay?: boolean
-  controls?: boolean
   onLoadedData?: () => void
   onTimeUpdate?: (currentTime: number) => void
   onSeeked?: (currentTime: number) => void
@@ -38,7 +38,6 @@ export const Player = withBoundary(
         src,
         className = 'w-full max-w-4xl h-auto rounded-lg shadow-lg',
         autoPlay = true,
-        controls = true,
         onLoadedData,
         onTimeUpdate,
         onSeeked,
@@ -274,19 +273,31 @@ export const Player = withBoundary(
         ? 'w-full max-w-6xl h-auto rounded-lg shadow-lg'
         : className
 
+      const handleVideoClick = () => {
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play()
+          } else {
+            videoRef.current.pause()
+          }
+        }
+      }
+
       return (
-        <div className="relative">
+        <div className="relative group">
           <video
             ref={videoRef}
-            controls={controls}
+            controls={false}
             autoPlay={autoPlay}
             muted={isMuted}
-            className={videoClassName}
+            className={`${videoClassName} cursor-pointer`}
             src={src}
+            onClick={handleVideoClick}
           >
             Your browser does not support the video tag.
           </video>
           <PlaybackActionsOverlay />
+          <VideoControls videoRef={videoRef} />
         </div>
       )
     },

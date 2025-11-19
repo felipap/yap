@@ -1,5 +1,4 @@
-import { useRef } from 'react'
-import { IoSync } from 'react-icons/io5'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
 import { TranscriptionResult } from '../../../../types'
 import { PlayerRef } from '../Player'
 
@@ -9,93 +8,91 @@ interface TeleprompterProps {
   playerRef: React.RefObject<PlayerRef>
 }
 
-export function Teleprompter({
-  isVideo,
-  transcription,
-  playerRef,
-}: TeleprompterProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const handleSegmentClick = (startTime: number) => {
-    if (playerRef.current) {
-      playerRef.current.seekTo(startTime)
-    }
-  }
-
-  const syncToVideo = () => {
-    if (
-      !playerRef.current ||
-      !containerRef.current ||
-      !transcription.segments
-    ) {
-      return
-    }
-
-    const currentTime = playerRef.current.currentTime
-
-    const currentSegment = transcription.segments.find(
-      (segment: TranscriptionResult['segments'][number]) =>
-        currentTime >= segment.start && currentTime <= segment.end,
-    )
-
-    if (!currentSegment) {
-      return
-    }
-
-    const segmentIndex = transcription.segments.findIndex(
-      (segment: TranscriptionResult['segments'][number]) =>
-        segment === currentSegment,
-    )
-
-    const segmentElement = containerRef.current.children[segmentIndex] as
-      | HTMLElement
-      | undefined
-    if (!segmentElement) {
-      return
-    }
-
-    segmentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    segmentElement.style.backgroundColor = 'var(--bg-hover)'
-    setTimeout(() => {
-      segmentElement.style.backgroundColor = ''
-    }, 2000)
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={syncToVideo}
-        className="btn-secondary text-sm font-medium flex items-center gap-1.5"
-          title="Sync transcript to current video position"
-        >
-          <IoSync />
-          Sync to {isVideo ? 'video' : 'audio'}
-        </button>
-      </div>
-
-      <div className="h-[400px] overflow-y-auto border-t" ref={containerRef}>
-        {transcription.segments?.map(
-          (segment: TranscriptionResult['segments'][number], index: number) => (
-            <div
-              key={index}
-              className="p-2 rounded cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              onClick={() => handleSegmentClick(segment.start)}
-            >
-              <div className="text-xs text-secondary mb-1">
-                {formatTime(segment.start)} - {formatTime(segment.end)}
-              </div>
-              <div className="text-sm text-contrast">{segment.text}</div>
-            </div>
-          ),
-        )}
-      </div>
-    </div>
-  )
+export interface TeleprompterRef {
+  syncToVideo: () => void
 }
+
+export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
+  function Teleprompter({ isVideo, transcription, playerRef }, ref) {
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const formatTime = (seconds: number): string => {
+      const mins = Math.floor(seconds / 60)
+      const secs = Math.floor(seconds % 60)
+      return `${mins}:${secs.toString().padStart(2, '0')}`
+    }
+
+    const handleSegmentClick = (startTime: number) => {
+      if (playerRef.current) {
+        playerRef.current.seekTo(startTime)
+      }
+    }
+
+    const syncToVideo = () => {
+      if (
+        !playerRef.current ||
+        !containerRef.current ||
+        !transcription.segments
+      ) {
+        return
+      }
+
+      const currentTime = playerRef.current.currentTime
+
+      const currentSegment = transcription.segments.find(
+        (segment: TranscriptionResult['segments'][number]) =>
+          currentTime >= segment.start && currentTime <= segment.end,
+      )
+
+      if (!currentSegment) {
+        return
+      }
+
+      const segmentIndex = transcription.segments.findIndex(
+        (segment: TranscriptionResult['segments'][number]) =>
+          segment === currentSegment,
+      )
+
+      const segmentElement = containerRef.current.children[segmentIndex] as
+        | HTMLElement
+        | undefined
+      if (!segmentElement) {
+        return
+      }
+
+      segmentElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      segmentElement.style.backgroundColor = 'var(--bg-hover)'
+      setTimeout(() => {
+        segmentElement.style.backgroundColor = ''
+      }, 2000)
+    }
+
+    useImperativeHandle(ref, () => ({
+      syncToVideo,
+    }))
+
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="h-[400px] overflow-y-auto border-t" ref={containerRef}>
+          {transcription.segments?.map(
+            (
+              segment: TranscriptionResult['segments'][number],
+              index: number,
+            ) => (
+              <div
+                key={index}
+                className="p-2 rounded cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                onClick={() => handleSegmentClick(segment.start)}
+              >
+                <div className="text-xs text-secondary mb-1">
+                  {formatTime(segment.start)} - {formatTime(segment.end)}
+                </div>
+                <div className="text-sm text-contrast">{segment.text}</div>
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    )
+  },
+)

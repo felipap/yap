@@ -1,30 +1,30 @@
+import { Folder, FolderInput, Loader2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Folder, FolderInput, Trash2, Loader2 } from 'lucide-react'
+import { EnrichedLog } from '../../../../../../shared-types'
 import {
+  moveToDefaultFolder,
   openFileLocation,
   untrackVlog,
-  moveToDefaultFolder,
 } from '../../../../../shared/ipc'
-import { useVlog } from '../../../../../shared/useVlogData'
 import { Button } from '../../../../../shared/ui/Button'
+import { JsonViewer } from '../JsonViewer'
 import { ConvertButton } from './ConvertButton'
 
-interface ToolbarProps {
-  vlogId: string
+interface Props {
+  log: EnrichedLog
   onBack: () => void
 }
 
-export function Toolbar({ vlogId, onBack }: ToolbarProps) {
+export function Toolbar({ log, onBack }: Props) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isMoving, setIsMoving] = useState(false)
-  const { vlog } = useVlog(vlogId)
 
-  const isWebm = vlog?.name?.toLowerCase().endsWith('.webm') || false
-  const inDefaultFolder = vlog?.isInDefaultFolder ?? true
+  const isWebm = log?.name?.toLowerCase().endsWith('.webm') || false
+  const inDefaultFolder = log?.isInDefaultFolder ?? true
 
   const handleOpenLocation = async () => {
     try {
-      await openFileLocation(vlogId)
+      await openFileLocation(log.id)
     } catch (error) {
       console.error('Failed to open file location:', error)
       alert('Failed to open file location')
@@ -42,7 +42,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
 
     setIsDeleting(true)
     try {
-      await untrackVlog(vlogId)
+      await untrackVlog(log.id)
       onBack()
     } catch (error) {
       console.error('Failed to remove vlog from library:', error)
@@ -54,7 +54,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const handleMoveToDefaultFolder = async () => {
     setIsMoving(true)
     try {
-      const result = await moveToDefaultFolder(vlogId)
+      const result = await moveToDefaultFolder(log.id)
       if (!result.success) {
         alert(result.message)
       }
@@ -68,12 +68,12 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const isDisabled = isDeleting || isMoving
 
   return (
-    <div className="no-drag-region flex gap-2 w-full overflow-x-scroll">
+    <div className="no-drag-region flex gap-2 w-full overflow-x-scroll justify-end">
       <Button onClick={handleOpenLocation} disabled={isDisabled}>
         <Folder size={16} strokeWidth={2} />
         <span>Show in Finder</span>
       </Button>
-      {isWebm && <ConvertButton vlogId={vlogId} disabled={isDisabled} />}
+      {isWebm && <ConvertButton vlogId={log.id} disabled={isDisabled} />}
       {!inDefaultFolder && (
         <Button onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
           {isMoving ? (
@@ -89,11 +89,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
           )}
         </Button>
       )}
-      <Button
-        variant="danger"
-        onClick={handleDelete}
-        disabled={isDisabled}
-      >
+      <Button variant="danger" onClick={handleDelete} disabled={isDisabled}>
         {isDeleting ? (
           <>
             <Loader2 size={16} strokeWidth={2} className="animate-spin" />
@@ -106,6 +102,8 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
           </>
         )}
       </Button>
+      <JsonViewer log={log} />
+
     </div>
   )
 }

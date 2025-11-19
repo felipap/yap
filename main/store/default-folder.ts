@@ -5,8 +5,3 @@ export function getActiveRecordingsDir(): string {
   const customFolder = store.get('recordingsFolder')
   return customFolder || getDefaultRecordingsDir()
 }
-
-
-
-
-

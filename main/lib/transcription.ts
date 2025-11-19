@@ -375,7 +375,8 @@ export async function transcribeAudio(
         clearInterval(progressInterval)
         console.error(`Failed to transcribe chunk ${i}:`, chunkError)
         throw new Error(
-          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'
+          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${
+            chunkError instanceof Error ? chunkError.message : 'Unknown error'
           }`,
         )
       }
@@ -580,7 +581,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
       if (aMax > 0) {
         return aMax
       }
-    } catch { }
+    } catch {}
     try {
       // Fallback to video stream packets
       const video = await runProbe([
@@ -626,7 +627,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
     if (Number.isFinite(duration) && duration > 0) {
       return duration
     }
-  } catch { }
+  } catch {}
 
   const tsDuration = await computeFromPackets()
   return Number.isFinite(tsDuration) ? tsDuration : 0

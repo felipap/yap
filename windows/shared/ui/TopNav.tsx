@@ -45,12 +45,12 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
-            className="text-[14px] border hover:text-contrast"
+            className="text-[14px] border dark:border-white/10 hover:text-contrast"
           >
             <LibraryIcon className="w-3 h-3 mr-1" />
             Library
           </TabButton>
-          <TabButton
+          {currentTab !== 'record' && <TabButton
             active={currentTab === 'record'}
             onClick={() => {
               router.navigate({ name: 'record' })
@@ -61,8 +61,9 @@ export function TopNav({ currentTab }: TopNavProps) {
             )}
           >
             Record
-            <RecordIcon className="w-4 h-4 ml-1" />
-          </TabButton>
+                <RecordIcon className="w-4 h-4 ml-1" />
+            </TabButton>
+          }
         </div>
       </div>
     </div>
