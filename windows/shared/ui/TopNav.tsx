@@ -85,8 +85,8 @@ function TabButton({
   return (
     <button
       className={twMerge(
-        'no-drag-region px-3 h-7 text-[13px] tracking-normal font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
-        active ? 'text-contrast bg-two' : 'text-secondary',
+        'no-drag-region px-3 py-0.5 leading-1 self-stretch text-[13px] tracking-normal font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
+        active ? 'text-contrast bg-two border' : 'text-secondary',
         className,
       )}
       onClick={onClick}
