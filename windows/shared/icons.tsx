@@ -3,7 +3,7 @@ import {
   MdSearch,
   MdVideocam,
   MdMic,
-  MdLibraryBooks,
+  MdVideoLibrary,
   MdAccessTime,
   MdRefresh,
   MdContentCopy,
@@ -46,7 +46,7 @@ export function MicIcon({ size = 16, className }: IconProps) {
 }
 
 export function LibraryIcon({ size = 16, className }: IconProps) {
-  return <MdLibraryBooks size={size} className={className} />
+  return <MdVideoLibrary size={size} className={className} />
 }
 
 export function ClockIcon({ size = 16, className }: IconProps) {

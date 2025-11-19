@@ -69,13 +69,13 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
 
   return (
     <div className="no-drag-region flex gap-2 w-full overflow-x-scroll">
-      <Button variant="header" onClick={handleOpenLocation} disabled={isDisabled}>
+      <Button onClick={handleOpenLocation} disabled={isDisabled}>
         <Folder size={16} strokeWidth={2} />
         <span>Show in Finder</span>
       </Button>
       {isWebm && <ConvertButton vlogId={vlogId} disabled={isDisabled} />}
       {!inDefaultFolder && (
-        <Button variant="header" onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
+        <Button onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
           {isMoving ? (
             <>
               <Loader2 size={16} strokeWidth={2} className="animate-spin" />
@@ -90,7 +90,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
         </Button>
       )}
       <Button
-        variant="header-danger"
+        variant="danger"
         onClick={handleDelete}
         disabled={isDisabled}
       >

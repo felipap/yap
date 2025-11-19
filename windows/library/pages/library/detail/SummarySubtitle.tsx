@@ -123,7 +123,7 @@ export function SummarySubtitle({ vlog }: Props) {
         {summary}
       </div>
       <div className="flex items-center gap-2">
-        {isTruncated && (
+        {isTruncated && !isExpanded && (
           <button
             onClick={() => {
               setIsExpanded(false)

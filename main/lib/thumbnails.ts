@@ -13,6 +13,10 @@ const execAsync = promisify(exec)
 // Cache directory for thumbnails
 const CACHE_DIR = join(getCacheDir(), 'thumbnails')
 
+// Track number of ongoing thumbnail generations
+let activeGenerations = 0
+const MAX_CONCURRENT_GENERATIONS = 10
+
 // Cache directory initialization is handled by the centralized config
 
 // Helper function to generate thumbnail for a video file
@@ -38,100 +42,118 @@ export async function generateThumbnail(
       // Thumbnail doesn't exist, generate it
     }
 
-    // Check if source video file is actually readable
-    const isReadable = await isFileActuallyReadable(videoPath)
-    if (!isReadable) {
+    // Check if we're already at the concurrent generation limit
+    if (activeGenerations >= MAX_CONCURRENT_GENERATIONS) {
       debug(
-        'Cannot read video file for thumbnail (may be cloud storage placeholder):',
-        videoPath,
+        `Skipping thumbnail generation - limit of ${MAX_CONCURRENT_GENERATIONS} concurrent generations reached`,
       )
       return null
     }
 
-    // Get ffmpeg path
-    const ffmpegPath = await findFFmpegPath()
-    if (!ffmpegPath) {
-      console.log('ffmpeg not available')
-      return null
-    }
+    // Increment counter at the start of generation
+    activeGenerations++
+    debug(`Starting thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`)
 
-    const ffmpegEnv = getFFmpegEnv()
-
-    // Try to use ffmpeg if available
     try {
-      await execAsync(
-        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
-        { env: ffmpegEnv },
-      )
-      return thumbnailPath
-    } catch (ffmpegError) {
-      if (
-        ffmpegError instanceof Error &&
-        'stderr' in ffmpegError &&
-        (ffmpegError.stderr as string).includes('command not found')
-      ) {
-        console.log('ffmpeg not available, trying alternative method')
-      } else {
-        console.log('FFmpeg failed for video:', videoPath)
-        console.log('Error details:', ffmpegError)
-
-        // Try with different ffmpeg options for corrupted files
-        try {
-          console.log('Trying ffmpeg with error recovery options...')
-          await execAsync(
-            `"${ffmpegPath}" -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
-            { env: ffmpegEnv },
-          )
-          return thumbnailPath
-        } catch (recoveryError) {
-          console.log(
-            'FFmpeg recovery also failed, trying alternative approach...',
-          )
-        }
+      // Check if source video file is actually readable
+      const isReadable = await isFileActuallyReadable(videoPath)
+      if (!isReadable) {
+        debug(
+          'Cannot read video file for thumbnail (may be cloud storage placeholder):',
+          videoPath,
+        )
+        return null
       }
-    }
 
-    // Fallback: try different approaches for corrupted files
-    try {
-      // Try extracting from the very beginning (frame 0) which is more likely to work
-      console.log('Trying to extract frame from beginning of video...')
-      await execAsync(
-        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
-        { env: ffmpegEnv },
-      )
-      return thumbnailPath
-    } catch (beginningError) {
-      console.log(
-        'Beginning frame extraction failed, trying with different codec options...',
-      )
+      // Get ffmpeg path
+      const ffmpegPath = await findFFmpegPath()
+      if (!ffmpegPath) {
+        console.log('ffmpeg not available')
+        return null
+      }
 
-      // Try with different codec options
+      const ffmpegEnv = getFFmpegEnv()
+
+      // Try to use ffmpeg if available
       try {
         await execAsync(
-          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
+          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
           { env: ffmpegEnv },
         )
         return thumbnailPath
-      } catch (codecError) {
+      } catch (ffmpegError) {
+        if (
+          ffmpegError instanceof Error &&
+          'stderr' in ffmpegError &&
+          (ffmpegError.stderr as string).includes('command not found')
+        ) {
+          console.log('ffmpeg not available, trying alternative method')
+        } else {
+          console.log('FFmpeg failed for video:', videoPath)
+          console.log('Error details:', ffmpegError)
+
+          // Try with different ffmpeg options for corrupted files
+          try {
+            console.log('Trying ffmpeg with error recovery options...')
+            await execAsync(
+              `"${ffmpegPath}" -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
+              { env: ffmpegEnv },
+            )
+            return thumbnailPath
+          } catch (recoveryError) {
+            console.log(
+              'FFmpeg recovery also failed, trying alternative approach...',
+            )
+          }
+        }
+      }
+
+      // Fallback: try different approaches for corrupted files
+      try {
+        // Try extracting from the very beginning (frame 0) which is more likely to work
+        console.log('Trying to extract frame from beginning of video...')
+        await execAsync(
+          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
+          { env: ffmpegEnv },
+        )
+        return thumbnailPath
+      } catch (beginningError) {
         console.log(
-          'Codec-specific extraction failed, trying final fallback...',
+          'Beginning frame extraction failed, trying with different codec options...',
         )
 
-        // Final fallback: try without seeking (just take first frame)
+        // Try with different codec options
         try {
           await execAsync(
-            `"${ffmpegPath}" -i "${videoPath}" -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
+            `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
             { env: ffmpegEnv },
           )
           return thumbnailPath
-        } catch (finalError) {
-          console.log('All thumbnail generation methods failed for:', videoPath)
-          console.log('Final error:', finalError)
+        } catch (codecError) {
+          console.log(
+            'Codec-specific extraction failed, trying final fallback...',
+          )
+
+          // Final fallback: try without seeking (just take first frame)
+          try {
+            await execAsync(
+              `"${ffmpegPath}" -i "${videoPath}" -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
+              { env: ffmpegEnv },
+            )
+            return thumbnailPath
+          } catch (finalError) {
+            console.log('All thumbnail generation methods failed for:', videoPath)
+            console.log('Final error:', finalError)
+          }
         }
       }
-    }
 
-    return null
+      return null
+    } finally {
+      // Always decrement counter when generation completes
+      activeGenerations--
+      debug(`Finished thumbnail generation (${activeGenerations}/${MAX_CONCURRENT_GENERATIONS})`)
+    }
   } catch (error) {
     console.error('Error generating thumbnail:', error)
     return null

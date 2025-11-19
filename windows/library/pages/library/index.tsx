@@ -41,8 +41,8 @@ export default function Page() {
                   <div className=" flex justify-center">
                     <MdMovie size={40} className="text-secondary/80" />
                   </div>
-                  <h3 className="text-[15px] text-secondary/80 mb-2">
-                    Select a log or drag a file to import
+                  <h3 className="text-[15px] text-secondary/60 mb-2">
+                    Select an entry or drag a file to import
                   </h3>
                 </div>
               </div>
