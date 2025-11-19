@@ -232,7 +232,10 @@ export class Recorder {
   }
 
   private async createAudioStream(): Promise<MediaStream> {
-    console.log('Starting audio-only recording with microphone:', this.microphoneId)
+    console.log(
+      'Starting audio-only recording with microphone:',
+      this.microphoneId,
+    )
 
     const audioConstraints: MediaTrackConstraints = {
       echoCancellation: true,

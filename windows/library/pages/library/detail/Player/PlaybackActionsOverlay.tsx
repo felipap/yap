@@ -8,7 +8,8 @@ interface PlaybackActionsOverlayProps {
 export function PlaybackActionsOverlay({
   className = '',
 }: PlaybackActionsOverlayProps) {
-  const { isMuted, playbackSpeed, isLoading } = usePlaybackPreferences()
+  const { isMuted, playbackSpeed, skipSilence, isLoading } =
+    usePlaybackPreferences()
   const [isVisible, setIsVisible] = useState(false)
   const [displayText, setDisplayText] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
@@ -70,6 +71,33 @@ export function PlaybackActionsOverlay({
       }
     }
   }, [isMuted, isInitialized, isLoading])
+
+  // Handle skip silence changes
+  useEffect(() => {
+    // Don't show overlay while loading or on first initialization
+    if (isLoading || !isInitialized) {
+      return
+    }
+
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+
+    setDisplayText(skipSilence ? 'Skip Silence: ON' : 'Skip Silence: OFF')
+    setIsVisible(true)
+
+    // Hide overlay after 2 seconds
+    timerRef.current = setTimeout(() => {
+      setIsVisible(false)
+    }, 2000)
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [skipSilence, isInitialized, isLoading])
 
   return (
     <div

@@ -224,6 +224,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('moveToDefaultFolder', vlogId)
   },
 
+  // Window management
+  onChangeTopLevelPage: (page: 'library' | 'record'): Promise<void> => {
+    return ipcRenderer.invoke('onChangeTopLevelPage', page)
+  },
+
   //
   //
   //

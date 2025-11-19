@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Folder, FolderInput, Trash2, Loader2 } from 'lucide-react'
 import {
   openFileLocation,
   untrackVlog,
@@ -33,7 +34,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const handleDelete = async () => {
     if (
       !confirm(
-        `Are you sure you want to remove "${vlog?.name ?? 'this vlog'}" from your library? The file will remain on your computer.`,
+        `Remove item from your library? The file will remain on your computer.`,
       )
     ) {
       return
@@ -67,18 +68,43 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
   const isDisabled = isDeleting || isMoving
 
   return (
-    <div className="no-drag-region flex gap-1.5 w-full overflow-x-scroll">
+    <div className="no-drag-region flex gap-2 w-full overflow-x-scroll">
       <HeaderButton onClick={handleOpenLocation} disabled={isDisabled}>
-        📁 Show in Finder
+        <Folder size={16} strokeWidth={2} />
+        <span>Show in Finder</span>
       </HeaderButton>
       {isWebm && <ConvertButton vlogId={vlogId} disabled={isDisabled} />}
       {!inDefaultFolder && (
         <HeaderButton onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
-          {isMoving ? '⏳ Moving...' : '📂 Move to default Folder'}
+          {isMoving ? (
+            <>
+              <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+              <span>Moving...</span>
+            </>
+          ) : (
+            <>
+              <FolderInput size={16} strokeWidth={2} />
+              <span>Move to default Folder</span>
+            </>
+          )}
         </HeaderButton>
       )}
-      <HeaderButton onClick={handleDelete} disabled={isDisabled}>
-        {isDeleting ? '⏳ Removing...' : '🗑️ Remove'}
+      <HeaderButton
+        onClick={handleDelete}
+        disabled={isDisabled}
+        variant="danger"
+      >
+        {isDeleting ? (
+          <>
+            <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+            <span>Removing...</span>
+          </>
+        ) : (
+          <>
+            <Trash2 size={16} strokeWidth={2} />
+            <span>Remove</span>
+          </>
+        )}
       </HeaderButton>
     </div>
   )

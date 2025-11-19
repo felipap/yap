@@ -23,4 +23,3 @@ export function JsonViewer({ log }: Props) {
     </div>
   )
 }
-

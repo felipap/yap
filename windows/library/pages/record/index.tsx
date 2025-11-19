@@ -345,7 +345,7 @@ export default function Page() {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col gap-4 w-full max-w-2xl shrink-0">
+        <div className="flex flex-col gap-4 w-full shrink-0 z-10">
           {/* Recording Mode Selection */}
           <RecordingModeSelector
             recordingMode={recordingMode}

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process'
 import { createHash } from 'crypto'
-import { createReadStream } from 'fs'
-import { access, mkdir, stat, unlink } from 'fs/promises'
+import { access, mkdir, readFile, stat, unlink } from 'fs/promises'
+import { File } from 'node:buffer'
 import { OpenAI } from 'openai'
 import { join } from 'path'
 import type {
@@ -334,8 +334,13 @@ export async function transcribeAudio(
       }, 500)
 
       try {
+        // Read file and create File object for OpenAI API
+        const fileBuffer = await readFile(chunkPath)
+        const fileName = chunkPath.split('/').pop() || 'audio.mp3'
+        const file = new File([fileBuffer], fileName, { type: 'audio/mpeg' })
+
         const transcription = await openai.audio.transcriptions.create({
-          file: createReadStream(chunkPath),
+          file: file,
           model: 'whisper-1',
           response_format: 'verbose_json',
           timestamp_granularities: ['segment'],
@@ -370,8 +375,7 @@ export async function transcribeAudio(
         clearInterval(progressInterval)
         console.error(`Failed to transcribe chunk ${i}:`, chunkError)
         throw new Error(
-          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${
-            chunkError instanceof Error ? chunkError.message : 'Unknown error'
+          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'
           }`,
         )
       }
@@ -576,7 +580,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
       if (aMax > 0) {
         return aMax
       }
-    } catch {}
+    } catch { }
     try {
       // Fallback to video stream packets
       const video = await runProbe([
@@ -622,7 +626,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
     if (Number.isFinite(duration) && duration > 0) {
       return duration
     }
-  } catch {}
+  } catch { }
 
   const tsDuration = await computeFromPackets()
   return Number.isFinite(tsDuration) ? tsDuration : 0

@@ -1,5 +1,8 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { RecordingMode } from '../../../../shared-types'
+import { twMerge } from 'tailwind-merge'
+
+const FIT_MODE: 'contain' | 'cover' = 'cover'
 
 export interface PreviewScreenRef {
   srcObject: MediaProvider | null
@@ -38,14 +41,18 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
     }
 
     return (
-      <div className="relative w-full flex-1 min-h-0 max-h-[1000px] bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
+      <div className="relative w-full flex-1 min-h-0 h-full bg-gray-900 rounded-2xl overflow-hidden border-4 border-one shadow-2xl">
         {hasVideo ? (
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-contain"
+            className={twMerge(
+              `w-full h-full`,
+              FIT_MODE === 'contain' ? 'object-contain' : 'object-cover',
+              'object-center',
+            )}
             style={{ transform: 'scaleX(-1)' }}
           />
         ) : (

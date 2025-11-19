@@ -23,7 +23,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
   const handleUntrack = async () => {
     if (
       !confirm(
-        `Are you sure you want to remove "${log.title || log.name || 'this recording'}" from your library?`,
+        `Are you sure you want to remove this log from your library?`,
       )
     ) {
       return
@@ -85,9 +85,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
             <div className="text-xs font-medium text-secondary mb-2">
               Recording Title
             </div>
-            <div className="text-sm text-primary">
-              {log.title}
-            </div>
+            <div className="text-sm text-primary">{log.title}</div>
           </div>
         )}
 
@@ -104,7 +102,8 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
 
           <div className="text-center">
             <p className="text-xs text-secondary">
-              The recording metadata is still saved. If you locate the file, move it back to the expected location.
+              The recording metadata is still saved. If you locate the file,
+              move it back to the expected location.
             </p>
           </div>
         </div>
@@ -112,4 +111,3 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
     </div>
   )
 }
-

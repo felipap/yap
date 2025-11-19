@@ -39,11 +39,10 @@ export const DetailPage = withBoundary(function ({
   return (
     <div
       className={twMerge(
-        ' gap-4 overflow-x-hidden overflow-y-scroll w-full py-4',
-        'bg-one',
+        ' gap-4 overflow-x-hidden overflow-y-scroll w-full pb-4',
       )}
     >
-      <main className="flex flex-col items-center gap-4 justify-start px-4 bg-one min-h-screen pb-5">
+      <main className="flex flex-col items-center gap-4 justify-start px-1 bg-one min-h-screen pb-5">
         <div className="w-full max-w-5xl">
           <Player
             ref={playerRef}
@@ -56,7 +55,7 @@ export const DetailPage = withBoundary(function ({
           />
         </div>
 
-        <header className="flex flex-col gap-3 w-full">
+        <header className="px-2 flex flex-col gap-3 w-full">
           <TitleInput
             vlogId={log.id}
             title={log.title || ''}
@@ -67,15 +66,15 @@ export const DetailPage = withBoundary(function ({
           <Toolbar vlogId={log.id} onBack={onBack} />
         </header>
 
-        <div className="gap-4 w-full">
+        <div className="px-2 gap-4 w-full">
           <Summary vlog={log} />
         </div>
 
-        <div className="flex flex-col gap-4 w-full">
+        <div className="px-2 flex flex-col gap-4 w-full">
           <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
         </div>
 
-        <div className="w-full">
+        <div className="px-2 w-full">
           <JsonViewer log={log} />
         </div>
       </main>

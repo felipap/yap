@@ -102,6 +102,30 @@ export async function setGlobalPlaybackSpeed(speed: number): Promise<void> {
   return setStoredValue('globalPlaybackSpeed', speed)
 }
 
+export async function getSkipSilence(): Promise<boolean> {
+  return getStoredValue<boolean>('skipSilence') || false
+}
+
+export async function setSkipSilence(skip: boolean): Promise<void> {
+  return setStoredValue('skipSilence', skip)
+}
+
+export async function getSilenceThreshold(): Promise<number> {
+  return getStoredValue<number>('silenceThreshold') || 0.01
+}
+
+export async function setSilenceThreshold(threshold: number): Promise<void> {
+  return setStoredValue('silenceThreshold', threshold)
+}
+
+export async function getMinSilenceDuration(): Promise<number> {
+  return getStoredValue<number>('minSilenceDuration') || 1.0
+}
+
+export async function setMinSilenceDuration(duration: number): Promise<void> {
+  return setStoredValue('minSilenceDuration', duration)
+}
+
 // Transcription functions
 export async function transcribeVideo(
   vlogId: string,
@@ -206,9 +230,7 @@ export async function getRecordingsFolder(): Promise<string> {
   return window.electronAPI.getRecordingsFolder()
 }
 
-export async function setRecordingsFolder(
-  folderPath: string,
-): Promise<void> {
+export async function setRecordingsFolder(folderPath: string): Promise<void> {
   return window.electronAPI.setPartialState({ recordingsFolder: folderPath })
 }
 
@@ -239,4 +261,10 @@ export async function moveToDefaultFolder(vlogId: string): Promise<{
   newPath?: string
 }> {
   return window.electronAPI.moveToDefaultFolder(vlogId)
+}
+
+export async function onChangeTopLevelPage(
+  page: 'library' | 'record',
+): Promise<void> {
+  return window.electronAPI.onChangeTopLevelPage(page)
 }

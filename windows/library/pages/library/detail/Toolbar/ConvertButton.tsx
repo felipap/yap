@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Video, Loader2 } from 'lucide-react'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
 import { useVlog } from '../../../../../shared/useVlogData'
 import { HeaderButton } from './HeaderButton'
@@ -90,11 +91,26 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
   const getButtonText = () => {
     if (isConverting) {
       if (progress > 0) {
-        return `⏳ Converting... ${progress}%`
+        return (
+          <>
+            <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+            <span>Converting... {progress}%</span>
+          </>
+        )
       }
-      return '⏳ Converting...'
+      return (
+        <>
+          <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+          <span>Converting...</span>
+        </>
+      )
     }
-    return '🎬 Convert to MP4'
+    return (
+      <>
+        <Video size={16} strokeWidth={2} />
+        <span>Convert to MP4</span>
+      </>
+    )
   }
 
   return (

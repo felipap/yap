@@ -17,9 +17,9 @@ export function Item({ data, selected, onClick }: Props) {
       onClick={onClick}
       className={twMerge(
         `text-left pl-2 py-1.5 transition-colors`,
-        'hover:bg-one hover:dark:bg-one',
+        'hover:bg-one hover:dark:bg-one rounded-md',
         selected
-          ? '!bg-blue-500 dark:!bg-blue-500/20 hover:dark:!bg-blue-500/25 text-white'
+          ? '!bg-blue-500 dark:!bg-[#2A2A2A] hover:dark:!bg-[#1F1F1F] text-white'
           : 'text-contrast',
         isMissing && 'opacity-60',
       )}

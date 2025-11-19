@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CopyIcon, RefreshIcon } from '../../../../../shared/icons'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../../types'
 import { PlayerRef } from '../Player'
@@ -45,21 +46,39 @@ export const TranscriptionPanel = withBoundary(function ({
   }
 
   return (
-    <div className="bg-two rounded-lg p-3 border w-full">
-      <div className="flex justify-between items-center">
-        <h3 className="text-[15px] font-medium text-contrast m-0">
-          Transcript
-        </h3>
-
+    <div className="flex flex-col gap-2">
+      <header className="flex justify-between items-center">
         <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold text-contrast">Transcript</div>
           {transcription && (
             <button
               onClick={handleCopyTranscript}
-              className="btn-secondary text-sm"
-              title="Copy transcript to clipboard"
+              className="p-1 rounded hover:bg-hover transition-all opacity-60 hover:opacity-100"
+              title={
+                copyStatus === 'copied'
+                  ? 'Copied!'
+                  : 'Copy transcript to clipboard'
+              }
             >
-              {copyStatus === 'copied' ? '✓ Copied' : '📋 Copy'}
+              <CopyIcon className="w-3.5 h-3.5" />
             </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {transcription && !isTranscribing && (
+            <button
+              onClick={transcribe}
+              className="btn-primary text-xs font-medium opacity-70 hover:opacity-100 transition-all flex items-center gap-1"
+              title="Regenerate transcript"
+            >
+              <RefreshIcon className="w-3 h-3" />
+              Redo
+            </button>
+          )}
+          {isTranscribing && (
+            <div className="text-xs text-secondary">
+              {progressLabel} {progress > 0 && `(${progress}%)`}
+            </div>
           )}
           <TranscribeButton
             vlogId={vlogId}
@@ -71,24 +90,30 @@ export const TranscriptionPanel = withBoundary(function ({
             onClick={transcribe}
           />
         </div>
-      </div>
+      </header>
 
-      {transcriptionError && (
-        <div className="mb-3 text-red-400 text-sm">{transcriptionError}</div>
-      )}
-
-      {!transcription && !isTranscribing && (
-        <div className="text-sm text-secondary/80">
-          No transcript yet. Click "Transcribe" to generate one.
+      {transcription ? (
+        <div className="text-sm text-contrast border dark:bg-white/5 p-3 rounded-md">
+          <Teleprompter
+            isVideo={!log.isAudioOnly}
+            transcription={transcription}
+            playerRef={playerRef}
+          />
+        </div>
+      ) : (
+        <div className="p-3 flex items-center justify-center text-text-secondary">
+          <div className="text-sm">
+            {isTranscribing
+              ? 'Transcribing...'
+              : "Click 'Transcribe' to generate a transcript"}
+          </div>
         </div>
       )}
 
-      {transcription && (
-        <Teleprompter
-          isVideo={!log.isAudioOnly}
-          transcription={transcription}
-          playerRef={playerRef}
-        />
+      {transcriptionError && (
+        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-600 text-sm">
+          {transcriptionError}
+        </div>
       )}
     </div>
   )

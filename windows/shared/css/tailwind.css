@@ -28,7 +28,7 @@
     'Courier New', monospace;
 
   /* Layout */
-  --nav-height: 60px;
+  --nav-height: 45px;
   --column-width: 100%;
 }
 
@@ -60,9 +60,9 @@
     --text-color-link: #6fb4ff;
     --text-color-secondary: #aaa;
     --text-color-inverted: #000;
-    --color-sidebar: #222222ea;
+    --color-sidebar: #121212;
 
-    --background-color-one: #202020;
+    --background-color-one: #000;
     --background-color-two: #161616;
     --background-color-three: #2a2a2a;
 

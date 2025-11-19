@@ -31,7 +31,7 @@ import {
 } from './store'
 import { getActiveRecordingsDir } from './store/default-folder'
 import * as ephemeral from './store/ephemeral'
-import { libraryWindow, settingsWindow } from './windows'
+import { libraryWindow, settingsWindow, onChangeTopLevelPage } from './windows'
 
 export const vlogIdToPath = new Map<string, string>()
 
@@ -284,7 +284,14 @@ export function setupIpcHandlers() {
       if (!vlog || !vlog.transcription) {
         return null
       }
-      return vlog.transcription
+      // Return the TranscriptionResult, not the TranscriptionState
+      if (
+        vlog.transcription.status === 'completed' &&
+        vlog.transcription.result
+      ) {
+        return vlog.transcription.result
+      }
+      return null
     }),
   )
 
@@ -698,6 +705,11 @@ export function setupIpcHandlers() {
       }
     }),
   )
+
+  // Window resizing for Record view
+  ipcMain.handle('onChangeTopLevelPage', (_, page: 'library' | 'record') => {
+    onChangeTopLevelPage(page)
+  })
 
   // Set up state change listener
   store.onDidAnyChange((state) => {

@@ -38,14 +38,14 @@ export function TopNav({ currentTab }: TopNavProps) {
 
   return (
     <div className="drag-region">
-      <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-three border-b">
+      <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-one  h-(--nav-height)">
         <div className="flex items-center gap-3 pl-20 justify-between w-full">
           <TabButton
             active={currentTab === 'library'}
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
-            className="text-[14px]"
+            className="text-[14px] border hover:text-contrast"
           >
             <LibraryIcon className="w-3 h-3 mr-1" />
             Library

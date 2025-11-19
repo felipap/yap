@@ -40,6 +40,15 @@ const schema: Schema<State> = {
       y: { type: 'number' },
     },
   },
+  previousWindowBounds: {
+    type: 'object',
+    properties: {
+      width: { type: 'number' },
+      height: { type: 'number' },
+      x: { type: 'number' },
+      y: { type: 'number' },
+    },
+  },
   vlogs: {
     type: 'object',
     default: {},

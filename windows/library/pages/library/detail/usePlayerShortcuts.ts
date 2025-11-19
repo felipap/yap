@@ -7,7 +7,7 @@ interface Args {
 }
 
 export function usePlayerShortcuts({ playerRef }: Args) {
-  const { toggleMute, playbackSpeed, setPlaybackSpeed } =
+  const { toggleMute, playbackSpeed, setPlaybackSpeed, toggleSkipSilence } =
     usePlaybackPreferences()
 
   const togglePlayPause = useCallback(() => {
@@ -98,6 +98,13 @@ export function usePlayerShortcuts({ playerRef }: Args) {
         event.preventDefault()
         decreasePlaybackSpeed()
       }
+
+      // Handle 'k' key for toggling skip silence
+      if (event.key.toLowerCase() === 'k') {
+        console.log('k pressed => toggleSkipSilence')
+        event.preventDefault()
+        toggleSkipSilence()
+      }
     }
 
     // Add event listener to document
@@ -113,5 +120,6 @@ export function usePlayerShortcuts({ playerRef }: Args) {
     cyclePlaybackSpeed,
     increasePlaybackSpeed,
     decreasePlaybackSpeed,
+    toggleSkipSilence,
   ])
 }

@@ -45,6 +45,12 @@ export interface State {
     x?: number
     y?: number
   }
+  previousWindowBounds?: {
+    width: number
+    height: number
+    x?: number
+    y?: number
+  }
   vlogs?: Record<string, Log>
   transcriptionSpeedUp?: boolean
   userProfile?: UserProfile
@@ -182,6 +188,7 @@ export type SharedIpcMethods = {
     message: string
     newPath?: string
   }>
+  onChangeTopLevelPage: (page: 'library' | 'record') => Promise<void>
 }
 
 export type ExposedElectronAPI = SharedIpcMethods & {

@@ -6,6 +6,7 @@ import {
   MdLibraryBooks,
   MdAccessTime,
   MdRefresh,
+  MdContentCopy,
 } from 'react-icons/md'
 
 interface IconProps {
@@ -56,6 +57,10 @@ export function RefreshIcon({ size = 16, className }: IconProps) {
   return <MdRefresh size={size} className={className} />
 }
 
+export function CopyIcon({ size = 16, className }: IconProps) {
+  return <MdContentCopy size={size} className={className} />
+}
+
 export function RecordIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -70,4 +75,3 @@ export function RecordIcon({ size = 16, className }: IconProps) {
     </svg>
   )
 }
-

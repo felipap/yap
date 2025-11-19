@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { setVlogTitle } from '../../../../shared/ipc'
 
@@ -12,17 +13,33 @@ export function TitleInput({
   title,
   onLocalTitleChange,
 }: TitleInputProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [title])
+
   return (
-    <input
+    <textarea
+      ref={textareaRef}
       className={twMerge(
-        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-2 ml-[-5px] py-1 text-[20px] h-7 font-bold transition',
+        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-2 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words',
         title.length > 0
           ? ''
           : 'placeholder:text-contrast !opacity-10 focus:opacity-80',
       )}
       placeholder="Name your vlog"
       value={title}
-      onChange={(e) => onLocalTitleChange(e.target.value)}
+      rows={1}
+      onChange={(e) => {
+        onLocalTitleChange(e.target.value)
+        // Auto-resize textarea
+        e.target.style.height = 'auto'
+        e.target.style.height = e.target.scrollHeight + 'px'
+      }}
       onBlur={async (e) => {
         const value = e.target.value.trim()
         try {
@@ -32,12 +49,13 @@ export function TitleInput({
         }
       }}
       onKeyDown={async (e) => {
-        if (e.key === 'Enter') {
-          const input = e.currentTarget as HTMLInputElement
-          const value = input.value.trim()
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
+          const textarea = e.currentTarget as HTMLTextAreaElement
+          const value = textarea.value.trim()
           try {
             await setVlogTitle(vlogId, value)
-            input.blur()
+            textarea.blur()
           } catch (error) {
             console.error('Failed to save title', error)
           }

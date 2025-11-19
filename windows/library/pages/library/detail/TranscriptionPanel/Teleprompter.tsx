@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { IoSync } from 'react-icons/io5'
 import { TranscriptionResult } from '../../../../types'
 import { PlayerRef } from '../Player'
 
@@ -28,7 +29,11 @@ export function Teleprompter({
   }
 
   const syncToVideo = () => {
-    if (!playerRef.current || !containerRef.current) {
+    if (
+      !playerRef.current ||
+      !containerRef.current ||
+      !transcription.segments
+    ) {
       return
     }
 
@@ -67,22 +72,23 @@ export function Teleprompter({
       <div className="flex items-center gap-2">
         <button
           onClick={syncToVideo}
-          className="btn-secondary text-sm font-medium"
+        className="btn-secondary text-sm font-medium flex items-center gap-1.5"
           title="Sync transcript to current video position"
         >
-          ⏯Sync to {isVideo ? 'video' : 'audio'}
+          <IoSync />
+          Sync to {isVideo ? 'video' : 'audio'}
         </button>
       </div>
 
-      <div className="h-[400px] overflow-y-auto" ref={containerRef}>
-        {transcription.segments.map(
+      <div className="h-[400px] overflow-y-auto border-t" ref={containerRef}>
+        {transcription.segments?.map(
           (segment: TranscriptionResult['segments'][number], index: number) => (
             <div
               key={index}
               className="p-2 rounded cursor-pointer hover:bg-hover transition-colors"
               onClick={() => handleSegmentClick(segment.start)}
             >
-              <div className="text-xs textsecondary mb-1">
+              <div className="text-xs text-secondary mb-1">
                 {formatTime(segment.start)} - {formatTime(segment.end)}
               </div>
               <div className="text-sm text-contrast">{segment.text}</div>

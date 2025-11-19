@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ClockIcon, RefreshIcon } from '../../../../shared/icons'
+import { ClockIcon, CopyIcon, RefreshIcon } from '../../../../shared/icons'
 import { generateVideoSummary } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../types'
@@ -12,6 +12,7 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
   const [summary, setSummary] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     setSummary(vlog.summary || '')
@@ -50,6 +51,22 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
     }
   }
 
+  const handleCopy = async () => {
+    if (!summary) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(summary)
+      setCopied(true)
+      setTimeout(() => {
+        setCopied(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Failed to copy summary:', error)
+    }
+  }
+
   if (!vlog.transcription) {
     return null
   }
@@ -57,7 +74,18 @@ export const Summary = withBoundary(function ({ vlog }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <header className="flex justify-between items-center">
-        <div className="text-sm font-semibold text-contrast">Summary</div>
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold text-contrast">Summary</div>
+          {summary && (
+            <button
+              onClick={handleCopy}
+              className="p-1 rounded hover:bg-hover transition-all opacity-60 hover:opacity-100"
+              title={copied ? 'Copied!' : 'Copy summary to clipboard'}
+            >
+              <CopyIcon className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
         <button
           onClick={handleGenerateSummary}
           className="btn-primary text-xs font-medium opacity-70 hover:opacity-100 transition-all flex items-center gap-1"

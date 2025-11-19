@@ -18,8 +18,8 @@ export default function Page() {
   return (
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
-        <div className="flex h-full w-screen overflow-hidden">
-          <div className="h-full border-r bg-sidebar">
+        <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-2 px-1.5 pb-2">
+          <div className="h-full bg-sidebar rounded-md">
             <Sidebar
               selectedVlog={vlog ?? null}
               onVideoSelect={handleSelectVlog}
@@ -28,7 +28,7 @@ export default function Page() {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#202020]">
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#121212] rounded-md">
             {vlog ? (
               <DetailPage
                 key={vlog.id}

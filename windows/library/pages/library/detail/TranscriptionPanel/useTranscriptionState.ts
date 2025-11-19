@@ -129,6 +129,8 @@ export function useTranscriptionState({ vlogId }: Args): Return {
   const transcribe = async () => {
     setIsTranscribing(true)
     setTranscriptionError(null)
+    setTranscription(null)
+    setHasTranscription(false)
     setProgress(0)
     setProgressLabel('Starting...')
 

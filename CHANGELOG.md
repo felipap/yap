@@ -6,27 +6,24 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.9.6](https://github.com/felipap/vlogger/compare/v0.9.5...v0.9.6) (2025-11-13)
 
-
 ### Bug Fixes
 
-* many ([5d8a2d4](https://github.com/felipap/vlogger/commit/5d8a2d4a11cf31b75e7a0349f429d979258d2707))
-* many ([f7ce2cc](https://github.com/felipap/vlogger/commit/f7ce2cc873f6e9be3778473d91d5805a3560641b))
+- many ([5d8a2d4](https://github.com/felipap/vlogger/commit/5d8a2d4a11cf31b75e7a0349f429d979258d2707))
+- many ([f7ce2cc](https://github.com/felipap/vlogger/commit/f7ce2cc873f6e9be3778473d91d5805a3560641b))
 
 ### [0.9.5](https://github.com/felipap/vlogger/compare/v0.9.4...v0.9.5) (2025-11-13)
 
 ### [0.9.4](https://github.com/felipap/vlogger/compare/v0.9.3...v0.9.4) (2025-11-08)
 
-
 ### Bug Fixes
 
-* slow to load new videos ([64f7475](https://github.com/felipap/vlogger/commit/64f74756f142132e272e356c96d0e4f805cfd81b))
+- slow to load new videos ([64f7475](https://github.com/felipap/vlogger/commit/64f74756f142132e272e356c96d0e4f805cfd81b))
 
 ### [0.9.3](https://github.com/felipap/vlogger/compare/v0.9.2...v0.9.3) (2025-11-07)
 
-
 ### Features
 
-* audio support ([57ce8e3](https://github.com/felipap/vlogger/commit/57ce8e3ab728cfaf74c380d3b9a41a4f33f058f6))
+- audio support ([57ce8e3](https://github.com/felipap/vlogger/commit/57ce8e3ab728cfaf74c380d3b9a41a4f33f058f6))
 
 ### 0.9.1 (2025-10-24)
 
