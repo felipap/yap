@@ -6,7 +6,7 @@ import {
   moveToDefaultFolder,
 } from '../../../../../shared/ipc'
 import { useVlog } from '../../../../../shared/useVlogData'
-import { HeaderButton } from './HeaderButton'
+import { Button } from '../../../../../shared/ui/Button'
 import { ConvertButton } from './ConvertButton'
 
 interface ToolbarProps {
@@ -69,13 +69,13 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
 
   return (
     <div className="no-drag-region flex gap-2 w-full overflow-x-scroll">
-      <HeaderButton onClick={handleOpenLocation} disabled={isDisabled}>
+      <Button variant="header" onClick={handleOpenLocation} disabled={isDisabled}>
         <Folder size={16} strokeWidth={2} />
         <span>Show in Finder</span>
-      </HeaderButton>
+      </Button>
       {isWebm && <ConvertButton vlogId={vlogId} disabled={isDisabled} />}
       {!inDefaultFolder && (
-        <HeaderButton onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
+        <Button variant="header" onClick={handleMoveToDefaultFolder} disabled={isDisabled}>
           {isMoving ? (
             <>
               <Loader2 size={16} strokeWidth={2} className="animate-spin" />
@@ -87,12 +87,12 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
               <span>Move to default Folder</span>
             </>
           )}
-        </HeaderButton>
+        </Button>
       )}
-      <HeaderButton
+      <Button
+        variant="header-danger"
         onClick={handleDelete}
         disabled={isDisabled}
-        variant="danger"
       >
         {isDeleting ? (
           <>
@@ -105,7 +105,7 @@ export function Toolbar({ vlogId, onBack }: ToolbarProps) {
             <span>Remove</span>
           </>
         )}
-      </HeaderButton>
+      </Button>
     </div>
   )
 }

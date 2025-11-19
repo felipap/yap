@@ -117,6 +117,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('getVideoPosition', vlogId)
   },
 
+  onViewLogEntry: (vlogId: string): Promise<void> => {
+    return ipcRenderer.invoke('onViewLogEntry', vlogId)
+  },
+
   // Event listeners for real-time updates
   onVlogUpdated: (callback: (vlogId: string) => void) => {
     ipcRenderer.on('vlog-updated', (_, vlogId) => callback(vlogId))

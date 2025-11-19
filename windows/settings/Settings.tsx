@@ -21,6 +21,7 @@ export function Settings() {
     loadSettings()
   }, [])
 
+  // When cmd+, is pressed, hide the settings window
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === ',') {
@@ -50,7 +51,7 @@ export function Settings() {
     setIsLoading(true)
     try {
       await window.electronAPI.setGeminiApiKey(apiKey)
-      await window.electronAPI.setRecordingsFolder(recordingsFolder)
+      await window.electronAPI.setPartialState({ recordingsFolder })
     } catch (error) {
       console.error('Failed to save settings:', error)
     } finally {

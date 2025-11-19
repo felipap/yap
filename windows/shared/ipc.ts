@@ -176,6 +176,10 @@ export async function getVideoPosition(
   return window.electronAPI.getVideoPosition(vlogId)
 }
 
+export async function onViewLogEntry(vlogId: string): Promise<void> {
+  return window.electronAPI.onViewLogEntry(vlogId)
+}
+
 export async function getVlog(vlogId: string): Promise<EnrichedLog> {
   return window.electronAPI.getEnrichedLog(vlogId)
 }

@@ -16,6 +16,12 @@ import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
 import { generateVideoSummary } from './lib/videoSummary'
 import {
+  extractVideoMetadata,
+  formatDateForPrompt,
+  isIPhoneVideoFilename,
+  parseDateFromPrompt,
+} from './lib/video-metadata'
+import {
   appendRecordingChunk,
   finalizeStreamingRecording,
   startStreamingRecording,
@@ -346,6 +352,81 @@ export function setupIpcHandlers() {
   )
 
   ipcMain.handle(
+    'onViewLogEntry',
+    tryCatchIpcMain(async (_, vlogId: string) => {
+      const vlog = getLog(vlogId)
+      if (!vlog) {
+        return
+      }
+
+      // Auto-load duration if not present
+      if (vlog.duration === undefined) {
+        const filePath = vlogIdToPath.get(vlogId)
+        if (filePath) {
+          const duration = await getVideoDuration(filePath)
+          if (duration) {
+            updateVlog(vlogId, { duration })
+          }
+        }
+      }
+
+      // Auto-trigger transcription if not present or idle
+      if (!vlog.transcription || vlog.transcription.status === 'idle') {
+        const filePath = vlogIdToPath.get(vlogId)
+        if (filePath && !ephemeral.isTranscriptionActive(vlogId)) {
+          // Trigger transcription asynchronously (don't block)
+          const speedUp = store.get('transcriptionSpeedUp') || false
+
+          transcribeVideo(filePath, speedUp, (progress) => {
+            ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+            libraryWindow?.webContents.send(
+              'transcription-progress-updated',
+              vlogId,
+              Math.round(progress),
+            )
+          })
+            .then((result) => {
+              ephemeral.removeTranscription(vlogId)
+
+              updateVlog(vlogId, {
+                transcription: {
+                  status: 'completed',
+                  result,
+                },
+              })
+
+              // Generate summary asynchronously
+              generateVideoSummary(vlogId, result.text)
+                .then((summary) => {
+                  updateVlog(vlogId, { summary })
+                  libraryWindow?.webContents.send(
+                    'summary-generated',
+                    vlogId,
+                    summary,
+                  )
+                })
+                .catch((summaryError) => {
+                  console.error(
+                    'Error generating automatic summary:',
+                    summaryError,
+                  )
+                })
+            })
+            .catch((error) => {
+              ephemeral.removeTranscription(vlogId)
+
+              const errorState = {
+                status: 'error' as const,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              }
+              updateVlog(vlogId, { transcription: errorState })
+            })
+        }
+      }
+    }),
+  )
+
+  ipcMain.handle(
     'getVlog',
     tryCatchIpcMain(async (_, vlogId: string) => {
       return getLog(vlogId)
@@ -403,27 +484,80 @@ export function setupIpcHandlers() {
 
       vlogIdToPath.set(id, filePath)
 
-      const dateResult = await extractDateFromTitle(fileName)
-      if ('error' in dateResult) {
-        throw new Error(
-          `Could not extract date from filename: "${fileName}". Error: ${dateResult.error}`,
-        )
-      }
-      if (dateResult.confidence === 'low') {
-        throw new Error(
-          `Could not extract date from filename: "${fileName}". Please ensure the filename contains a date in a recognizable format.`,
-        )
-      }
+      let createdDate: Date
 
-      const createdDate = new Date(
-        dateResult.year,
-        dateResult.month - 1,
-        dateResult.day,
-        dateResult.hour,
-        dateResult.minute,
-        0,
-        0,
-      )
+      // Check if this is an iPhone video file
+      if (isIPhoneVideoFilename(fileName)) {
+        debug(`Detected iPhone video: ${fileName}`)
+
+        const metadata = await extractVideoMetadata(filePath)
+
+        if (metadata.creationDate) {
+          const formattedDate = formatDateForPrompt(metadata.creationDate)
+
+          let editedDate: string | null = null
+
+          try {
+            // Escape strings properly for JavaScript execution
+            const escapedFileName = fileName.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+            editedDate = await libraryWindow.webContents.executeJavaScript(
+              `prompt('Confirm or edit date for ${escapedFileName} (YYYY-MM-DD HH:MM):', '${formattedDate}')`,
+            )
+          } catch (executeError) {
+            debug(`Error executing prompt: ${executeError}`)
+            throw new Error(
+              `Failed to show date confirmation dialog: ${executeError instanceof Error ? executeError.message : 'Unknown error'}`,
+            )
+          }
+
+          if (!editedDate) {
+            debug(`User cancelled import for ${fileName}`)
+            vlogIdToPath.delete(id)
+            return {
+              success: false,
+              isDuplicate: false,
+              message: `Import cancelled`,
+            }
+          }
+
+          const parsedDate = parseDateFromPrompt(editedDate)
+          if (parsedDate) {
+            createdDate = parsedDate
+            debug(`Using date for ${fileName}: ${createdDate}`)
+          } else {
+            throw new Error(
+              `Invalid date format. Please use YYYY-MM-DD HH:MM format.`,
+            )
+          }
+        } else {
+          throw new Error(
+            `Could not extract creation date from iPhone video metadata for: "${fileName}"`,
+          )
+        }
+      } else {
+        // Use the existing date extraction from title for non-iPhone videos
+        const dateResult = await extractDateFromTitle(fileName)
+        if ('error' in dateResult) {
+          throw new Error(
+            `Could not extract date from filename: "${fileName}". Error: ${dateResult.error}`,
+          )
+        }
+        if (dateResult.confidence === 'low') {
+          throw new Error(
+            `Could not extract date from filename: "${fileName}". Please ensure the filename contains a date in a recognizable format.`,
+          )
+        }
+
+        createdDate = new Date(
+          dateResult.year,
+          dateResult.month - 1,
+          dateResult.day,
+          dateResult.hour,
+          dateResult.minute,
+          0,
+          0,
+        )
+      }
 
       const log: Log = {
         id,

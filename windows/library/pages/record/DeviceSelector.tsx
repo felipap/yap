@@ -23,14 +23,16 @@ export function DeviceSelector({
   recordingMode,
   isRecording,
 }: DeviceSelectorProps) {
+  if (isRecording) {
+    return null
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl flex-shrink-0">
-      {/* Device Selection - Hidden when recording */}
-      {!isRecording && (
-        <div className="flex gap-4 items-center">
-          {/* Camera Selection */}
-          {(recordingMode === 'camera' || recordingMode === 'both') &&
-            cameras.length > 0 && (
+      <div className="flex gap-4 items-center">
+        {/* Camera Selection */}
+        {(recordingMode === 'camera' || recordingMode === 'both') &&
+          cameras.length > 0 && (
               <div className="flex gap-1 items-center">
                 <div className="flex items-center justify-center w-8 h-8 opacity-40">
                   <VideocamIcon size={20} />
@@ -78,10 +80,9 @@ export function DeviceSelector({
                   className="w-[20px] ml-2"
                 />
               )}
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,0 +1,164 @@
+import { useEffect, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
+import { ClockIcon, CopyIcon, RefreshIcon } from '../../../../shared/icons'
+import { generateVideoSummary } from '../../../../shared/ipc'
+import { EnrichedLog } from '../../../types'
+
+interface Props {
+  vlog: EnrichedLog
+}
+
+export function SummarySubtitle({ vlog }: Props) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isTruncated, setIsTruncated] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const textRef = useRef<HTMLDivElement>(null)
+  
+  const summary = vlog.summary || ''
+
+  useEffect(() => {
+    if (textRef.current) {
+      setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight)
+    }
+  }, [summary])
+
+  const handleGenerateSummary = async () => {
+    if (!vlog.transcription) {
+      setError('No transcription available to generate summary')
+      return
+    }
+
+    if (
+      !vlog.transcription.text ||
+      vlog.transcription.text.trim().length === 0
+    ) {
+      setError('Transcription is empty. Please transcribe the video first.')
+      return
+    }
+
+    setIsGenerating(true)
+    setError(null)
+
+    try {
+      await generateVideoSummary(vlog.id, vlog.transcription.text)
+    } catch (error) {
+      console.error('Summary generation failed:', error)
+      setError(
+        error instanceof Error ? error.message : 'Summary generation failed',
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleCopy = async () => {
+    if (!summary) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(summary)
+      setCopied(true)
+      setTimeout(() => {
+        setCopied(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Failed to copy summary:', error)
+    }
+  }
+
+  if (!vlog.transcription) {
+    return null
+  }
+
+  if (!summary) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="text-[13px] text-contrast opacity-40">
+          No summary yet
+        </div>
+        <button
+          onClick={handleGenerateSummary}
+          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <>
+              <ClockIcon className="w-3 h-3" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <RefreshIcon className="w-3 h-3" />
+              Generate
+            </>
+          )}
+        </button>
+        {error && (
+          <div className="text-xs text-red-600">
+            {error}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div
+        ref={textRef}
+        className={twMerge(
+          'text-[13px] text-contrast opacity-60 leading-[1.35]',
+          !isExpanded && 'line-clamp-5',
+        )}
+      >
+        {summary}
+      </div>
+      <div className="flex items-center gap-2">
+        {isTruncated && (
+          <button
+            onClick={() => {
+              setIsExpanded(!isExpanded)
+            }}
+            className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity"
+          >
+            {isExpanded ? 'Show less' : 'Show more'}
+          </button>
+        )}
+        <button
+          onClick={handleCopy}
+          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+          title={copied ? 'Copied!' : 'Copy summary'}
+        >
+          <CopyIcon className="w-3 h-3" />
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+        <button
+          onClick={handleGenerateSummary}
+          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <>
+              <ClockIcon className="w-3 h-3" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <RefreshIcon className="w-3 h-3" />
+              Regenerate
+            </>
+          )}
+        </button>
+        {error && (
+          <div className="text-xs text-red-600">
+            {error}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+

@@ -85,7 +85,7 @@ export function Teleprompter({
           (segment: TranscriptionResult['segments'][number], index: number) => (
             <div
               key={index}
-              className="p-2 rounded cursor-pointer hover:bg-hover transition-colors"
+              className="p-2 rounded cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               onClick={() => handleSegmentClick(segment.start)}
             >
               <div className="text-xs text-secondary mb-1">

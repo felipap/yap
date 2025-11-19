@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { loadVideoDuration } from '../../../../shared/ipc'
-import { useVlog } from '../../../../shared/useVlogData'
+import { onViewLogEntry } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
 import { EnrichedLog } from '../../../types'
 import { JsonViewer } from './JsonViewer'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
-import { Summary } from './Summary'
+import { SummarySubtitle } from './SummarySubtitle'
 import { TitleInput } from './TitleInput'
 import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
@@ -26,7 +25,10 @@ export const DetailPage = withBoundary(function ({
   const [log, setCurrentVlog] = useState<EnrichedLog>(log__)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  useMaybeCalculateDurationOnce(log.id)
+  // Notify backend when viewing this log entry
+  useEffect(() => {
+    onViewLogEntry(log.id)
+  }, [log.id])
 
   usePlayerShortcuts({ playerRef })
 
@@ -55,20 +57,20 @@ export const DetailPage = withBoundary(function ({
           />
         </div>
 
-        <header className="px-2 flex flex-col gap-3 w-full">
-          <TitleInput
-            vlogId={log.id}
-            title={log.title || ''}
-            onLocalTitleChange={(value) =>
-              setCurrentVlog((prev) => ({ ...prev, title: value }))
-            }
-          />
+        <header className="px-1 flex flex-col gap-10 w-full">
+          <div className="flex flex-col gap-1">
+            <TitleInput
+              vlogId={log.id}
+              isVideo={!log.isAudioOnly}
+              title={log.title || ''}
+              onLocalTitleChange={(value) =>
+                setCurrentVlog((prev) => ({ ...prev, title: value }))
+              }
+            />
+            <div className="px-1"><SummarySubtitle vlog={log} /></div>
+          </div>
           <Toolbar vlogId={log.id} onBack={onBack} />
         </header>
-
-        <div className="px-2 gap-4 w-full">
-          <Summary vlog={log} />
-        </div>
 
         <div className="px-2 flex flex-col gap-4 w-full">
           <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
@@ -110,14 +112,4 @@ function VideoExtensionTag({ log }: { log: EnrichedLog }) {
       {inner}
     </span>
   )
-}
-
-// If the video duration is not known, calculate it once and save it.
-function useMaybeCalculateDurationOnce(vlogId: string) {
-  const { vlog } = useVlog(vlogId)
-  useEffect(() => {
-    if (!vlog?.duration) {
-      loadVideoDuration(vlogId)
-    }
-  }, [vlogId, !!vlog])
 }

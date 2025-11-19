@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Video Date</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #f5f5f7;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin: 0;
+    }
+
+    .message {
+      font-size: 14px;
+      color: #6e6e73;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1d1d1f;
+    }
+
+    input[type="datetime-local"] {
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      background: white;
+      color: #1d1d1f;
+      font-family: inherit;
+    }
+
+    input[type="datetime-local"]:focus {
+      outline: none;
+      border-color: #0071e3;
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    button.cancel {
+      background: #e5e5ea;
+      color: #1d1d1f;
+    }
+
+    button.cancel:hover {
+      background: #d1d1d6;
+    }
+
+    button.confirm {
+      background: #0071e3;
+      color: white;
+    }
+
+    button.confirm:hover {
+      background: #0077ed;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <h1>Confirm Video Date</h1>
+
+  <div class="message">
+    This appears to be an iPhone video. Please confirm or edit the creation date from the file metadata:
+  </div>
+
+  <div class="input-group">
+    <label for="datetime">Date and Time</label>
+    <input type="datetime-local" id="datetime" />
+  </div>
+
+  <div class="buttons">
+    <button class="cancel" onclick="handleCancel()">Cancel</button>
+    <button class="confirm" onclick="handleConfirm()">Confirm</button>
+  </div>
+
+  <script>
+    // Get the initial date from query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialDate = urlParams.get('date');
+
+    const datetimeInput = document.getElementById('datetime');
+
+    if (initialDate) {
+      datetimeInput.value = initialDate;
+    }
+
+    function handleCancel() {
+      if (window.dateEditorAPI) {
+        window.dateEditorAPI.sendResponse({ cancelled: true });
+      }
+    }
+
+    function handleConfirm() {
+      const selectedDate = datetimeInput.value;
+      if (window.dateEditorAPI && selectedDate) {
+        window.dateEditorAPI.sendResponse({
+          cancelled: false,
+          date: selectedDate
+        });
+      }
+    }
+
+    // Handle Enter key to confirm
+    datetimeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        handleCancel();
+      }
+    });
+
+    // Focus the input on load
+    window.addEventListener('DOMContentLoaded', () => {
+      datetimeInput.focus();
+    });
+  </script>
+</body>
+</html>
+

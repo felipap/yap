@@ -2,17 +2,19 @@ import { useEffect, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { setVlogTitle } from '../../../../shared/ipc'
 
-interface TitleInputProps {
+interface Props {
   vlogId: string
   title: string
+  isVideo: boolean
   onLocalTitleChange: (value: string) => void
 }
 
 export function TitleInput({
   vlogId,
+  isVideo,
   title,
   onLocalTitleChange,
-}: TitleInputProps) {
+}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function TitleInput({
           ? ''
           : 'placeholder:text-contrast !opacity-10 focus:opacity-80',
       )}
-      placeholder="Name your vlog"
+      placeholder={isVideo ? "Untitled video" : "Untitled audio"}
       value={title}
       rows={1}
       onChange={(e) => {

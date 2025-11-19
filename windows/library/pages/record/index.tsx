@@ -318,21 +318,25 @@ export default function Page() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-one">
-      <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 min-h-0">
-        {/* Preview Area */}
+      <div className="flex-1 flex flex-col items-center justify-center px-3 pb-4 gap-4 min-h-0">
+      {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">
-          {isRecording ? (
-            <div className="text-[32px] font-bold text-contrast tabular-nums">
-              {formatTime(recordingTime)}
-            </div>
-          ) : null}
 
           <div className="relative w-full h-full">
             <PreviewScreen mode={recordingMode} ref={previewRef} />
 
+            {/* Duration Timer during recording */}
+            {isRecording && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="text-[32px] font-bold text-white tabular-nums drop-shadow-lg">
+                  {formatTime(recordingTime)}
+                </div>
+              </div>
+            )}
+
             {/* Volume Meter during recording */}
             {isRecording && selectedMicrophoneId && (
-              <div className="absolute top-4 right-4 z-10">
+              <div className="absolute top-4 right-8 z-10">
                 <VolumeMeter
                   microphoneId={selectedMicrophoneId}
                   size="sm"

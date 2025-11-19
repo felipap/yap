@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { EnrichedLog } from '../../../types'
-import { HeaderButton } from './Toolbar/HeaderButton'
+import { Button } from '../../../../shared/ui/Button'
 
 interface Props {
   log: EnrichedLog
@@ -11,9 +11,9 @@ export function JsonViewer({ log }: Props) {
 
   return (
     <div className="w-full">
-      <HeaderButton onClick={() => setIsOpen(!isOpen)}>
+      <Button variant="header" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? '📋 Hide JSON' : '📋 Show JSON'}
-      </HeaderButton>
+      </Button>
 
       {isOpen && (
         <pre className="mt-2 p-3 bg-two rounded border border-secondary/20 text-xs text-secondary overflow-auto max-h-96 font-mono">

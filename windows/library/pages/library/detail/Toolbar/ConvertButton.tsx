@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Video, Loader2 } from 'lucide-react'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
 import { useVlog } from '../../../../../shared/useVlogData'
-import { HeaderButton } from './HeaderButton'
+import { Button } from '../../../../../shared/ui/Button'
 
 interface ConvertButtonProps {
   vlogId: string
@@ -114,11 +114,12 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
   }
 
   return (
-    <HeaderButton
+    <Button
+      variant="header"
       onClick={handleConvertToMp4}
       disabled={disabled || isConverting}
     >
       {getButtonText()}
-    </HeaderButton>
+    </Button>
   )
 }

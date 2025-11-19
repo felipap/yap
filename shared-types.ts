@@ -148,6 +148,7 @@ export type SharedIpcMethods = {
   getVideoPosition: (
     vlogId: string,
   ) => Promise<{ position: number; timestamp: string } | null>
+  onViewLogEntry: (vlogId: string) => Promise<void>
   onSummaryGenerated: (
     callback: (vlogId: string, summary: string) => void,
   ) => void

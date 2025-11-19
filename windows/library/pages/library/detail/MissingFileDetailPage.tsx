@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
-import { HeaderButton } from './Toolbar/HeaderButton'
+import { Button } from '../../../../shared/ui/Button'
 
 interface Props {
   log: EnrichedLog
@@ -92,12 +92,12 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
         {/* Actions */}
         <div className="flex flex-col gap-3 w-full mt-4">
           <div className="flex justify-center gap-2">
-            <HeaderButton onClick={handleOpenLocation} disabled={isDeleting}>
+            <Button variant="header" onClick={handleOpenLocation} disabled={isDeleting}>
               📁 Show in Finder
-            </HeaderButton>
-            <HeaderButton onClick={handleUntrack} disabled={isDeleting}>
+            </Button>
+            <Button variant="header" onClick={handleUntrack} disabled={isDeleting}>
               {isDeleting ? '⏳ Removing...' : '🗑️ Remove from Library'}
-            </HeaderButton>
+            </Button>
           </div>
 
           <div className="text-center">
