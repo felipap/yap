@@ -15,7 +15,7 @@ export function SummarySubtitle({ vlog }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
-  
+
   const summary = vlog.summary || ''
 
   useEffect(() => {
@@ -106,12 +106,18 @@ export function SummarySubtitle({ vlog }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <div
         ref={textRef}
+        onClick={() => {
+          if (!isExpanded && isTruncated) {
+            setIsExpanded(true)
+          }
+        }}
         className={twMerge(
-          'text-[13px] text-contrast opacity-60 leading-[1.35]',
+          'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
           !isExpanded && 'line-clamp-5',
+          !isExpanded && isTruncated && 'cursor-pointer hover:opacity-70 transition-opacity',
         )}
       >
         {summary}
@@ -120,11 +126,11 @@ export function SummarySubtitle({ vlog }: Props) {
         {isTruncated && (
           <button
             onClick={() => {
-              setIsExpanded(!isExpanded)
+              setIsExpanded(false)
             }}
             className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity"
           >
-            {isExpanded ? 'Show less' : 'Show more'}
+            {isExpanded ? "Show less" : "Show more"}
           </button>
         )}
         <button

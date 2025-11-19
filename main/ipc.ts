@@ -495,22 +495,17 @@ export function setupIpcHandlers() {
         if (metadata.creationDate) {
           const formattedDate = formatDateForPrompt(metadata.creationDate)
 
-          let editedDate: string | null = null
+          const response = await dialog.showMessageBox(libraryWindow, {
+            type: 'question',
+            buttons: ['Cancel', 'Use This Date'],
+            defaultId: 1,
+            cancelId: 0,
+            title: 'Confirm Video Date',
+            message: `iPhone video: ${fileName}`,
+            detail: `Date found: ${formattedDate}\n\nClick "Use This Date" to confirm, or "Cancel" to skip this video.\n\n(Note: Date format is YYYY-MM-DD HH:MM)`,
+          })
 
-          try {
-            // Escape strings properly for JavaScript execution
-            const escapedFileName = fileName.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-            editedDate = await libraryWindow.webContents.executeJavaScript(
-              `prompt('Confirm or edit date for ${escapedFileName} (YYYY-MM-DD HH:MM):', '${formattedDate}')`,
-            )
-          } catch (executeError) {
-            debug(`Error executing prompt: ${executeError}`)
-            throw new Error(
-              `Failed to show date confirmation dialog: ${executeError instanceof Error ? executeError.message : 'Unknown error'}`,
-            )
-          }
-
-          if (!editedDate) {
+          if (response.response === 0) {
             debug(`User cancelled import for ${fileName}`)
             vlogIdToPath.delete(id)
             return {
@@ -520,15 +515,8 @@ export function setupIpcHandlers() {
             }
           }
 
-          const parsedDate = parseDateFromPrompt(editedDate)
-          if (parsedDate) {
-            createdDate = parsedDate
-            debug(`Using date for ${fileName}: ${createdDate}`)
-          } else {
-            throw new Error(
-              `Invalid date format. Please use YYYY-MM-DD HH:MM format.`,
-            )
-          }
+          createdDate = metadata.creationDate
+          debug(`Using metadata date for ${fileName}: ${createdDate}`)
         } else {
           throw new Error(
             `Could not extract creation date from iPhone video metadata for: "${fileName}"`,

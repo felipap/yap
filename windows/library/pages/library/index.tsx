@@ -28,7 +28,7 @@ export default function Page() {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#121212] rounded-md">
+          <div className="flex-1 flex flex-col h-full overflow-hidden rounded-md">
             {vlog ? (
               <DetailPage
                 key={vlog.id}
@@ -42,7 +42,7 @@ export default function Page() {
                     <MdMovie size={40} className="text-secondary/80" />
                   </div>
                   <h3 className="text-[15px] text-secondary/80 mb-2">
-                    Select a vlog or drag a file here
+                    Select a log or drag a file to import
                   </h3>
                 </div>
               </div>

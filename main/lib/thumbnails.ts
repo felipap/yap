@@ -60,7 +60,7 @@ export async function generateThumbnail(
     // Try to use ffmpeg if available
     try {
       await execAsync(
-        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
         { env: ffmpegEnv },
       )
       return thumbnailPath
@@ -79,7 +79,7 @@ export async function generateThumbnail(
         try {
           console.log('Trying ffmpeg with error recovery options...')
           await execAsync(
-            `"${ffmpegPath}" -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            `"${ffmpegPath}" -err_detect ignore_err -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
             { env: ffmpegEnv },
           )
           return thumbnailPath
@@ -96,7 +96,7 @@ export async function generateThumbnail(
       // Try extracting from the very beginning (frame 0) which is more likely to work
       console.log('Trying to extract frame from beginning of video...')
       await execAsync(
-        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+        `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:00 -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
         { env: ffmpegEnv },
       )
       return thumbnailPath
@@ -108,7 +108,7 @@ export async function generateThumbnail(
       // Try with different codec options
       try {
         await execAsync(
-          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:180" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
+          `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -c:v mjpeg -q:v 2 "${thumbnailPath}"`,
           { env: ffmpegEnv },
         )
         return thumbnailPath
@@ -120,7 +120,7 @@ export async function generateThumbnail(
         // Final fallback: try without seeking (just take first frame)
         try {
           await execAsync(
-            `"${ffmpegPath}" -i "${videoPath}" -vframes 1 -vf "scale=320:180" -q:v 2 "${thumbnailPath}"`,
+            `"${ffmpegPath}" -i "${videoPath}" -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`,
             { env: ffmpegEnv },
           )
           return thumbnailPath
