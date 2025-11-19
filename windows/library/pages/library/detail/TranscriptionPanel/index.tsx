@@ -61,6 +61,30 @@ export const TranscriptionPanel = withBoundary(function ({
     )
   }
 
+  if (!transcription && isTranscribing) {
+    return (
+      <div className="border bg-two p-3 rounded-md flex flex-row gap-2 justify-between">
+        <div className="text-md font-semibold text-contrast">Transcription</div>
+          <div className="flex items-center gap-2">
+            {/* {isTranscribing && (
+              <div className="text-xs text-secondary">
+                {progressLabel} {progress > 0 && `(${progress}%)`}
+              </div>
+            )} */}
+            <TranscribeButton
+              vlogId={vlogId}
+              useExternal
+              isTranscribing={isTranscribing}
+              progress={progress}
+              progressLabel={progressLabel}
+              hasTranscription={!!transcription}
+              onClick={transcribe}
+            />
+        </div>
+      </div>
+    )
+  }
+
   if (!transcription) {
     return (
       <div className="border bg-two p-3 rounded-md">
@@ -83,13 +107,6 @@ export const TranscriptionPanel = withBoundary(function ({
             />
           </div>
         </header>
-        <div className="flex items-center justify-center text-text-secondary">
-          <div className="text-sm">
-            {isTranscribing
-              ? 'Transcribing...'
-              : "Click 'Transcribe' to generate a transcript"}
-          </div>
-        </div>
       </div>
     )
   }

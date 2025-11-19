@@ -1,3 +1,4 @@
+import { twMerge } from 'tailwind-merge'
 import { getVlog } from '../../../../../shared/ipc'
 
 interface TranscribeButtonProps {
@@ -18,7 +19,7 @@ export function TranscribeButton({
   vlogId,
   onTranscriptionComplete,
   onVlogUpdate,
-  className = 'btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2',
+  className,
   disabled = false,
   useExternal = false,
   isTranscribing,
@@ -81,7 +82,7 @@ export function TranscribeButton({
       <button
         onClick={handleTranscribe}
         disabled={computedIsTranscribing || disabled}
-        className={className}
+        className={twMerge('btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2 dark:border-white/5', className)}
       >
         {computedIsTranscribing ? (
           <div className="flex items-center gap-2">

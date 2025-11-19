@@ -65,7 +65,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
           if (state.progress && state.progress <= 50) {
             setProgressLabel('Extracting audio...')
           } else if (state.progress) {
-            setProgressLabel('Transcribing with AI...')
+            setProgressLabel('Transcribing...')
           } else {
             setProgressLabel('Starting...')
           }
