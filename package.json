@@ -109,6 +109,7 @@
       "extendInfo": {
         "NSCameraUseContinuityCameraDeviceType": true
       },
+      "artifactName": "${productName}-${version}-${arch}-mac.${ext}",
       "target": [
         {
           "target": "dmg",
@@ -130,9 +131,6 @@
       "title": "Yap",
       "artifactName": "Yap-${version}-${arch}.${ext}",
       "sign": false
-    },
-    "zip": {
-      "artifactName": "Yap-${version}-${arch}-mac.${ext}"
     },
     "afterSign": "scripts/notarize.js",
     "win": {
