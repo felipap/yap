@@ -61,7 +61,7 @@ jobs:
           files: |
             dist-electron/**/*.dmg
             dist-electron/**/*.app
-            dist-electron/**/*.yml
+            dist-electron/latest-mac.yml
           draft: false
           # prerelease: false
           generate_release_notes: true
