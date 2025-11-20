@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, RefObject } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { MdGraphicEq, MdForward10, MdReplay10 } from 'react-icons/md'
+import { MdForward10, MdReplay10 } from 'react-icons/md'
 import { usePlaybackPreferences } from '../../../../../../shared/PlaybackPreferencesProvider'
 import { VolumeControl } from './VolumeControl'
 
@@ -27,8 +27,6 @@ export function VideoControls({ videoRef, className }: Props) {
     toggleMute,
     playbackSpeed,
     setPlaybackSpeed,
-    skipSilence,
-    toggleSkipSilence,
   } = usePlaybackPreferences()
 
   const speeds = [1, 1.25, 1.5, 1.75, 2]
@@ -282,29 +280,33 @@ export function VideoControls({ videoRef, className }: Props) {
       {/* Seek Bar */}
       <div className="mb-3">
         <div
-          ref={seekBarRef}
-          className="relative h-1 bg-white/30 rounded-full cursor-pointer group"
+          className="relative cursor-pointer py-2 -my-2 group"
           onClick={handleSeekBarClick}
           onMouseDown={handleSeekBarMouseDown}
         >
-          {/* Buffered Progress */}
           <div
-            className="absolute h-full bg-white/40 rounded-full"
-            style={{ width: `${getBufferedPercent()}%` }}
-          />
-          {/* Played Progress */}
-          <div
-            className="absolute h-full bg-white rounded-full"
-            style={{ width: `${(currentTime / duration) * 100}%` }}
-          />
-          {/* Seek Handle */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{
-              left: `${(currentTime / duration) * 100}%`,
-              marginLeft: '-6px',
-            }}
-          />
+            ref={seekBarRef}
+            className="relative h-1 bg-white/30 rounded-full pointer-events-none"
+          >
+            {/* Buffered Progress */}
+            <div
+              className="absolute h-full bg-white/40 rounded-full pointer-events-none"
+              style={{ width: `${getBufferedPercent()}%` }}
+            />
+            {/* Played Progress */}
+            <div
+              className="absolute h-full bg-white rounded-full pointer-events-none"
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+            />
+            {/* Seek Handle */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              style={{
+                left: `${(currentTime / duration) * 100}%`,
+                marginLeft: '-6px',
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -338,7 +340,7 @@ export function VideoControls({ videoRef, className }: Props) {
         </button>
 
         {/* Time Display */}
-        <div className="text-sm font-medium whitespace-nowrap">
+        <div className="text-sm font-medium whitespace-nowrap select-none">
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
 
@@ -359,26 +361,6 @@ export function VideoControls({ videoRef, className }: Props) {
             title="Cycle playback speed"
           >
             {playbackSpeed}x
-          </button>
-
-          {/* Skip Silence */}
-          <button
-            onClick={toggleSkipSilence}
-            className={twMerge(
-              'hover:scale-110 transition-all px-2 py-1 rounded relative mr-1',
-              // skipSilence && 'bg-white/20'
-            )}
-            title={skipSilence ? 'Skip silence: ON' : 'Skip silence: OFF'}
-          >
-            <MdGraphicEq
-              size={18}
-              className={skipSilence ? 'opacity-100' : 'opacity-50'}
-            />
-            {skipSilence && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-0.5 h-5 bg-white rotate-45" />
-              </div>
-            )}
           </button>
 
           {/* Fullscreen */}

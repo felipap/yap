@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EnrichedLog } from '../../../../shared-types'
+import { EnrichedLog } from '../../../shared-types'
 import { Button } from './Button'
 
 interface Props {

@@ -48,7 +48,7 @@ export const DetailPage = withBoundary(function ({
           src={`log-media://${log.id}`}
           className={twMerge(
             'w-full rounded-md',
-            log.isAudioOnly ? 'max-h-[100px]' : 'max-h-[500px]',
+            log.isAudioOnly ? 'max-h-[100px]' : 'h-[350px]',
           )}
         />
       </div>

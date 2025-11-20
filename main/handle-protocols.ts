@@ -145,7 +145,7 @@ export function setupProtocolHandlers() {
 
       const filePath = vlogIdToPath.get(vlogId)
       if (!filePath) {
-        console.error(`Vlog with ID ${vlogId} not found in mapping`)
+        // console.error(`Vlog with ID ${vlogId} not found in mapping`)
         debug('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
         return new Response('Vlog not found', { status: 404 })
       }

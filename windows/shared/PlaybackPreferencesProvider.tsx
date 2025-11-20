@@ -10,12 +10,6 @@ import {
   setGlobalVideoMute,
   getGlobalPlaybackSpeed,
   setGlobalPlaybackSpeed,
-  getSkipSilence,
-  setSkipSilence,
-  getSilenceThreshold,
-  setSilenceThreshold,
-  getMinSilenceDuration,
-  setMinSilenceDuration,
 } from './ipc'
 
 interface PlaybackPreferencesContextType {
@@ -27,17 +21,6 @@ interface PlaybackPreferencesContextType {
   // Playback speed state
   playbackSpeed: number
   setPlaybackSpeed: (speed: number) => Promise<void>
-
-  // Skip silence state
-  skipSilence: boolean
-  setSkipSilence: (skip: boolean) => Promise<void>
-  toggleSkipSilence: () => void
-
-  // Silence detection configuration
-  silenceThreshold: number
-  setSilenceThreshold: (threshold: number) => Promise<void>
-  minSilenceDuration: number
-  setMinSilenceDuration: (duration: number) => Promise<void>
 
   // Loading state
   isLoading: boolean
@@ -55,33 +38,18 @@ export function PlaybackPreferencesProvider({
 }: PlaybackPreferencesProviderProps) {
   const [isMuted, setIsMutedState] = useState(false)
   const [playbackSpeed, setPlaybackSpeedState] = useState(1.0)
-  const [skipSilenceState, setSkipSilenceState] = useState(false)
-  const [silenceThresholdState, setSilenceThresholdState] = useState(0.01)
-  const [minSilenceDurationState, setMinSilenceDurationState] = useState(1.0)
   const [isLoading, setIsLoading] = useState(true)
 
   // Load initial state
   useEffect(() => {
     const loadPreferences = async () => {
       try {
-        const [
-          muteState,
-          speedState,
-          skipSilenceValue,
-          thresholdValue,
-          durationValue,
-        ] = await Promise.all([
+        const [muteState, speedState] = await Promise.all([
           getGlobalVideoMute(),
           getGlobalPlaybackSpeed(),
-          getSkipSilence(),
-          getSilenceThreshold(),
-          getMinSilenceDuration(),
         ])
         setIsMutedState(muteState)
         setPlaybackSpeedState(speedState)
-        setSkipSilenceState(skipSilenceValue)
-        setSilenceThresholdState(thresholdValue)
-        setMinSilenceDurationState(durationValue)
       } catch (error) {
         console.error('Failed to load playback preferences:', error)
       } finally {
@@ -114,37 +82,6 @@ export function PlaybackPreferencesProvider({
     }
   }
 
-  const setSkipSilenceValue = async (skip: boolean) => {
-    try {
-      await setSkipSilence(skip)
-      setSkipSilenceState(skip)
-    } catch (error) {
-      console.error('Failed to set skip silence:', error)
-    }
-  }
-
-  const toggleSkipSilence = () => {
-    setSkipSilenceValue(!skipSilenceState)
-  }
-
-  const setSilenceThresholdValue = async (threshold: number) => {
-    try {
-      await setSilenceThreshold(threshold)
-      setSilenceThresholdState(threshold)
-    } catch (error) {
-      console.error('Failed to set silence threshold:', error)
-    }
-  }
-
-  const setMinSilenceDurationValue = async (duration: number) => {
-    try {
-      await setMinSilenceDuration(duration)
-      setMinSilenceDurationState(duration)
-    } catch (error) {
-      console.error('Failed to set min silence duration:', error)
-    }
-  }
-
   const value: PlaybackPreferencesContextType = {
     // Mute state
     isMuted,
@@ -154,17 +91,6 @@ export function PlaybackPreferencesProvider({
     // Playback speed state
     playbackSpeed,
     setPlaybackSpeed,
-
-    // Skip silence state
-    skipSilence: skipSilenceState,
-    setSkipSilence: setSkipSilenceValue,
-    toggleSkipSilence,
-
-    // Silence detection configuration
-    silenceThreshold: silenceThresholdState,
-    setSilenceThreshold: setSilenceThresholdValue,
-    minSilenceDuration: minSilenceDurationState,
-    setMinSilenceDuration: setMinSilenceDurationValue,
 
     // Loading state
     isLoading,

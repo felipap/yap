@@ -5,13 +5,12 @@ import {
   useRef,
   useState,
 } from 'react'
+import { twMerge } from 'tailwind-merge'
 import { getVideoPosition, saveVideoPosition } from '../../../../../shared/ipc'
 import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreferencesProvider'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
-import { useAudioSilenceDetection } from './useAudioSilenceDetection'
 import { VideoControls } from './VideoControls'
-import { twMerge } from 'tailwind-merge'
 
 interface PlayerProps {
   logId: string
@@ -48,25 +47,14 @@ export const Player = withBoundary(
       const videoRef = useRef<HTMLVideoElement>(null)
       const [hasRestoredPosition, setHasRestoredPosition] = useState(false)
       const [isBuffering, setIsBuffering] = useState(false)
+      const [isFullscreen, setIsFullscreen] = useState(false)
       const {
         isMuted,
         toggleMute,
         setMuted,
         playbackSpeed,
         setPlaybackSpeed,
-        skipSilence,
-        silenceThreshold,
-        minSilenceDuration,
       } = usePlaybackPreferences()
-
-      // Handle audio silence detection
-      useAudioSilenceDetection({
-        videoRef,
-        logId,
-        skipSilence,
-        silenceThreshold,
-        minSilenceDuration,
-      })
 
       // Expose video methods through ref
       useImperativeHandle(
@@ -270,6 +258,19 @@ export const Player = withBoundary(
         }
       }, [])
 
+      // Handle fullscreen changes
+      useEffect(() => {
+        const handleFullscreenChange = () => {
+          setIsFullscreen(!!document.fullscreenElement)
+        }
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange)
+
+        return () => {
+          document.removeEventListener('fullscreenchange', handleFullscreenChange)
+        }
+      }, [])
+
       const handleVideoClick = () => {
         if (videoRef.current) {
           if (videoRef.current.paused) {
@@ -281,7 +282,12 @@ export const Player = withBoundary(
       }
 
       return (
-        <div className="relative group">
+        <div
+          className={twMerge(
+            'relative group',
+            isFullscreen && 'w-full h-full',
+          )}
+        >
           <video
             ref={videoRef}
             controls={false}
@@ -293,13 +299,16 @@ export const Player = withBoundary(
                 : 'opacity-100',
               className,
               'cursor-pointer',
+              isFullscreen
+                ? 'w-full h-full object-contain'
+                : 'object-cover',
             )}
             src={src}
             onClick={handleVideoClick}
           >
             Your browser does not support the video tag.
           </video>
-          <PlaybackActionsOverlay />
+          <PlaybackActionsOverlay logId={logId} />
           <VideoControls videoRef={videoRef} />
         </div>
       )

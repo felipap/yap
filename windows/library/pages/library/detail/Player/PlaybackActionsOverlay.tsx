@@ -3,27 +3,56 @@ import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreference
 
 interface PlaybackActionsOverlayProps {
   className?: string
+  logId: string
 }
 
 export function PlaybackActionsOverlay({
   className = '',
+  logId,
 }: PlaybackActionsOverlayProps) {
-  const { isMuted, playbackSpeed, skipSilence, isLoading } =
+  const { isMuted, playbackSpeed, isLoading } =
     usePlaybackPreferences()
   const [isVisible, setIsVisible] = useState(false)
   const [displayText, setDisplayText] = useState('')
-  const [isInitialized, setIsInitialized] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const prevMutedRef = useRef<boolean | null>(null)
+  const prevPlaybackSpeedRef = useRef<number | null>(null)
+  const isInitialMountRef = useRef(true)
+
+  // Reset tracking refs when video changes
+  useEffect(() => {
+    prevMutedRef.current = null
+    prevPlaybackSpeedRef.current = null
+    isInitialMountRef.current = true
+    setIsVisible(false)
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }, [logId])
+
+  // Initialize refs once preferences are loaded
+  useEffect(() => {
+    if (!isLoading && isInitialMountRef.current) {
+      prevMutedRef.current = isMuted
+      prevPlaybackSpeedRef.current = playbackSpeed
+      isInitialMountRef.current = false
+    }
+  }, [isLoading, isMuted, playbackSpeed])
 
   // Handle playback speed changes
   useEffect(() => {
-    // Don't show overlay while loading or on first initialization
-    if (isLoading || !isInitialized) {
-      if (!isLoading) {
-        setIsInitialized(true)
-      }
+    // Don't show overlay while loading or on initial mount
+    if (isLoading || isInitialMountRef.current) {
       return
     }
+
+    // Only show if playback speed actually changed
+    if (prevPlaybackSpeedRef.current === playbackSpeed) {
+      return
+    }
+
+    prevPlaybackSpeedRef.current = playbackSpeed
 
     // Clear any existing timer
     if (timerRef.current) {
@@ -43,14 +72,21 @@ export function PlaybackActionsOverlay({
         clearTimeout(timerRef.current)
       }
     }
-  }, [playbackSpeed, isInitialized, isLoading])
+  }, [playbackSpeed, isLoading])
 
   // Handle mute changes
   useEffect(() => {
-    // Don't show overlay while loading or on first initialization
-    if (isLoading || !isInitialized) {
+    // Don't show overlay while loading or on initial mount
+    if (isLoading || isInitialMountRef.current) {
       return
     }
+
+    // Only show if mute state actually changed
+    if (prevMutedRef.current === isMuted) {
+      return
+    }
+
+    prevMutedRef.current = isMuted
 
     // Clear any existing timer
     if (timerRef.current) {
@@ -70,34 +106,8 @@ export function PlaybackActionsOverlay({
         clearTimeout(timerRef.current)
       }
     }
-  }, [isMuted, isInitialized, isLoading])
+  }, [isMuted, isLoading])
 
-  // Handle skip silence changes
-  useEffect(() => {
-    // Don't show overlay while loading or on first initialization
-    if (isLoading || !isInitialized) {
-      return
-    }
-
-    // Clear any existing timer
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-    }
-
-    setDisplayText(skipSilence ? 'Skip Silence: ON' : 'Skip Silence: OFF')
-    setIsVisible(true)
-
-    // Hide overlay after 2 seconds
-    timerRef.current = setTimeout(() => {
-      setIsVisible(false)
-    }, 2000)
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
-    }
-  }, [skipSilence, isInitialized, isLoading])
 
   return (
     <div

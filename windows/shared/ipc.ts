@@ -102,30 +102,6 @@ export async function setGlobalPlaybackSpeed(speed: number): Promise<void> {
   return setStoredValue('globalPlaybackSpeed', speed)
 }
 
-export async function getSkipSilence(): Promise<boolean> {
-  return getStoredValue<boolean>('skipSilence') || false
-}
-
-export async function setSkipSilence(skip: boolean): Promise<void> {
-  return setStoredValue('skipSilence', skip)
-}
-
-export async function getSilenceThreshold(): Promise<number> {
-  return getStoredValue<number>('silenceThreshold') || 0.01
-}
-
-export async function setSilenceThreshold(threshold: number): Promise<void> {
-  return setStoredValue('silenceThreshold', threshold)
-}
-
-export async function getMinSilenceDuration(): Promise<number> {
-  return getStoredValue<number>('minSilenceDuration') || 1.0
-}
-
-export async function setMinSilenceDuration(duration: number): Promise<void> {
-  return setStoredValue('minSilenceDuration', duration)
-}
-
 // Transcription functions
 export async function transcribeVideo(
   vlogId: string,
