@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.11](https://github.com/felipap/yap/compare/v0.9.10...v0.9.11) (2025-11-20)
+
 ### [0.9.10](https://github.com/felipap/vlogger/compare/v0.9.9...v0.9.10) (2025-11-20)
 
 ### [0.9.9](https://github.com/felipap/vlogger/compare/v0.9.7...v0.9.9) (2025-11-20)
