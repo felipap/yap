@@ -136,7 +136,7 @@ bun run dist
 
 ### Platform Support
 
-- **macOS**: DMG and ZIP packages (ARM64 and x64)
+- **macOS**: DMG and ZIP packages (ARM64 only)
 - **Windows**: NSIS installer
 - **Linux**: AppImage
 

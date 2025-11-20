@@ -8,16 +8,8 @@ on:
       - '*.*.*' # Only trigger on version tags like 1.0.0
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        arch: [arm64, x64]
-        include:
-          - arch: arm64
-            runner: macos-14
-          - arch: x64
-            runner: macos-13
-    runs-on: ${{ matrix.runner }}
+  release:
+    runs-on: macos-14
     timeout-minutes: 15
     env:
       CSC_IDENTITY: ${{ secrets.MACOS_CERTIFICATE_ID }}
@@ -59,31 +51,7 @@ jobs:
         run: pnpm run build
 
       - name: Package Electron app
-        run: pnpm run pack -- --mac.target.arch=${{ matrix.arch }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ matrix.arch }}
-          path: |
-            dist-electron/**/*.dmg
-            dist-electron/**/*.zip
-            dist-electron/**/*.app
-            dist-electron/latest-mac.yml
-          retention-days: 1
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist-electron
-          pattern: dist-*
-          merge-multiple: true
+        run: pnpm run pack
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -96,3 +64,5 @@ jobs:
             dist-electron/latest-mac.yml
           draft: false
           generate_release_notes: true
+          # prerelease: false
+          # body_path: CHANGELOG.md
