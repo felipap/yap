@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.17](https://github.com/felipap/yap/compare/v0.9.16...v0.9.17) (2025-11-20)
+
+
+### Bug Fixes
+
+* ui nits ([cb3a9d0](https://github.com/felipap/yap/commit/cb3a9d0af017a1d2c56c92f1b0713a1afa39fc4a))
+* ui nits ([e0420bb](https://github.com/felipap/yap/commit/e0420bb43924dd15a80980edff7fb89c0483ac8d))
+
 ### [0.9.16](https://github.com/felipap/yap/compare/v0.9.14...v0.9.16) (2025-11-20)
 
 ### [0.9.15](https://github.com/felipap/yap/compare/v0.9.14...v0.9.15) (2025-11-20)
