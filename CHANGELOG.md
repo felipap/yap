@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.9](https://github.com/felipap/vlogger/compare/v0.9.7...v0.9.9) (2025-11-20)
+
+
+### Features
+
+* improved colors ([1b2d0d8](https://github.com/felipap/vlogger/commit/1b2d0d8a0e0836e37a6c012699c583411df3673a))
+
+
+### Bug Fixes
+
+* many fixes ([1edf736](https://github.com/felipap/vlogger/commit/1edf736dd9f27e515614a540da4ddac29e7d526f))
+
+### [0.9.8](https://github.com/felipap/vlogger/compare/v0.9.7...v0.9.8) (2025-11-20)
+
+
+### Features
+
+* improved colors ([1b2d0d8](https://github.com/felipap/vlogger/commit/1b2d0d8a0e0836e37a6c012699c583411df3673a))
+
+
+### Bug Fixes
+
+* many fixes ([1edf736](https://github.com/felipap/vlogger/commit/1edf736dd9f27e515614a540da4ddac29e7d526f))
+
 ### [0.9.7](https://github.com/felipap/vlogger/compare/v0.9.6...v0.9.7) (2025-11-14)
 
 ### [0.9.6](https://github.com/felipap/vlogger/compare/v0.9.5...v0.9.6) (2025-11-13)
