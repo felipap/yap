@@ -131,6 +131,9 @@
       "artifactName": "Yap-${version}-${arch}.${ext}",
       "sign": false
     },
+    "zip": {
+      "artifactName": "Yap-${version}-${arch}-mac.${ext}"
+    },
     "afterSign": "scripts/notarize.js",
     "win": {
       "icon": "assets/icon.ico",

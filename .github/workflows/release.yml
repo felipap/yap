@@ -60,6 +60,7 @@ jobs:
           name: 'Yap ${{ github.ref_name }}'
           files: |
             dist-electron/**/*.dmg
+            dist-electron/**/*.zip
             dist-electron/**/*.app
             dist-electron/latest-mac.yml
           draft: false
