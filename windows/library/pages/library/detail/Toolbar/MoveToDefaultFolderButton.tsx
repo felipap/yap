@@ -36,7 +36,7 @@ export function MoveToDefaultFolderButton({ vlogId, disabled }: Props) {
       ) : (
         <>
           <FolderInput size={16} strokeWidth={2} />
-          <span>Move to default Folder</span>
+          <span>Move to default folder</span>
         </>
       )}
     </Button>

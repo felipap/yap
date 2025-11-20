@@ -73,6 +73,7 @@ export function SummarySubtitle({ vlog }: Props) {
 
   if (!summary) {
     if (!vlog.transcription) {
+      return null
       return (
         <div className="text-[13px] text-contrast opacity-40 italic">
           Transcribe the video to summarize it
