@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, RefObject } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { MdForward10, MdReplay10 } from 'react-icons/md'
-import { usePlaybackPreferences } from '../../../../../../shared/PlaybackPreferencesProvider'
 import { VolumeControl } from './VolumeControl'
 
 interface Props {
@@ -9,6 +8,11 @@ interface Props {
   className?: string
 }
 
+// Note: Even though PlaybackPreferencesProvider exists, we're changing the state
+// of the video element directly here. This is cleaner because VideoControls doesn't
+// have to know about how we wire the rest of the app. The Player component
+// (../index.tsx) catches changes to the video element (e.g., muting, playback speed)
+// via event listeners and syncs them to the global preference state.
 export function VideoControls({ videoRef, className }: Props) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -17,15 +21,41 @@ export function VideoControls({ videoRef, className }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [bufferedRanges, setBufferedRanges] = useState<TimeRanges | null>(null)
+  const [isMuted, setIsMuted] = useState(false)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
 
   const controlsRef = useRef<HTMLDivElement>(null)
   const seekBarRef = useRef<HTMLDivElement>(null)
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null)
 
-  const { isMuted, toggleMute, playbackSpeed, setPlaybackSpeed } =
-    usePlaybackPreferences()
-
   const speeds = [1, 1.25, 1.5, 1.75, 2]
+
+  // Sync mute state from video element
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
+    setIsMuted(video.muted)
+    setPlaybackSpeed(video.playbackRate)
+
+    const handleVolumeChange = () => {
+      setIsMuted(video.muted)
+    }
+
+    const handleRateChange = () => {
+      setPlaybackSpeed(video.playbackRate)
+    }
+
+    video.addEventListener('volumechange', handleVolumeChange)
+    video.addEventListener('ratechange', handleRateChange)
+
+    return () => {
+      video.removeEventListener('volumechange', handleVolumeChange)
+      video.removeEventListener('ratechange', handleRateChange)
+    }
+  }, [videoRef])
 
   // Update play state
   useEffect(() => {
@@ -175,9 +205,22 @@ export function VideoControls({ videoRef, className }: Props) {
   }
 
   const cycleSpeed = () => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+
     const currentIndex = speeds.indexOf(playbackSpeed)
     const nextIndex = (currentIndex + 1) % speeds.length
-    setPlaybackSpeed(speeds[nextIndex])
+    video.playbackRate = speeds[nextIndex]
+  }
+
+  const toggleMute = () => {
+    const video = videoRef.current
+    if (!video) {
+      return
+    }
+    video.muted = !video.muted
   }
 
   const handleSeekBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -268,7 +311,7 @@ export function VideoControls({ videoRef, className }: Props) {
     <div
       ref={controlsRef}
       className={twMerge(
-        'absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 transition-opacity duration-300 rounded-md',
+        'absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 pb-3 transition-opacity duration-300 rounded-md',
         showControls ? 'opacity-100' : 'opacity-0',
         className,
       )}
@@ -311,7 +354,7 @@ export function VideoControls({ videoRef, className }: Props) {
         {/* Play/Pause */}
         <button
           onClick={togglePlay}
-          className="hover:scale-110 transition-transform"
+          className="hover:scale-110 transition-transform outline-none"
           title={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? <PauseIcon /> : <PlayIcon />}

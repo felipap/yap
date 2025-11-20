@@ -122,6 +122,25 @@ export const Player = withBoundary(
         }
       }, [isMuted, setMuted])
 
+      // Listen for video element playback rate changes and sync with global state
+      useEffect(() => {
+        const video = videoRef.current
+        if (!video) {
+          return
+        }
+
+        const handleRateChange = () => {
+          if (video.playbackRate !== playbackSpeed) {
+            setPlaybackSpeed(video.playbackRate)
+          }
+        }
+
+        video.addEventListener('ratechange', handleRateChange)
+        return () => {
+          video.removeEventListener('ratechange', handleRateChange)
+        }
+      }, [playbackSpeed, setPlaybackSpeed])
+
       // Handle buffering state
       useEffect(() => {
         const video = videoRef.current

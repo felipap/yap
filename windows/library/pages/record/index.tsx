@@ -360,15 +360,17 @@ export default function Page() {
           />
 
           {/* Device Selection */}
-          {!isRecording && <DeviceSelector
-            cameras={cameras}
-            microphones={microphones}
-            selectedCameraId={selectedCameraId}
-            selectedMicrophoneId={selectedMicrophoneId}
-            onCameraChange={setSelectedCameraId}
-            onMicrophoneChange={setSelectedMicrophoneId}
-            recordingMode={recordingMode}
-          />}
+          {!isRecording && (
+            <DeviceSelector
+              cameras={cameras}
+              microphones={microphones}
+              selectedCameraId={selectedCameraId}
+              selectedMicrophoneId={selectedMicrophoneId}
+              onCameraChange={setSelectedCameraId}
+              onMicrophoneChange={setSelectedMicrophoneId}
+              recordingMode={recordingMode}
+            />
+          )}
 
           {/* Recording Button */}
           <RecordButton
