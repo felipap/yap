@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.27](https://github.com/felipap/yap/compare/v0.9.26...v0.9.27) (2025-11-20)
+
 ### [0.9.26](https://github.com/felipap/yap/compare/v0.9.25...v0.9.26) (2025-11-20)
 
 ### [0.9.25](https://github.com/felipap/yap/compare/v0.9.24...v0.9.25) (2025-11-20)
@@ -16,10 +18,9 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.9.20](https://github.com/felipap/yap/compare/v0.9.19...v0.9.20) (2025-11-20)
 
-
 ### Bug Fixes
 
-* ui nits ([6f09dad](https://github.com/felipap/yap/commit/6f09dadc6aceb29ce4bf38ae607721b3ffa3f797))
+- ui nits ([6f09dad](https://github.com/felipap/yap/commit/6f09dadc6aceb29ce4bf38ae607721b3ffa3f797))
 
 ### [0.9.19](https://github.com/felipap/yap/compare/v0.9.18...v0.9.19) (2025-11-20)
 
@@ -27,11 +28,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.9.17](https://github.com/felipap/yap/compare/v0.9.16...v0.9.17) (2025-11-20)
 
-
 ### Bug Fixes
 
-* ui nits ([cb3a9d0](https://github.com/felipap/yap/commit/cb3a9d0af017a1d2c56c92f1b0713a1afa39fc4a))
-* ui nits ([e0420bb](https://github.com/felipap/yap/commit/e0420bb43924dd15a80980edff7fb89c0483ac8d))
+- ui nits ([cb3a9d0](https://github.com/felipap/yap/commit/cb3a9d0af017a1d2c56c92f1b0713a1afa39fc4a))
+- ui nits ([e0420bb](https://github.com/felipap/yap/commit/e0420bb43924dd15a80980edff7fb89c0483ac8d))
 
 ### [0.9.16](https://github.com/felipap/yap/compare/v0.9.14...v0.9.16) (2025-11-20)
 
