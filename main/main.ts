@@ -5,7 +5,7 @@ import { app } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
-import { createTray } from './tray'
+// import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
 import {
   createLibraryWindow,
@@ -53,7 +53,7 @@ async function onInit() {
   createLibraryWindow()
   createSettingsWindow()
   // createRecordingWindow()
-  createTray()
+  // createTray()
 
   app.on('activate', () => {
     // On macOS, when the dock icon is clicked, show the library window
@@ -119,6 +119,7 @@ app.on('window-all-closed', () => {
   // On macOS, keep the app running even when all windows are closed
   // The tray will remain available for background recording
   // Note: Main window is now hidden instead of destroyed when closed
+  // Note: Tray is currently disabled
   if (process.platform !== 'darwin') {
     app.quit()
   }

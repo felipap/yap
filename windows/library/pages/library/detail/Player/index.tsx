@@ -6,14 +6,15 @@ import {
   useState,
 } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreferencesProvider'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
 import { useRememberMediaPosition } from './useRememberMediaPosition'
+import { useSyncVideoPlaybackPreferences } from './useSyncVideoPlaybackPreferences'
 import { VideoControls } from './VideoControls'
 
 interface Props {
   logId: string
+  isVideo: boolean
   src: string
   className?: string
   autoPlay?: boolean
@@ -35,9 +36,9 @@ export const Player = withBoundary(
     (
       {
         logId,
+        isVideo,
         src,
         className = 'w-full max-w-4xl h-auto rounded-lg shadow-lg',
-        autoPlay = true,
         onLoadedData,
         onTimeUpdate,
         onSeeked,
@@ -47,8 +48,6 @@ export const Player = withBoundary(
       const videoRef = useRef<HTMLVideoElement>(null)
       const [isBuffering, setIsBuffering] = useState(false)
       const [isFullscreen, setIsFullscreen] = useState(false)
-      const { isMuted, toggleMute, setMuted, playbackSpeed, setPlaybackSpeed } =
-        usePlaybackPreferences()
 
       // Use the hook to handle position restoration and saving
       useRememberMediaPosition({
@@ -58,6 +57,9 @@ export const Player = withBoundary(
         onSeeked,
         onLoadedData,
       })
+
+      // Sync video playback preferences with global state
+      useSyncVideoPlaybackPreferences({ videoRef })
 
       // Expose video methods through ref
       useImperativeHandle(
@@ -88,58 +90,6 @@ export const Player = withBoundary(
         }),
         [],
       )
-
-      // Sync video element muted state with global state
-      useEffect(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = isMuted
-        }
-      }, [isMuted])
-
-      // Sync video element playback rate with global state
-      useEffect(() => {
-        if (videoRef.current) {
-          videoRef.current.playbackRate = playbackSpeed
-        }
-      }, [playbackSpeed])
-
-      // Listen for video element mute changes and sync with global state
-      useEffect(() => {
-        const video = videoRef.current
-        if (!video) {
-          return
-        }
-
-        const handleVolumeChange = () => {
-          if (video.muted !== isMuted) {
-            setMuted(video.muted)
-          }
-        }
-
-        video.addEventListener('volumechange', handleVolumeChange)
-        return () => {
-          video.removeEventListener('volumechange', handleVolumeChange)
-        }
-      }, [isMuted, setMuted])
-
-      // Listen for video element playback rate changes and sync with global state
-      useEffect(() => {
-        const video = videoRef.current
-        if (!video) {
-          return
-        }
-
-        const handleRateChange = () => {
-          if (video.playbackRate !== playbackSpeed) {
-            setPlaybackSpeed(video.playbackRate)
-          }
-        }
-
-        video.addEventListener('ratechange', handleRateChange)
-        return () => {
-          video.removeEventListener('ratechange', handleRateChange)
-        }
-      }, [playbackSpeed, setPlaybackSpeed])
 
       // Handle buffering state
       useEffect(() => {
@@ -210,13 +160,14 @@ export const Player = withBoundary(
           <video
             ref={videoRef}
             controls={false}
-            autoPlay={autoPlay}
-            muted={isMuted}
+            // autoPlay
             className={twMerge(
               isBuffering
                 ? 'w-full h-auto rounded-lg shadow-lg opacity-50'
                 : 'opacity-100',
               className,
+              // For audio, show background, otherwise it's weird.
+              !isVideo && 'bg-neutral-500/60',
               'cursor-pointer',
               isFullscreen ? 'w-full h-full object-contain' : 'object-cover',
             )}
@@ -226,7 +177,7 @@ export const Player = withBoundary(
             Your browser does not support the video tag.
           </video>
           <PlaybackActionsOverlay logId={logId} />
-          <VideoControls videoRef={videoRef} />
+          <VideoControls videoRef={videoRef} canFullscreen={isVideo} />
         </div>
       )
     },

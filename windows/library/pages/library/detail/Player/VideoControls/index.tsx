@@ -6,6 +6,7 @@ import { VolumeControl } from './VolumeControl'
 interface Props {
   videoRef: RefObject<HTMLVideoElement>
   className?: string
+  canFullscreen: boolean
 }
 
 // Note: Even though PlaybackPreferencesProvider exists, we're changing the state
@@ -13,7 +14,7 @@ interface Props {
 // have to know about how we wire the rest of the app. The Player component
 // (../index.tsx) catches changes to the video element (e.g., muting, playback speed)
 // via event listeners and syncs them to the global preference state.
-export function VideoControls({ videoRef, className }: Props) {
+export function VideoControls({ videoRef, className, canFullscreen }: Props) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -403,13 +404,15 @@ export function VideoControls({ videoRef, className }: Props) {
           </button>
 
           {/* Fullscreen */}
+          {canFullscreen && (
           <button
             onClick={toggleFullscreen}
             className="hover:scale-110 transition-transform"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-          </button>
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </button>
+          )}
         </div>
       </div>
     </div>

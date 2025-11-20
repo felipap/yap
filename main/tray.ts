@@ -93,3 +93,4 @@ export function getImagePath(name: string) {
     : path.join(__dirname, '../../assets')
   return path.join(base, name)
 }
+
