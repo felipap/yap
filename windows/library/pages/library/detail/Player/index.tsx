@@ -168,6 +168,7 @@ export const Player = withBoundary(
               className,
               // For audio, show background, otherwise it's weird.
               !isVideo && 'bg-neutral-500/60',
+              'bg-neutral-500/60',
               'cursor-pointer',
               isFullscreen ? 'w-full h-full object-contain' : 'object-cover',
             )}

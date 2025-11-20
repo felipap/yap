@@ -60,4 +60,3 @@ export function useSyncVideoPlaybackPreferences({ videoRef }: Props) {
     }
   }, [playbackSpeed, setPlaybackSpeed])
 }
-

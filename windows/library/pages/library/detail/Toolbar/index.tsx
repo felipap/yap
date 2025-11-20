@@ -27,14 +27,14 @@ export function Toolbar({ log, onBack }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-    <div className="no-drag-region flex gap-2 w-full  overflow-x-scroll">
-      <Button onClick={handleOpenLocation}>
-        <MdFolder size={16} />
-        <span>Show in Finder</span>
-      </Button>
-      {isWebm && <ConvertButton vlogId={log.id} />}
-      {!inDefaultFolder && <MoveToDefaultFolderButton vlogId={log.id} />}
-      <DeleteButton vlogId={log.id} onDeleted={onBack} />
+      <div className="no-drag-region flex gap-2 w-full  overflow-x-scroll">
+        <Button onClick={handleOpenLocation}>
+          <MdFolder size={16} />
+          <span>Show in Finder</span>
+        </Button>
+        {isWebm && <ConvertButton vlogId={log.id} />}
+        {!inDefaultFolder && <MoveToDefaultFolderButton vlogId={log.id} />}
+        <DeleteButton vlogId={log.id} onDeleted={onBack} />
       </div>
       <JsonViewer log={log} />
     </div>

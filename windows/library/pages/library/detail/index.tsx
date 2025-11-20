@@ -17,11 +17,10 @@ interface Props {
 }
 
 export const DetailPage = withBoundary(function ({
-  log: log__,
+  log,
   onBack,
 }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
-  const [log, setCurrentVlog] = useState<EnrichedLog>(log__)
 
   // Notify backend when viewing this log entry
   useEffect(() => {
@@ -59,9 +58,6 @@ export const DetailPage = withBoundary(function ({
             vlogId={log.id}
             isVideo={!log.isAudioOnly}
             title={log.title || ''}
-            onLocalTitleChange={(value) =>
-              setCurrentVlog((prev) => ({ ...prev, title: value }))
-            }
           />
           <div className="px-2">
             <SummarySubtitle vlog={log} />

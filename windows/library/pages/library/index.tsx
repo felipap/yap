@@ -1,5 +1,5 @@
-import { MdMovie } from 'react-icons/md'
 import { useState } from 'react'
+import { MdMovie } from 'react-icons/md'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { useVlog } from '../../../shared/useVlogData'
 import { EnrichedLog } from '../../types'
@@ -15,10 +15,23 @@ export default function Page() {
     setSelectedVlogId(next.id)
   }
 
+  let main
+  if (vlog) {
+    main = (
+      <DetailPage
+        key={vlog.id}
+        log={vlog}
+        onBack={() => setSelectedVlogId(null)}
+      />
+    )
+  } else {
+    main = <NoVideoPage />
+  }
+
   return (
     <PlaybackPreferencesProvider>
       <DragDropWrapper>
-        <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 px-1.5 pb-2">
+        <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-1.5 pb-2">
           <div className="h-full bg-sidebar rounded-md">
             <Sidebar
               selectedVlog={vlog ?? null}
@@ -27,29 +40,26 @@ export default function Page() {
             />
           </div>
 
-          {/* Main content area */}
           <div className="flex-1 flex flex-col h-full overflow-hidden rounded-md">
-            {vlog ? (
-              <DetailPage
-                key={vlog.id}
-                log={vlog}
-                onBack={() => setSelectedVlogId(null)}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center select-none">
-                <div className="text-center flex flex-col gap-2">
-                  <div className=" flex justify-center">
-                    <MdMovie size={40} className="text-secondary/80" />
-                  </div>
-                  <h3 className="text-md text-secondary/60">
-                    Select a log or drag a file to import
-                  </h3>
-                </div>
-              </div>
-            )}
+            {main}
           </div>
         </div>
       </DragDropWrapper>
     </PlaybackPreferencesProvider>
+  )
+}
+
+function NoVideoPage() {
+  return (
+    <div className="flex-1 flex items-center justify-center select-none">
+      <div className="text-center flex flex-col gap-2">
+        <div className=" flex justify-center">
+          <MdMovie size={40} className="text-secondary/80" />
+        </div>
+        <h3 className="text-md text-secondary/60">
+          Select a log or drag a file to import
+        </h3>
+      </div>
+    </div>
   )
 }

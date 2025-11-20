@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { setVlogTitle } from '../../../../shared/ipc'
 
@@ -6,38 +6,42 @@ interface Props {
   vlogId: string
   title: string
   isVideo: boolean
-  onLocalTitleChange: (value: string) => void
 }
 
 export function TitleInput({
   vlogId,
   isVideo,
   title,
-  onLocalTitleChange,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [localTitle, setLocalTitle] = useState(title)
+
+  // Sync with external title changes (e.g., from backend updates)
+  useEffect(() => {
+    setLocalTitle(title)
+  }, [title])
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
     }
-  }, [title])
+  }, [localTitle])
 
   return (
     <textarea
       ref={textareaRef}
       className={twMerge(
         'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-3 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words',
-        title.length > 0
+        localTitle.length > 0
           ? ''
           : 'placeholder:text-contrast !opacity-40 focus:opacity-80',
       )}
       placeholder={isVideo ? 'Untitled video' : 'Untitled audio'}
-      value={title}
+      value={localTitle}
       rows={1}
       onChange={(e) => {
-        onLocalTitleChange(e.target.value)
+        setLocalTitle(e.target.value)
         // Auto-resize textarea
         e.target.style.height = 'auto'
         e.target.style.height = e.target.scrollHeight + 'px'

@@ -405,11 +405,11 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
 
           {/* Fullscreen */}
           {canFullscreen && (
-          <button
-            onClick={toggleFullscreen}
-            className="hover:scale-110 transition-transform"
-            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          >
+            <button
+              onClick={toggleFullscreen}
+              className="hover:scale-110 transition-transform"
+              title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            >
               {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
             </button>
           )}
