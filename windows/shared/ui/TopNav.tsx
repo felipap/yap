@@ -52,13 +52,12 @@ export function TopNav({ currentTab }: TopNavProps) {
           </TabButton>
           {currentTab !== 'record' && (
             <TabButton
-              active={currentTab === 'record'}
+              active={false}
               onClick={() => {
                 router.navigate({ name: 'record' })
               }}
               className={twMerge(
                 'border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
-                currentTab === 'record' && 'text-red-500 dark:text-red-400',
               )}
             >
               Record

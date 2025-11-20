@@ -4,7 +4,7 @@ import { MdMic, MdVideocam } from 'react-icons/md'
 import { RecordingMode } from '../../../../shared-types'
 import { twMerge } from 'tailwind-merge'
 
-const FIT_MODE: 'contain' | 'cover' = 'cover'
+const FIT_MODE = 'cover' as 'contain' | 'cover'
 
 export interface PreviewScreenRef {
   srcObject: MediaProvider | null
