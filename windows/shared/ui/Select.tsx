@@ -1,4 +1,4 @@
-interface SelectProps {
+interface Props {
   value: string
   onChange: (value: string) => void
   children: React.ReactNode
@@ -10,9 +10,9 @@ export function Select({
   onChange,
   children,
   className = '',
-}: SelectProps) {
+}: Props) {
   const baseClasses =
-    'px-3 h-7.5 py-0 rounded-md font-medium transition-all text-sm bg-two text-contrast hover:bg-three focus:outline-none'
+    'pl-3 pr-8 h-7.5 py-0 rounded-md font-medium transition-all text-sm bg-two text-contrast hover:bg-three focus:outline-none truncate'
 
   return (
     <select

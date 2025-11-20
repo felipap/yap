@@ -10,8 +10,7 @@ export function PlaybackActionsOverlay({
   className = '',
   logId,
 }: PlaybackActionsOverlayProps) {
-  const { isMuted, playbackSpeed, isLoading } =
-    usePlaybackPreferences()
+  const { isMuted, playbackSpeed, isLoading } = usePlaybackPreferences()
   const [isVisible, setIsVisible] = useState(false)
   const [displayText, setDisplayText] = useState('')
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -107,7 +106,6 @@ export function PlaybackActionsOverlay({
       }
     }
   }, [isMuted, isLoading])
-
 
   return (
     <div

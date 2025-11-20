@@ -7,7 +7,10 @@ import {
   MdAccessTime,
   MdRefresh,
   MdContentCopy,
+  MdCollections,
+  MdCollectionsBookmark,
 } from 'react-icons/md'
+import { BsFillCollectionFill } from 'react-icons/bs'
 
 interface IconProps {
   size?: number
@@ -46,7 +49,7 @@ export function MicIcon({ size = 16, className }: IconProps) {
 }
 
 export function LibraryIcon({ size = 16, className }: IconProps) {
-  return <MdVideoLibrary size={size} className={className} />
+  return <BsFillCollectionFill size={size} className={className} />
 }
 
 export function ClockIcon({ size = 16, className }: IconProps) {

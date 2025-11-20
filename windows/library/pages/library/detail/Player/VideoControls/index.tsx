@@ -22,12 +22,8 @@ export function VideoControls({ videoRef, className }: Props) {
   const seekBarRef = useRef<HTMLDivElement>(null)
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null)
 
-  const {
-    isMuted,
-    toggleMute,
-    playbackSpeed,
-    setPlaybackSpeed,
-  } = usePlaybackPreferences()
+  const { isMuted, toggleMute, playbackSpeed, setPlaybackSpeed } =
+    usePlaybackPreferences()
 
   const speeds = [1, 1.25, 1.5, 1.75, 2]
 

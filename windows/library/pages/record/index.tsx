@@ -360,7 +360,7 @@ export default function Page() {
           />
 
           {/* Device Selection */}
-          <DeviceSelector
+          {!isRecording && <DeviceSelector
             cameras={cameras}
             microphones={microphones}
             selectedCameraId={selectedCameraId}
@@ -368,8 +368,7 @@ export default function Page() {
             onCameraChange={setSelectedCameraId}
             onMicrophoneChange={setSelectedMicrophoneId}
             recordingMode={recordingMode}
-            isRecording={isRecording}
-          />
+          />}
 
           {/* Recording Button */}
           <RecordButton

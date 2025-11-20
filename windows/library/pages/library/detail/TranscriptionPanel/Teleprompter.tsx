@@ -119,7 +119,10 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
 
     return (
       <div className="flex flex-col gap-3 p-1 pb-0">
-        <div className="h-[300px] overflow-y-auto border-t dark:border-white/10" ref={containerRef}>
+        <div
+          className="h-[300px] overflow-y-auto border-t dark:border-white/10"
+          ref={containerRef}
+        >
           <div className="h-[5px]"></div>
           {transcription.segments?.map(
             (

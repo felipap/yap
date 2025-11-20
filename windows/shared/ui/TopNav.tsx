@@ -45,25 +45,27 @@ export function TopNav({ currentTab }: TopNavProps) {
             onClick={() => {
               router.navigate({ name: 'library' })
             }}
-            className={twMerge("border  hover:text-contrast", currentTab === 'record' && 'dark:border-white/10')}
+            className={twMerge(
+              'border  hover:text-contrast',
+              currentTab === 'record' && 'dark:border-white/10',
+            )}
           >
             <LibraryIcon className="w-3 h-3 mr-1" />
             Library
           </TabButton>
-          {currentTab !== 'record' && (
-            <TabButton
-              active={false}
-              onClick={() => {
-                router.navigate({ name: 'record' })
-              }}
-              className={twMerge(
-                'border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
-              )}
-            >
-              Record
-              <RecordIcon className="w-4 h-4 ml-1" />
-            </TabButton>
-          )}
+
+          <TabButton
+            active={false}
+            onClick={() => {
+              router.navigate({ name: 'record' })
+            }}
+            className={twMerge(
+              'border hover:bg-transparent dark:border-white/10 pr-2 hover:text-red-500 dark:hover:text-red-400',
+            )}
+          >
+            Record
+            <RecordIcon className="w-4 h-4 ml-1" />
+          </TabButton>
         </div>
       </div>
     </div>

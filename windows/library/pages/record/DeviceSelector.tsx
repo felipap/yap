@@ -10,7 +10,6 @@ interface DeviceSelectorProps {
   onCameraChange: (cameraId: string) => void
   onMicrophoneChange: (microphoneId: string) => void
   recordingMode: 'screen' | 'camera' | 'both' | 'audio'
-  isRecording: boolean
 }
 
 export function DeviceSelector({
@@ -21,18 +20,12 @@ export function DeviceSelector({
   onCameraChange,
   onMicrophoneChange,
   recordingMode,
-  isRecording,
 }: DeviceSelectorProps) {
-  if (isRecording) {
-    return null
-  }
-
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl flex-shrink-0">
       <div className="flex gap-4 items-center">
         {/* Camera Selection */}
-        {(recordingMode === 'camera' || recordingMode === 'both') &&
-          cameras.length > 0 && (
+        {(recordingMode === 'camera' || recordingMode === 'both') &&(
             <div className="flex gap-1 items-center">
               <div className="flex items-center justify-center w-8 h-8 opacity-40">
                 <VideocamIcon size={20} />
@@ -47,12 +40,14 @@ export function DeviceSelector({
                     {camera.label || `Camera ${camera.deviceId.slice(0, 8)}...`}
                   </option>
                 ))}
+                {cameras.length === 0 && (
+                  <option value="">No cameras found</option>
+                )}
               </Select>
             </div>
           )}
 
         {/* Microphone Selection */}
-        {microphones.length > 0 && (
           <div className="flex gap-1 items-center">
             <div className="flex items-center justify-center w-8 h-8">
               <MicIcon className="opacity-40" size={20} />
@@ -69,6 +64,9 @@ export function DeviceSelector({
                     `Microphone ${microphone.deviceId.slice(0, 8)}...`}
                 </option>
               ))}
+              {microphones.length === 0 && (
+                <option value="">No microphones found</option>
+              )}
             </Select>
 
             {selectedMicrophoneId && (
@@ -80,7 +78,7 @@ export function DeviceSelector({
               />
             )}
           </div>
-        )}
+
       </div>
     </div>
   )

@@ -6,13 +6,13 @@ import {
   useState,
 } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { getVideoPosition, saveVideoPosition } from '../../../../../shared/ipc'
 import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreferencesProvider'
 import { withBoundary } from '../../../../../shared/withBoundary'
 import { PlaybackActionsOverlay } from './PlaybackActionsOverlay'
+import { useRememberMediaPosition } from './useRememberMediaPosition'
 import { VideoControls } from './VideoControls'
 
-interface PlayerProps {
+interface Props {
   logId: string
   src: string
   className?: string
@@ -31,7 +31,7 @@ export interface PlayerRef {
 }
 
 export const Player = withBoundary(
-  forwardRef<PlayerRef, PlayerProps>(
+  forwardRef<PlayerRef, Props>(
     (
       {
         logId,
@@ -45,16 +45,19 @@ export const Player = withBoundary(
       ref,
     ) => {
       const videoRef = useRef<HTMLVideoElement>(null)
-      const [hasRestoredPosition, setHasRestoredPosition] = useState(false)
       const [isBuffering, setIsBuffering] = useState(false)
       const [isFullscreen, setIsFullscreen] = useState(false)
-      const {
-        isMuted,
-        toggleMute,
-        setMuted,
-        playbackSpeed,
-        setPlaybackSpeed,
-      } = usePlaybackPreferences()
+      const { isMuted, toggleMute, setMuted, playbackSpeed, setPlaybackSpeed } =
+        usePlaybackPreferences()
+
+      // Use the hook to handle position restoration and saving
+      useRememberMediaPosition({
+        videoRef,
+        vlogId: logId,
+        onTimeUpdate,
+        onSeeked,
+        onLoadedData,
+      })
 
       // Expose video methods through ref
       useImperativeHandle(
@@ -85,109 +88,6 @@ export const Player = withBoundary(
         }),
         [],
       )
-
-      // Reset restoration state when logId changes
-      useEffect(() => {
-        setHasRestoredPosition(false)
-      }, [logId])
-
-      // Restore video position on load
-      useEffect(() => {
-        const restorePosition = async () => {
-          if (!videoRef.current || hasRestoredPosition) {
-            return
-          }
-
-          try {
-            const positionData = await getVideoPosition(logId)
-            if (positionData && videoRef.current) {
-              videoRef.current.currentTime = positionData.position
-              setHasRestoredPosition(true)
-            }
-          } catch (error) {
-            console.error('Failed to restore video position:', error)
-          }
-        }
-
-        // Wait for video to be ready
-        const video = videoRef.current
-        if (video) {
-          if (video.readyState >= 2) {
-            // HAVE_CURRENT_DATA
-            restorePosition()
-          } else {
-            const handleLoadedData = () => {
-              restorePosition()
-              video.removeEventListener('loadeddata', handleLoadedData)
-            }
-            video.addEventListener('loadeddata', handleLoadedData)
-            return () =>
-              video.removeEventListener('loadeddata', handleLoadedData)
-          }
-        }
-      }, [logId, hasRestoredPosition])
-
-      // Track video position changes
-      useEffect(() => {
-        const video = videoRef.current
-        if (!video) {
-          return
-        }
-
-        let saveTimeout: NodeJS.Timeout
-
-        const handleTimeUpdate = () => {
-          // Clear existing timeout
-          if (saveTimeout) {
-            clearTimeout(saveTimeout)
-          }
-
-          // Save position after 2 seconds of no changes (debounced)
-          saveTimeout = setTimeout(() => {
-            if (video.currentTime > 0) {
-              saveVideoPosition(logId, video.currentTime).catch(
-                (error: unknown) => {
-                  console.error('Failed to save video position:', error)
-                },
-              )
-            }
-          }, 2000)
-
-          // Call external onTimeUpdate callback
-          onTimeUpdate?.(video.currentTime)
-        }
-
-        const handleSeeked = () => {
-          // Save position immediately when user seeks
-          if (video.currentTime > 0) {
-            saveVideoPosition(logId, video.currentTime).catch(
-              (error: unknown) => {
-                console.error('Failed to save video position:', error)
-              },
-            )
-          }
-
-          // Call external onSeeked callback
-          onSeeked?.(video.currentTime)
-        }
-
-        const handleLoadedData = () => {
-          onLoadedData?.()
-        }
-
-        video.addEventListener('timeupdate', handleTimeUpdate)
-        video.addEventListener('seeked', handleSeeked)
-        video.addEventListener('loadeddata', handleLoadedData)
-
-        return () => {
-          video.removeEventListener('timeupdate', handleTimeUpdate)
-          video.removeEventListener('seeked', handleSeeked)
-          video.removeEventListener('loadeddata', handleLoadedData)
-          if (saveTimeout) {
-            clearTimeout(saveTimeout)
-          }
-        }
-      }, [logId, onTimeUpdate, onSeeked, onLoadedData])
 
       // Sync video element muted state with global state
       useEffect(() => {
@@ -267,7 +167,10 @@ export const Player = withBoundary(
         document.addEventListener('fullscreenchange', handleFullscreenChange)
 
         return () => {
-          document.removeEventListener('fullscreenchange', handleFullscreenChange)
+          document.removeEventListener(
+            'fullscreenchange',
+            handleFullscreenChange,
+          )
         }
       }, [])
 
@@ -283,10 +186,7 @@ export const Player = withBoundary(
 
       return (
         <div
-          className={twMerge(
-            'relative group',
-            isFullscreen && 'w-full h-full',
-          )}
+          className={twMerge('relative group', isFullscreen && 'w-full h-full')}
         >
           <video
             ref={videoRef}
@@ -299,9 +199,7 @@ export const Player = withBoundary(
                 : 'opacity-100',
               className,
               'cursor-pointer',
-              isFullscreen
-                ? 'w-full h-full object-contain'
-                : 'object-cover',
+              isFullscreen ? 'w-full h-full object-contain' : 'object-cover',
             )}
             src={src}
             onClick={handleVideoClick}

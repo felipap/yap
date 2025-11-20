@@ -281,8 +281,8 @@ export function onChangeTopLevelPage(page: 'library' | 'record'): void {
 
     // Set fixed size for record view
     libraryWindow.setMinimumSize(800, 600)
-    libraryWindow.setMaximumSize(800, 600)
-    libraryWindow.setSize(800, 600)
+    libraryWindow.setMaximumSize(800, 800)
+    // libraryWindow.setSize(800, 600)
     // libraryWindow.center()
   } else {
     // Restore previous bounds

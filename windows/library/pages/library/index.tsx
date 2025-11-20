@@ -42,7 +42,7 @@ export default function Page() {
                     <MdMovie size={40} className="text-secondary/80" />
                   </div>
                   <h3 className="text-md text-secondary/60">
-                    Select an entry or drag a file to import
+                    Select a log or drag a file to import
                   </h3>
                 </div>
               </div>
