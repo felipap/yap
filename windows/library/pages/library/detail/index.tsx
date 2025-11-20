@@ -45,6 +45,7 @@ export const DetailPage = withBoundary(function ({
         <Player
           ref={playerRef}
           logId={log.id}
+          isVideo={!log.isAudioOnly}
           src={`log-media://${log.id}`}
           className={twMerge(
             'w-full rounded-md',
