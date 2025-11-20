@@ -1,16 +1,16 @@
+import { BsFillCollectionFill } from 'react-icons/bs'
 import {
+  MdAccessTime,
+  MdContentCopy,
+  MdMic,
   MdMovie,
+  MdMovieFilter,
+  MdRefresh,
   MdSearch,
   MdVideocam,
-  MdMic,
-  MdVideoLibrary,
-  MdAccessTime,
-  MdRefresh,
-  MdContentCopy,
-  MdCollections,
-  MdCollectionsBookmark,
+  MdVisibility,
+  MdVisibilityOff,
 } from 'react-icons/md'
-import { BsFillCollectionFill } from 'react-icons/bs'
 
 interface IconProps {
   size?: number
@@ -77,4 +77,12 @@ export function RecordIcon({ size = 16, className }: IconProps) {
       <circle cx="8" cy="8" r="6" fill="currentColor" />
     </svg>
   )
+}
+
+export function VisibilityIcon({ size = 16, className }: IconProps) {
+  return <MdVisibility size={size} className={className} />
+}
+
+export function VisibilityOffIcon({ size = 16, className }: IconProps) {
+  return <MdVisibilityOff size={size} className={className} />
 }

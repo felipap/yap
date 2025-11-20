@@ -1,6 +1,5 @@
-import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { MdDelete } from 'react-icons/md'
+import { MdDelete, MdRefresh } from 'react-icons/md'
 import { untrackVlog } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
 
@@ -41,7 +40,7 @@ export function DeleteButton({ vlogId, disabled, onDeleted }: Props) {
     >
       {isDeleting ? (
         <>
-          <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+          <MdRefresh size={16} className="animate-spin" />
           <span>Removing...</span>
         </>
       ) : (

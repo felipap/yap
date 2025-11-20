@@ -16,10 +16,7 @@ interface Props {
   onBack: () => void
 }
 
-export const DetailPage = withBoundary(function ({
-  log,
-  onBack,
-}: Props) {
+export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
 
   // Notify backend when viewing this log entry
@@ -37,10 +34,10 @@ export const DetailPage = withBoundary(function ({
   return (
     <div
       className={twMerge(
-        'gap-4 overflow-x-hidden overflow-y-scroll w-full pb-8',
+        'gap-7 overflow-x-hidden overflow-y-scroll w-full pb-8',
       )}
     >
-      <div className="w-full px-2">
+      <div className="w-full px-1">
         <Player
           ref={playerRef}
           logId={log.id}
@@ -53,22 +50,22 @@ export const DetailPage = withBoundary(function ({
         />
       </div>
       <div className="flex flex-col items-center gap-8 justify-start mt-5">
-        <header className="px-2 flex flex-col gap-1 w-full">
+        <header className="px-0 flex flex-col gap-1 w-full">
           <TitleInput
             vlogId={log.id}
             isVideo={!log.isAudioOnly}
             title={log.title || ''}
           />
-          <div className="px-2">
+          <div className="px-1.5">
             <SummarySubtitle vlog={log} />
           </div>
         </header>
 
-        <div className="px-2 flex flex-col gap-4 w-full">
+        <div className="px-1 flex flex-col gap-4 w-full">
           <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
         </div>
 
-        <div className="px-2 w-full">
+        <div className="px-1 w-full">
           <Toolbar log={log} onBack={onBack} />
         </div>
       </div>

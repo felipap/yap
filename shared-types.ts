@@ -133,6 +133,7 @@ export type SharedIpcMethods = {
     set: (key: string, value: any) => Promise<void>
   }
   transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
+  transcribeNextFive: () => Promise<{ started: number; total: number }>
   getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
   loadVideoDuration: (vlogId: string) => Promise<number>
   getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>

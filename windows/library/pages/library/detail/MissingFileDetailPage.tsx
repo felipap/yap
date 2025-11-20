@@ -1,9 +1,15 @@
-import { Folder, Loader2 } from 'lucide-react'
-import { MdDelete } from 'react-icons/md'
+import {
+  MdDelete,
+  MdFolder,
+  MdRefresh,
+  MdErrorOutline,
+  MdMovieFilter,
+} from 'react-icons/md'
 import { useState } from 'react'
 import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
 import { Button } from '../../../../shared/ui/Button'
+import { MovieIcon } from '../../../../shared/icons'
 
 interface Props {
   log: EnrichedLog
@@ -43,51 +49,33 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
     <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-one">
       <div className="w-full max-w-2xl flex flex-col items-center gap-6">
         {/* Icon */}
-        <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        <div className="relative inline-block">
+          <MovieIcon size={40} className="text-[#AAA] dark:text-[#DDD]" />
+          <div className="absolute inset-[-5px] flex items-center justify-center pointer-events-none">
+            <div
+              className="h-1 bg-[#777] dark:bg-[#DDD] origin-center"
+              style={{ width: '100px', transform: 'rotate(-45deg)' }}
             />
-          </svg>
+          </div>
         </div>
 
         {/* Title and Message */}
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-semibold text-primary">
-            Video file not found
-          </h2>
-          <p className="text-base text-secondary">
-            The video file for this recording has been moved or deleted.
-          </p>
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-semibold text-primary">File not found</h2>
+          <h3 className="text-md text-secondary/60">
+            The file for this log has been moved or deleted.
+          </h3>
         </div>
 
         {/* File Path */}
-        <div className="w-full rounded-lg border border-stroke bg-two p-4">
+        {/* <div className="w-full rounded-lg border border-stroke bg-two p-4">
           <div className="text-xs font-medium text-secondary mb-2">
             Expected Location
           </div>
           <div className="text-sm font-mono text-primary break-all">
             {log.path}
           </div>
-        </div>
-
-        {/* Recording Info */}
-        {log.title && (
-          <div className="w-full rounded-lg border border-stroke bg-two p-4">
-            <div className="text-xs font-medium text-secondary mb-2">
-              Recording Title
-            </div>
-            <div className="text-sm text-primary">{log.title}</div>
-          </div>
-        )}
+        </div> */}
 
         {/* Actions */}
         <div className="flex flex-col gap-3 w-full mt-4">
@@ -97,8 +85,8 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
               onClick={handleOpenLocation}
               disabled={isDeleting}
             >
-              <Folder size={16} strokeWidth={2} />
-              <span>Show in Finder</span>
+              <MdFolder size={16} />
+              <span>Open in Finder</span>
             </Button>
             <Button
               variant="header"
@@ -107,7 +95,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
             >
               {isDeleting ? (
                 <>
-                  <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+                  <MdRefresh size={16} className="animate-spin" />
                   <span>Removing...</span>
                 </>
               ) : (
@@ -117,13 +105,6 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
                 </>
               )}
             </Button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-xs text-secondary">
-              The recording metadata is still saved. If you locate the file,
-              move it back to the expected location.
-            </p>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Video, Loader2 } from 'lucide-react'
+import { MdVideocam, MdRefresh } from 'react-icons/md'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
 import { useVlog } from '../../../../../shared/useVlogData'
 import { Button } from '../../../../../shared/ui/Button'
@@ -93,21 +93,21 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
       if (progress > 0) {
         return (
           <>
-            <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+            <MdRefresh size={16} className="animate-spin" />
             <span>Converting... {progress}%</span>
           </>
         )
       }
       return (
         <>
-          <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+          <MdRefresh size={16} className="animate-spin" />
           <span>Converting...</span>
         </>
       )
     }
     return (
       <>
-        <Video size={16} strokeWidth={2} />
+        <MdVideocam size={16} />
         <span>Convert to MP4</span>
       </>
     )

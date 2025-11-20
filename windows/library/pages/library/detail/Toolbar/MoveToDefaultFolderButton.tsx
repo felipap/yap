@@ -1,5 +1,5 @@
-import { FolderInput, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { MdFolder, MdRefresh } from 'react-icons/md'
 import { moveToDefaultFolder } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
 
@@ -30,12 +30,12 @@ export function MoveToDefaultFolderButton({ vlogId, disabled }: Props) {
     <Button onClick={handleMoveToDefaultFolder} disabled={disabled || isMoving}>
       {isMoving ? (
         <>
-          <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+          <MdRefresh size={16} className="animate-spin" />
           <span>Moving...</span>
         </>
       ) : (
         <>
-          <FolderInput size={16} strokeWidth={2} />
+          <MdFolder size={16} />
           <span>Move to default folder</span>
         </>
       )}

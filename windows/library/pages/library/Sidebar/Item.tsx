@@ -1,8 +1,8 @@
-import { AlertTriangle, Link2, Link2Off } from 'lucide-react'
-import dayjs from 'dayjs'
-import { MdMic, MdMovie } from 'react-icons/md'
+import { useEffect, useState } from 'react'
+import { MdLinkOff, MdMic, MdMovie, MdWarning } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { SidebarItem } from '.'
+import { IS_DEV } from '../../..'
 import { formatDate, formatDateOrRelative } from './formatters'
 
 interface Props {
@@ -11,8 +11,45 @@ interface Props {
   onClick: () => void
 }
 
+function useTranscriptionProgress(vlogId: string) {
+  const [progress, setProgress] = useState<number | null>(null)
+
+  useEffect(() => {
+    const handleProgressUpdate = (
+      updatedVlogId: string,
+      updatedProgress: number,
+    ) => {
+      if (updatedVlogId === vlogId) {
+        if (updatedProgress < 100) {
+          setProgress(updatedProgress)
+        } else {
+          // Clear progress when complete
+          setTimeout(() => {
+            setProgress(null)
+          }, 500)
+        }
+      }
+    }
+
+    if (window.electronAPI.onTranscriptionProgressUpdated) {
+      window.electronAPI.onTranscriptionProgressUpdated(handleProgressUpdate)
+    }
+
+    return () => {
+      if (window.electronAPI.removeTranscriptionProgressListener) {
+        window.electronAPI.removeTranscriptionProgressListener(
+          handleProgressUpdate,
+        )
+      }
+    }
+  }, [vlogId])
+
+  return progress
+}
+
 export function Item({ data, selected, onClick }: Props) {
   const isMissing = !data.fileExists
+  const transcriptionProgress = useTranscriptionProgress(data.id)
 
   return (
     <button
@@ -41,14 +78,24 @@ export function Item({ data, selected, onClick }: Props) {
                   #{data.dayIndex}
                 </span>
               )}
-              {isMissing && (
+              {IS_DEV && transcriptionProgress !== null && (
                 <span
-                  className="text-[10px] px-1 py-0.5 rounded bg-red-500/20 text-red-500 dark:text-red-400 flex items-center"
-                  title="File not found on disk"
+                  className="text-[10px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 font-mono"
+                  title={`Transcribing: ${transcriptionProgress}%`}
                 >
-                  <AlertTriangle size={10} strokeWidth={2} />
+                  {transcriptionProgress}%
                 </span>
               )}
+              {IS_DEV &&
+                transcriptionProgress === null &&
+                !data.transcription && (
+                  <span
+                    className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-500 dark:text-yellow-400"
+                    title="No transcription"
+                  >
+                    No transcript
+                  </span>
+                )}
             </div>
             {data.title && (
               <div className="text-xs opacity-50 truncate flex items-center gap-1">
@@ -109,7 +156,7 @@ function ItemImage({
         style={{ display: data.thumbnailPath && !isMissing ? 'none' : 'flex' }}
       >
         {isMissing ? (
-          <Link2Off size={24} className="text-gray-400" strokeWidth={1.5} />
+          <MdLinkOff size={24} className="text-gray-400" />
         ) : data.isAudioOnly ? (
           <MdMic size={24} className="text-gray-400" />
         ) : (
@@ -120,16 +167,6 @@ function ItemImage({
       {data.duration && !isMissing && (
         <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">
           {formatDuration(data.duration)}
-        </div>
-      )}
-
-      {isMissing && (
-        <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
-          <AlertTriangle
-            size={18}
-            strokeWidth={2}
-            className="text-red-500 dark:text-red-400"
-          />
         </div>
       )}
     </>

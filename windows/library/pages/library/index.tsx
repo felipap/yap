@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { MdMovie } from 'react-icons/md'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
+import { MovieIcon } from '../../../shared/icons'
 import { useVlog } from '../../../shared/useVlogData'
 import { EnrichedLog } from '../../types'
 import { DetailPage } from './detail'
@@ -54,7 +54,7 @@ function NoVideoPage() {
     <div className="flex-1 flex items-center justify-center select-none">
       <div className="text-center flex flex-col gap-2">
         <div className=" flex justify-center">
-          <MdMovie size={40} className="text-secondary/80" />
+          <MovieIcon size={40} className="text-secondary/80" />
         </div>
         <h3 className="text-md text-secondary/60">
           Select a log or drag a file to import

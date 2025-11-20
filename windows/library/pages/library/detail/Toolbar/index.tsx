@@ -6,6 +6,7 @@ import { JsonViewer } from '../../../../../shared/ui/JsonViewer'
 import { ConvertButton } from './ConvertButton'
 import { DeleteButton } from './DeleteButton'
 import { MoveToDefaultFolderButton } from './MoveToDefaultFolderButton'
+import { IS_DEV } from '../../../..'
 
 interface Props {
   log: EnrichedLog
@@ -36,7 +37,7 @@ export function Toolbar({ log, onBack }: Props) {
         {!inDefaultFolder && <MoveToDefaultFolderButton vlogId={log.id} />}
         <DeleteButton vlogId={log.id} onDeleted={onBack} />
       </div>
-      <JsonViewer log={log} />
+      {IS_DEV && <JsonViewer log={log} />}
     </div>
   )
 }

@@ -5,6 +5,7 @@ interface Args {
   displayVlogs: SidebarItem[]
   onVideoSelect: (file: SidebarItem) => void
   selectedVlog?: SidebarItem | null
+  onUnselect?: () => void
 }
 
 function useSelectionHistory(selectedVlog?: SidebarItem | null) {
@@ -65,12 +66,31 @@ export function useSidebarShortcuts({
   displayVlogs,
   onVideoSelect,
   selectedVlog,
+  onUnselect,
 }: Args) {
   const { goBack, goForward } = useSelectionHistory(selectedVlog)
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const key = e.key
+
+      // ESC: unselect current file
+      if (key === 'Escape') {
+        const target = e.target as HTMLElement | null
+        const isEditable =
+          !!target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable)
+        if (isEditable) {
+          return
+        }
+        if (selectedVlog && onUnselect) {
+          e.preventDefault()
+          onUnselect()
+        }
+        return
+      }
 
       // Arrow navigation (no modifier): move selection up/down
       if (key === 'ArrowDown') {
@@ -154,5 +174,5 @@ export function useSidebarShortcuts({
     return () => {
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [displayVlogs, onVideoSelect, goBack, goForward])
+  }, [displayVlogs, onVideoSelect, goBack, goForward, selectedVlog, onUnselect])
 }

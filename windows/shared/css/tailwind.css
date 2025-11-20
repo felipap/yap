@@ -36,9 +36,9 @@
   /* Colors */
   --color-contrast: #000;
   --text-color-secondary: #888;
-  --text-color-inverted: #fff;
+  --color-inverted: #fff;
   --background-color-one: #f4f6f6;
-  --background-color-two: #eee;
+  --background-color-two: #eeeef2;
   --background-color-three: #fff;
   --highlight-color: #3b82f6;
   --twitter-blue: #1da1f2;
@@ -59,7 +59,7 @@
     --text-color-primary: #fff;
     --text-color-link: #6fb4ff;
     --text-color-secondary: #aaa;
-    --text-color-inverted: #000;
+    --color-inverted: #000;
     --color-sidebar: #121212;
 
     --background-color-one: #000;
@@ -105,7 +105,7 @@ body {
 }
 
 .text-inverted {
-  color: var(--text-color-inverted);
+  color: var(--color-inverted);
 }
 
 button {

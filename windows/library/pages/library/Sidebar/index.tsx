@@ -34,6 +34,7 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
     displayVlogs: filteredVlogs,
     onVideoSelect,
     selectedVlog: selectedSidebarItem,
+    onUnselect: onClose,
   })
 
   return (

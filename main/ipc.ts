@@ -352,6 +352,114 @@ export function setupIpcHandlers() {
   )
 
   ipcMain.handle(
+    'transcribeNextFive',
+    tryCatchIpcMain(async () => {
+      const allVlogs = getAllVlogs()
+      const vlogEntries = Object.entries(allVlogs)
+
+      // Find vlogs that need transcription
+      const needsTranscription = vlogEntries.filter(([vlogId, vlog]) => {
+        // Skip if already transcribing
+        if (ephemeral.isTranscriptionActive(vlogId)) {
+          return false
+        }
+
+        // Skip if file doesn't exist
+        const filePath = vlogIdToPath.get(vlogId)
+        if (!filePath) {
+          return false
+        }
+
+        // Check if transcription is missing or incomplete
+        if (!vlog.transcription) {
+          return true
+        }
+
+        if (vlog.transcription.status !== 'completed') {
+          return true
+        }
+
+        return false
+      })
+
+      // Take up to 5, sorted by creation date (oldest first)
+      const toTranscribe = needsTranscription
+        .sort(([, a], [, b]) => {
+          const dateA = new Date(a.timestamp).getTime()
+          const dateB = new Date(b.timestamp).getTime()
+          return dateA - dateB
+        })
+        .slice(0, 5)
+        .map(([vlogId]) => vlogId)
+
+      const speedUp = store.get('transcriptionSpeedUp') || false
+
+      // Start transcribing each one (fire and forget)
+      for (const vlogId of toTranscribe) {
+        const filePath = vlogIdToPath.get(vlogId)
+        if (!filePath) {
+          continue
+        }
+
+        ephemeral.setTranscriptionProgress(vlogId, 0)
+
+        // Don't await - let them run in parallel
+        transcribeVideo(filePath, speedUp, (progress) => {
+          ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+          libraryWindow?.webContents.send(
+            'transcription-progress-updated',
+            vlogId,
+            Math.round(progress),
+          )
+        })
+          .then((result) => {
+            ephemeral.removeTranscription(vlogId)
+
+            updateVlog(vlogId, {
+              transcription: {
+                status: 'completed',
+                result,
+              },
+            })
+
+            // Generate summary asynchronously
+            generateVideoSummary(vlogId, result.text)
+              .then((summary) => {
+                updateVlog(vlogId, { summary })
+                libraryWindow?.webContents.send(
+                  'summary-generated',
+                  vlogId,
+                  summary,
+                )
+              })
+              .catch((summaryError) => {
+                console.error(
+                  'Error generating automatic summary:',
+                  summaryError,
+                )
+              })
+          })
+          .catch((error) => {
+            ephemeral.removeTranscription(vlogId)
+
+            const errorState = {
+              status: 'error' as const,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            }
+            updateVlog(vlogId, { transcription: errorState })
+
+            console.error(`Failed to transcribe ${vlogId}:`, error)
+          })
+      }
+
+      return {
+        started: toTranscribe.length,
+        total: needsTranscription.length,
+      }
+    }),
+  )
+
+  ipcMain.handle(
     'onViewLogEntry',
     tryCatchIpcMain(async (_, vlogId: string) => {
       const vlog = getLog(vlogId)

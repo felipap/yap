@@ -5,6 +5,7 @@ import { app } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
+import { setupMenu } from './menu'
 // import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
 import {
@@ -48,6 +49,8 @@ async function onInit() {
   setupProtocolHandlers()
 
   setupIpcHandlers()
+
+  setupMenu()
 
   // Create windows
   createLibraryWindow()
@@ -108,6 +111,7 @@ if (!gotTheLock) {
       if (libraryWindow.isMinimized()) {
         libraryWindow.restore()
       }
+      libraryWindow.show()
       libraryWindow.focus()
     }
   })

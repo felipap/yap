@@ -75,6 +75,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('transcribeVideo', vlogId)
   },
 
+  transcribeNextFive: (): Promise<{
+    started: number
+    total: number
+  }> => {
+    return ipcRenderer.invoke('transcribeNextFive')
+  },
+
   getTranscription: (vlogId: string): Promise<TranscriptionResult | null> => {
     return ipcRenderer.invoke('getTranscription', vlogId)
   },

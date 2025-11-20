@@ -8,11 +8,7 @@ interface Props {
   isVideo: boolean
 }
 
-export function TitleInput({
-  vlogId,
-  isVideo,
-  title,
-}: Props) {
+export function TitleInput({ vlogId, isVideo, title }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [localTitle, setLocalTitle] = useState(title)
 

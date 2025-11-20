@@ -1,5 +1,4 @@
-import { Loader2 } from 'lucide-react'
-import { MdClose } from 'react-icons/md'
+import { MdClose, MdRefresh } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { getVlog } from '../../../../../shared/ipc'
 import { MicIcon } from '../../../../../shared/icons'
@@ -92,7 +91,7 @@ export function TranscribeButton({
       >
         {computedIsTranscribing ? (
           <div className="flex items-center gap-2">
-            <Loader2 size={14} strokeWidth={2} className="animate-spin" />
+            <MdRefresh size={14} className="animate-spin" />
             <span>{computedProgressLabel}</span>
             <span className="text-xs opacity-75">{computedProgress}%</span>
           </div>

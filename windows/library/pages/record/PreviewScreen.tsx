@@ -1,6 +1,5 @@
-import { Monitor, MonitorSpeaker } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
-import { MdMic, MdVideocam } from 'react-icons/md'
+import { MdMic, MdVideocam, MdDesktopMac } from 'react-icons/md'
 import { RecordingMode } from '../../../../shared-types'
 import { twMerge } from 'tailwind-merge'
 
@@ -63,7 +62,7 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
             {props.mode === 'camera' ? (
               <MdVideocam size={120} className="text-gray-400" />
             ) : (
-              <Monitor size={120} strokeWidth={1.5} className="text-gray-400" />
+              <MdDesktopMac size={120} className="text-gray-400" />
             )}
           </div>
         )}
