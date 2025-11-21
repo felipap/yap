@@ -14,7 +14,7 @@ import { getDefaultRecordingsDir, getRecordingsDir } from './lib/config'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
-import { generateVideoSummary } from './lib/videoSummary'
+import { generateVideoSummary } from './ai/summarize-transcript'
 import {
   extractVideoMetadata,
   formatDateForPrompt,
@@ -262,8 +262,11 @@ export function setupIpcHandlers() {
 
         try {
           const summary = await generateVideoSummary(vlogId, result.text)
-          updateVlog(vlogId, { summary })
-          libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+          // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
+          if (summary) {
+            updateVlog(vlogId, { summary })
+            libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+          }
         } catch (summaryError) {
           console.error('Error generating automatic summary:', summaryError)
         }
@@ -425,12 +428,15 @@ export function setupIpcHandlers() {
             // Generate summary asynchronously
             generateVideoSummary(vlogId, result.text)
               .then((summary) => {
-                updateVlog(vlogId, { summary })
-                libraryWindow?.webContents.send(
-                  'summary-generated',
-                  vlogId,
-                  summary,
-                )
+                // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
+                if (summary) {
+                  updateVlog(vlogId, { summary })
+                  libraryWindow?.webContents.send(
+                    'summary-generated',
+                    vlogId,
+                    summary,
+                  )
+                }
               })
               .catch((summaryError) => {
                 console.error(
@@ -459,6 +465,54 @@ export function setupIpcHandlers() {
     }),
   )
 
+  // Helper function to start transcription and generate summary asynchronously
+  async function startTranscriptionAndSummary(
+    vlogId: string,
+    filePath: string,
+  ) {
+    const speedUp = store.get('transcriptionSpeedUp') || false
+
+    try {
+      const result = await transcribeVideo(filePath, speedUp, (progress) => {
+        ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+        libraryWindow?.webContents.send(
+          'transcription-progress-updated',
+          vlogId,
+          Math.round(progress),
+        )
+      })
+
+      ephemeral.removeTranscription(vlogId)
+
+      updateVlog(vlogId, {
+        transcription: {
+          status: 'completed',
+          result,
+        },
+      })
+
+      // Generate summary asynchronously
+      try {
+        const summary = await generateVideoSummary(vlogId, result.text)
+        // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
+        if (summary) {
+          updateVlog(vlogId, { summary })
+          libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+        }
+      } catch (summaryError) {
+        console.error('Error generating automatic summary:', summaryError)
+      }
+    } catch (error) {
+      ephemeral.removeTranscription(vlogId)
+
+      const errorState = {
+        status: 'error' as const,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+      updateVlog(vlogId, { transcription: errorState })
+    }
+  }
+
   ipcMain.handle(
     'onViewLogEntry',
     tryCatchIpcMain(async (_, vlogId: string) => {
@@ -467,69 +521,25 @@ export function setupIpcHandlers() {
         return
       }
 
+      const filePath = vlogIdToPath.get(vlogId)
+
       // Auto-load duration if not present
-      if (vlog.duration === undefined) {
-        const filePath = vlogIdToPath.get(vlogId)
-        if (filePath) {
-          const duration = await getVideoDuration(filePath)
-          if (duration) {
-            updateVlog(vlogId, { duration })
-          }
+      if (vlog.duration === undefined && filePath) {
+        const duration = await getVideoDuration(filePath)
+        if (duration) {
+          updateVlog(vlogId, { duration })
         }
       }
 
       // Auto-trigger transcription if not present or idle
-      if (!vlog.transcription || vlog.transcription.status === 'idle') {
-        const filePath = vlogIdToPath.get(vlogId)
-        if (filePath && !ephemeral.isTranscriptionActive(vlogId)) {
-          // Trigger transcription asynchronously (don't block)
-          const speedUp = store.get('transcriptionSpeedUp') || false
+      const needsTranscription =
+        (!vlog.transcription || vlog.transcription.status === 'idle') &&
+        filePath &&
+        !ephemeral.isTranscriptionActive(vlogId)
 
-          transcribeVideo(filePath, speedUp, (progress) => {
-            ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
-            libraryWindow?.webContents.send(
-              'transcription-progress-updated',
-              vlogId,
-              Math.round(progress),
-            )
-          })
-            .then((result) => {
-              ephemeral.removeTranscription(vlogId)
-
-              updateVlog(vlogId, {
-                transcription: {
-                  status: 'completed',
-                  result,
-                },
-              })
-
-              // Generate summary asynchronously
-              generateVideoSummary(vlogId, result.text)
-                .then((summary) => {
-                  updateVlog(vlogId, { summary })
-                  libraryWindow?.webContents.send(
-                    'summary-generated',
-                    vlogId,
-                    summary,
-                  )
-                })
-                .catch((summaryError) => {
-                  console.error(
-                    'Error generating automatic summary:',
-                    summaryError,
-                  )
-                })
-            })
-            .catch((error) => {
-              ephemeral.removeTranscription(vlogId)
-
-              const errorState = {
-                status: 'error' as const,
-                error: error instanceof Error ? error.message : 'Unknown error',
-              }
-              updateVlog(vlogId, { transcription: errorState })
-            })
-        }
+      if (needsTranscription) {
+        // Trigger transcription asynchronously (don't block)
+        startTranscriptionAndSummary(vlogId, filePath)
       }
     }),
   )
@@ -564,7 +574,10 @@ export function setupIpcHandlers() {
     'generateVideoSummary',
     tryCatchIpcMain(async (_, vlogId: string, transcription: string) => {
       const summary = await generateVideoSummary(vlogId, transcription)
-      updateVlog(vlogId, { summary })
+      // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
+      if (summary) {
+        updateVlog(vlogId, { summary })
+      }
       return summary
     }),
   )

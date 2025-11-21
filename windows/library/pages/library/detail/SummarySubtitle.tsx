@@ -18,6 +18,13 @@ export function SummarySubtitle({ vlog }: Props) {
 
   const summary = vlog.summary || ''
 
+  // Check if transcription exists but has no words
+  const hasTranscriptionButNoWords =
+    vlog.transcription &&
+    (!vlog.transcription.text || vlog.transcription.text.trim().length === 0)
+
+  const isNothingToTranscribe = !summary && hasTranscriptionButNoWords
+
   useEffect(() => {
     if (textRef.current) {
       setIsTruncated(
@@ -32,19 +39,12 @@ export function SummarySubtitle({ vlog }: Props) {
       return
     }
 
-    if (
-      !vlog.transcription.text ||
-      vlog.transcription.text.trim().length === 0
-    ) {
-      setError('Transcription is empty. Please transcribe the video first.')
-      return
-    }
-
+    // Let the AI "fail" - don't return early for empty transcription
     setIsGenerating(true)
     setError(null)
 
     try {
-      await generateVideoSummary(vlog.id, vlog.transcription.text)
+      await generateVideoSummary(vlog.id, vlog.transcription.text || '')
     } catch (error) {
       console.error('Summary generation failed:', error)
       setError(
@@ -74,9 +74,13 @@ export function SummarySubtitle({ vlog }: Props) {
   if (!summary) {
     if (!vlog.transcription) {
       return null
+    }
+
+    // If transcription exists but has no words, show "nothing to transcribe" in italics
+    if (hasTranscriptionButNoWords) {
       return (
-        <div className="text-[13px] text-contrast opacity-40 italic">
-          Transcribe the video to summarize it
+        <div className="text-[13px] text-contrast opacity-60 italic">
+          nothing to transcribe
         </div>
       )
     }
@@ -119,6 +123,7 @@ export function SummarySubtitle({ vlog }: Props) {
         }}
         className={twMerge(
           'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
+          isNothingToTranscribe && 'italic',
           !isExpanded && 'line-clamp-5',
           !isExpanded && isTruncated && 'cursor-pointer  transition-opacity',
         )}
