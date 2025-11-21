@@ -101,3 +101,4 @@ ${transcription || ''}`
   return parsedResponse.summary
 }
 
+

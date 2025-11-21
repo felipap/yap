@@ -854,6 +854,9 @@ export function setupIpcHandlers() {
           name: fileName,
           path: outputPath,
           timestamp: timestamp,
+          title: originalVlog?.title,
+          transcription: originalVlog?.transcription,
+          summary: originalVlog?.summary,
         }
         setVlog(vlog)
 

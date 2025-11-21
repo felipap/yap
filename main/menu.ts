@@ -28,24 +28,24 @@ export function setupMenu() {
         { role: 'paste' },
         { role: 'selectAll' },
         { type: 'separator' },
-        {
-          label: 'Transcribe five more',
-          click: async () => {
-            if (libraryWindow) {
-              try {
-                const result =
-                  await libraryWindow.webContents.executeJavaScript(
-                    `window.electronAPI.transcribeNextFive()`,
-                  )
-                console.log(
-                  `Started transcribing ${result.started} items (${result.total} total need transcription)`,
-                )
-              } catch (error) {
-                console.error('Failed to transcribe next 5:', error)
-              }
-            }
-          },
-        },
+        // {
+        //   label: 'Transcribe five more',
+        //   click: async () => {
+        //     if (libraryWindow) {
+        //       try {
+        //         const result =
+        //           await libraryWindow.webContents.executeJavaScript(
+        //             `window.electronAPI.transcribeNextFive()`,
+        //           )
+        //         console.log(
+        //           `Started transcribing ${result.started} items (${result.total} total need transcription)`,
+        //         )
+        //       } catch (error) {
+        //         console.error('Failed to transcribe next 5:', error)
+        //       }
+        //     }
+        //   },
+        // },
       ],
     },
     {

@@ -55,7 +55,12 @@ export const PreviewScreen = forwardRef<PreviewScreenRef, Props>(
             'object-center',
             hasVideo ? 'opacity-100' : 'opacity-0',
           )}
-          style={{ transform: 'scaleX(-1)' }}
+          style={{
+            transform:
+              props.mode === 'camera' || props.mode === 'both'
+                ? 'scaleX(-1)'
+                : 'none',
+          }}
         />
         {!hasVideo && (
           <div className="absolute inset-0 flex items-center justify-center">

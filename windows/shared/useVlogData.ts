@@ -60,19 +60,19 @@ export function useVlogData() {
   useEffect(() => {
     loadVlogs()
 
-    // // Refresh file list periodically
-    // // const intervalId = setInterval(loadVlogs, 2000)
+    // Refresh file list periodically
+    // const intervalId = setInterval(loadVlogs, 2000)
 
-    // // Subscribe to general vlog changes
-    // const handleStateChange = () => {
-    //   void loadVlogs()
-    // }
-    // onStateChange(handleStateChange)
+    // Subscribe to general vlog changes
+    const handleStateChange = () => {
+      void loadVlogs()
+    }
+    onStateChange(handleStateChange)
 
-    // return () => {
-    //   // clearInterval(intervalId)
-    //   removeVlogUpdatedListener()
-    // }
+    return () => {
+      // clearInterval(intervalId)
+      removeVlogUpdatedListener()
+    }
   }, [stateCount])
 
   const loadVlogs = async () => {
