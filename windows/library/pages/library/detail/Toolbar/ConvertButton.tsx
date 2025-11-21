@@ -63,11 +63,7 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
   }, [vlogId])
 
   const handleConvertToMp4 = async () => {
-    if (
-      !confirm(
-        `Convert "${vlog?.name ?? 'this video'}" to MP4? This may take a few minutes.`,
-      )
-    ) {
+    if (!confirm(`Convert file to MP4? This may take a few minutes.`)) {
       return
     }
 
@@ -94,7 +90,7 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
         return (
           <>
             <MdRefresh size={16} className="animate-spin" />
-            <span>Converting... {progress}%</span>
+            <span>Converting {progress}%</span>
           </>
         )
       }
@@ -114,11 +110,7 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
   }
 
   return (
-    <Button
-      variant="header"
-      onClick={handleConvertToMp4}
-      disabled={disabled || isConverting}
-    >
+    <Button onClick={handleConvertToMp4} disabled={disabled || isConverting}>
       {getButtonText()}
     </Button>
   )

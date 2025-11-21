@@ -775,11 +775,16 @@ export function setupIpcHandlers() {
         throw new Error(`Vlog with ID ${vlogId} not found`)
       }
 
-      if (!filePath.toLowerCase().endsWith('.webm')) {
-        throw new Error('Only WebM files can be converted to MP4')
+      if (
+        !filePath.toLowerCase().endsWith('.webm') &&
+        !filePath.toLowerCase().endsWith('.mov')
+      ) {
+        throw new Error('Only WebM and MOV files can be converted to MP4')
       }
 
-      const outputPath = filePath.replace(/\.webm$/i, '.mp4')
+      const outputPath = filePath
+        .replace(/\.webm$/i, '.mp4')
+        .replace(/\.mov$/i, '.mp4')
 
       try {
         await access(outputPath)
@@ -912,11 +917,11 @@ export function setupIpcHandlers() {
 
       const response = await dialog.showMessageBox(libraryWindow, {
         type: 'question',
-        buttons: ['Keep Original', 'Move to Trash'],
+        buttons: ['Move to Trash', 'Keep Original'],
         defaultId: 0,
-        title: 'Delete Original File?',
+        title: 'Delete original file?',
         message: 'File copied successfully!',
-        detail: `The file has been copied to the recordings folder. Do you want to move the original file "${fileName}" to trash?`,
+        detail: `The file has been copied to the recordings folder. Do you want to move the original file to trash?`,
       })
 
       if (response.response === 1) {

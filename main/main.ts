@@ -60,6 +60,10 @@ async function onInit() {
 
   app.on('activate', () => {
     // On macOS, when the dock icon is clicked, show the library window
+    if (!libraryWindow) {
+      createLibraryWindow()
+      return
+    }
     if (libraryWindow.isMinimized()) {
       libraryWindow.restore()
     }
@@ -107,13 +111,15 @@ if (!gotTheLock) {
 } else {
   app.on('second-instance', (event, commandLine) => {
     // Someone tried to run a second instance, focus our window instead
-    if (libraryWindow) {
-      if (libraryWindow.isMinimized()) {
-        libraryWindow.restore()
-      }
-      libraryWindow.show()
-      libraryWindow.focus()
+    if (!libraryWindow) {
+      createLibraryWindow()
+      return
     }
+    if (libraryWindow.isMinimized()) {
+      libraryWindow.restore()
+    }
+    libraryWindow.show()
+    libraryWindow.focus()
   })
 }
 

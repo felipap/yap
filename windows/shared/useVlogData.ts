@@ -30,15 +30,15 @@ export function useBackendState() {
     load()
 
     // Subscribe to state changes
-    const unsubscribe = window.electronAPI.onStateChange((newState) => {
-      stateRef.current = newState
-      setState(newState)
-      stateCount.current++
-    })
+    // const unsubscribe = window.electronAPI.onStateChange((newState) => {
+    //   stateRef.current = newState
+    //   setState(newState)
+    //   stateCount.current++
+    // })
 
     // Cleanup subscription on unmount
     return () => {
-      unsubscribe()
+      // unsubscribe()
     }
   }, [])
 

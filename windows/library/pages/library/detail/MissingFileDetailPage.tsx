@@ -1,15 +1,9 @@
-import {
-  MdDelete,
-  MdFolder,
-  MdRefresh,
-  MdErrorOutline,
-  MdMovieFilter,
-} from 'react-icons/md'
 import { useState } from 'react'
-import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
-import { EnrichedLog } from '../../../types'
-import { Button } from '../../../../shared/ui/Button'
+import { MdDelete, MdFolder, MdRefresh } from 'react-icons/md'
 import { MovieIcon } from '../../../../shared/icons'
+import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
+import { Button } from '../../../../shared/ui/Button'
+import { EnrichedLog } from '../../../types'
 
 interface Props {
   log: EnrichedLog
@@ -80,19 +74,11 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
         {/* Actions */}
         <div className="flex flex-col gap-3 w-full mt-4">
           <div className="flex justify-center gap-2">
-            <Button
-              variant="header"
-              onClick={handleOpenLocation}
-              disabled={isDeleting}
-            >
+            <Button onClick={handleOpenLocation} disabled={isDeleting}>
               <MdFolder size={16} />
               <span>Open in Finder</span>
             </Button>
-            <Button
-              variant="header"
-              onClick={handleUntrack}
-              disabled={isDeleting}
-            >
+            <Button onClick={handleUntrack} disabled={isDeleting}>
               {isDeleting ? (
                 <>
                   <MdRefresh size={16} className="animate-spin" />

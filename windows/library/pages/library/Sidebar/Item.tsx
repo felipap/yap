@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { MdLinkOff, MdMic, MdMovie, MdWarning } from 'react-icons/md'
+import { MdLinkOff, MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { SidebarItem } from '.'
 import { IS_DEV } from '../../..'
@@ -11,45 +10,8 @@ interface Props {
   onClick: () => void
 }
 
-function useTranscriptionProgress(vlogId: string) {
-  const [progress, setProgress] = useState<number | null>(null)
-
-  useEffect(() => {
-    const handleProgressUpdate = (
-      updatedVlogId: string,
-      updatedProgress: number,
-    ) => {
-      if (updatedVlogId === vlogId) {
-        if (updatedProgress < 100) {
-          setProgress(updatedProgress)
-        } else {
-          // Clear progress when complete
-          setTimeout(() => {
-            setProgress(null)
-          }, 500)
-        }
-      }
-    }
-
-    if (window.electronAPI.onTranscriptionProgressUpdated) {
-      window.electronAPI.onTranscriptionProgressUpdated(handleProgressUpdate)
-    }
-
-    return () => {
-      if (window.electronAPI.removeTranscriptionProgressListener) {
-        window.electronAPI.removeTranscriptionProgressListener(
-          handleProgressUpdate,
-        )
-      }
-    }
-  }, [vlogId])
-
-  return progress
-}
-
 export function Item({ data, selected, onClick }: Props) {
   const isMissing = !data.fileExists
-  const transcriptionProgress = useTranscriptionProgress(data.id)
 
   return (
     <button
@@ -78,24 +40,14 @@ export function Item({ data, selected, onClick }: Props) {
                   #{data.dayIndex}
                 </span>
               )}
-              {IS_DEV && transcriptionProgress !== null && (
+              {IS_DEV && !data.transcription && (
                 <span
-                  className="text-[10px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-500 dark:text-blue-400 font-mono"
-                  title={`Transcribing: ${transcriptionProgress}%`}
+                  className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-500 dark:text-yellow-400"
+                  title="No transcription"
                 >
-                  {transcriptionProgress}%
+                  No transcript
                 </span>
               )}
-              {IS_DEV &&
-                transcriptionProgress === null &&
-                !data.transcription && (
-                  <span
-                    className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-500 dark:text-yellow-400"
-                    title="No transcription"
-                  >
-                    No transcript
-                  </span>
-                )}
             </div>
             {data.title && (
               <div className="text-xs opacity-50 truncate flex items-center gap-1">

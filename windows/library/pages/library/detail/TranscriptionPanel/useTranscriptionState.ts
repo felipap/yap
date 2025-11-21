@@ -137,7 +137,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
     setTranscription(null)
     setHasTranscription(false)
     setProgress(0)
-    setProgressLabel('Starting...')
+    setProgressLabel('Starting')
 
     try {
       const result = await transcribeVideo(vlogId)

@@ -15,6 +15,7 @@ interface Props {
 
 export function Toolbar({ log, onBack }: Props) {
   const isWebm = log?.name?.toLowerCase().endsWith('.webm') || false
+  const isMov = log?.name?.toLowerCase().endsWith('.mov') || false
   const inDefaultFolder = log?.isInDefaultFolder ?? true
 
   const handleOpenLocation = async () => {
@@ -33,7 +34,7 @@ export function Toolbar({ log, onBack }: Props) {
           <MdFolder size={16} />
           <span>Show in Finder</span>
         </Button>
-        {isWebm && <ConvertButton vlogId={log.id} />}
+        {(isWebm || isMov) && <ConvertButton vlogId={log.id} />}
         {!inDefaultFolder && <MoveToDefaultFolderButton vlogId={log.id} />}
         <DeleteButton vlogId={log.id} onDeleted={onBack} />
       </div>

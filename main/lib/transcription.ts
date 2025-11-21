@@ -57,7 +57,15 @@ export async function extractAudioFromVideo(
 
   console.log(`Extracting audio from video: ${videoPath}`)
 
-  return new Promise((resolve, reject) => {
+  // Get video duration for validation
+  let videoDuration: number | null = null
+  try {
+    videoDuration = await getVideoDuration(videoPath)
+  } catch (error) {
+    console.warn('Could not get video duration for validation:', error)
+  }
+
+  await new Promise<void>((resolve, reject) => {
     const args = [
       '-i',
       videoPath,
@@ -115,31 +123,10 @@ export async function extractAudioFromVideo(
       }
     })
 
-    ffmpeg.on('close', async (code) => {
+    ffmpeg.on('close', (code) => {
       if (code === 0) {
         onProgress?.(100)
-        // Verify the extracted file exists and has content
-        try {
-          const stats = await stat(audioPath)
-          if (stats.size === 0) {
-            reject(
-              new Error(
-                'Audio extraction created an empty file. The video may not have an audio track.',
-              ),
-            )
-          } else {
-            console.log(
-              `Audio extracted successfully: ${audioPath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`,
-            )
-            resolve(audioPath)
-          }
-        } catch (statError) {
-          reject(
-            new Error(
-              `Audio extraction completed but file verification failed: ${statError}`,
-            ),
-          )
-        }
+        resolve()
       } else {
         reject(new Error(`FFmpeg audio extraction failed: ${errorOutput}`))
       }
@@ -149,6 +136,36 @@ export async function extractAudioFromVideo(
       reject(new Error(`Failed to start FFmpeg: ${error.message}`))
     })
   })
+
+  // Verify the extracted file exists and has content
+  const stats = await stat(audioPath)
+  if (stats.size === 0) {
+    throw new Error(
+      'Audio extraction created an empty file. The video may not have an audio track.',
+    )
+  }
+
+  console.log(
+    `Audio extracted successfully: ${audioPath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`,
+  )
+
+  // Validate duration matches video
+  if (videoDuration !== null && videoDuration > 0) {
+    try {
+      const audioDuration = await getAudioDuration(audioPath)
+      const expectedDuration = speedUp ? videoDuration / 2 : videoDuration
+      const diff = Math.abs(audioDuration - expectedDuration)
+      if (diff > expectedDuration * 0.02) {
+        console.warn(
+          `Audio duration mismatch: video ${(videoDuration / 60).toFixed(1)}min, audio ${(audioDuration / 60).toFixed(1)}min, expected ${(expectedDuration / 60).toFixed(1)}min`,
+        )
+      }
+    } catch {
+      // Ignore validation errors
+    }
+  }
+
+  return audioPath
 }
 
 async function splitAudioIntoChunks(
@@ -375,8 +392,7 @@ export async function transcribeAudio(
         clearInterval(progressInterval)
         console.error(`Failed to transcribe chunk ${i}:`, chunkError)
         throw new Error(
-          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${
-            chunkError instanceof Error ? chunkError.message : 'Unknown error'
+          `Failed to transcribe audio chunk ${i + 1}/${chunks.length}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'
           }`,
         )
       }
@@ -581,7 +597,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
       if (aMax > 0) {
         return aMax
       }
-    } catch {}
+    } catch { }
     try {
       // Fallback to video stream packets
       const video = await runProbe([
@@ -627,7 +643,7 @@ export async function getVideoDuration(videoPath: string): Promise<number> {
     if (Number.isFinite(duration) && duration > 0) {
       return duration
     }
-  } catch {}
+  } catch { }
 
   const tsDuration = await computeFromPackets()
   return Number.isFinite(tsDuration) ? tsDuration : 0

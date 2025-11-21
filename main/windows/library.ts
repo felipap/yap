@@ -6,9 +6,9 @@ import { findIconPath } from './utils'
 export let libraryWindow: BrowserWindow
 
 export function createLibraryWindow(): BrowserWindow {
+  // If window already exists, return it (window should never be destroyed)
   if (libraryWindow) {
-    console.log('Library window already created, skipping...')
-    throw new Error('Library window already created')
+    return libraryWindow
   }
 
   const windowBounds = store.get('windowBounds', { width: 800, height: 500 })
@@ -53,19 +53,17 @@ export function createLibraryWindow(): BrowserWindow {
     libraryWindow.setIcon(iconPath)
   }
 
-  // Save window bounds on close / destroy
-  libraryWindow.on('close', () => {
-    const bounds = libraryWindow.getBounds()
-    store.set('windowBounds', bounds)
-  })
-
-  // Hide instead of destroy
+  // Hide instead of destroy - prevent window from ever being destroyed
   libraryWindow.on('close', (event) => {
+    // Save window bounds before hiding
+    const bounds = libraryWindow!.getBounds()
+    store.set('windowBounds', bounds)
+
     if (!app.isQuitting) {
-      libraryWindow.hide()
-      return false
+      // Don't let closing the window destroy the window
+      event.preventDefault()
+      libraryWindow!.hide()
     }
-    return true
   })
 
   // Track window focus state
@@ -97,7 +95,7 @@ export function createLibraryWindow(): BrowserWindow {
   // Show window after content is loaded in development to prevent focus stealing
   if (process.env.NODE_ENV === 'development' && wasLastFocused) {
     libraryWindow.once('ready-to-show', () => {
-      libraryWindow.show()
+      libraryWindow!.show()
     })
   }
 
@@ -105,5 +103,5 @@ export function createLibraryWindow(): BrowserWindow {
 }
 
 export function getMainWindow(): BrowserWindow | undefined {
-  return libraryWindow
+  return libraryWindow ?? undefined
 }

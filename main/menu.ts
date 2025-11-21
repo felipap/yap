@@ -29,7 +29,7 @@ export function setupMenu() {
         { role: 'selectAll' },
         { type: 'separator' },
         {
-          label: 'Transcribe Next 5',
+          label: 'Transcribe five more',
           click: async () => {
             if (libraryWindow) {
               try {
@@ -64,7 +64,18 @@ export function setupMenu() {
     },
     {
       label: 'Window',
-      submenu: [{ role: 'minimize' }, { role: 'close' }],
+      submenu: [
+        { role: 'minimize' },
+        {
+          label: 'Close',
+          accelerator: 'CommandOrControl+W',
+          click: () => {
+            if (libraryWindow && !libraryWindow.isDestroyed()) {
+              libraryWindow.hide()
+            }
+          },
+        },
+      ],
     },
   ]
 
