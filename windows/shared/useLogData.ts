@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   getEnrichedLogs,
-  getVlog,
+  getLog,
   onStateChange,
-  onVlogUpdated,
-  removeVlogUpdatedListener,
+  onLogUpdated,
+  removeLogUpdatedListener,
 } from './ipc'
 import { EnrichedLog, State } from '../library/types'
 
@@ -51,85 +51,85 @@ export function useBackendState() {
   }
 }
 
-export function useVlogData() {
+export function useLogData() {
   const { stateCount } = useBackendState()
 
   const [loading, setLoading] = useState(false)
-  const [vlogs, setVlogs] = useState<EnrichedLog[]>([])
+  const [logs, setLogs] = useState<EnrichedLog[]>([])
 
   useEffect(() => {
-    loadVlogs()
+    loadLogs()
 
     // Refresh file list periodically
-    // const intervalId = setInterval(loadVlogs, 2000)
+    // const intervalId = setInterval(loadLogs, 2000)
 
-    // Subscribe to general vlog changes
+    // Subscribe to general log changes
     const handleStateChange = () => {
-      void loadVlogs()
+      void loadLogs()
     }
     onStateChange(handleStateChange)
 
     return () => {
       // clearInterval(intervalId)
-      removeVlogUpdatedListener()
+      removeLogUpdatedListener()
     }
   }, [stateCount])
 
-  const loadVlogs = async () => {
+  const loadLogs = async () => {
     try {
       setLoading(true)
       const files = await getEnrichedLogs()
-      setVlogs(files)
+      setLogs(files)
     } catch (error) {
-      console.error('Failed to load vlogs:', error)
+      console.error('Failed to load logs:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  return { vlogs, loading }
+  return { logs, loading }
 }
 
-export function useVlog(vlogId: string | null) {
-  const [vlog, setVlog] = useState<EnrichedLog | undefined>(undefined)
+export function useLog(logId: string | null) {
+  const [log, setLog] = useState<EnrichedLog | undefined>(undefined)
   const [loading, setLoading] = useState(false)
 
   const load = async () => {
-    if (!vlogId) {
+    if (!logId) {
       return
     }
     setLoading(true)
     try {
-      const fresh = await getVlog(vlogId)
-      setVlog(fresh)
+      const fresh = await getLog(logId)
+      setLog(fresh)
     } catch (error) {
-      console.error('Failed to load vlog:', error)
+      console.error('Failed to load log:', error)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (!vlogId) {
+    if (!logId) {
       return
     }
 
     // Refresh periodically as a fallback
     const intervalId = setInterval(load, 1000)
 
-    // React to general vlog updated/removed events
-    const handleGeneralVlogEvent = (eventVlogId: string) => {
-      if (eventVlogId === vlogId) {
+    // React to general log updated/removed events
+    const handleGeneralLogEvent = (eventLogId: string) => {
+      if (eventLogId === logId) {
         void load()
       }
     }
-    onVlogUpdated(handleGeneralVlogEvent)
+    onLogUpdated(handleGeneralLogEvent)
 
     return () => {
       clearInterval(intervalId)
-      removeVlogUpdatedListener()
+      removeLogUpdatedListener()
     }
-  }, [vlogId])
+  }, [logId])
 
   // Expose manual refresh for generic external updates
   const refresh = () => {
@@ -138,7 +138,7 @@ export function useVlog(vlogId: string | null) {
 
   useEffect(() => {
     void load()
-  }, [vlogId])
+  }, [logId])
 
-  return { vlog, loading, refresh }
+  return { log, loading, refresh }
 }

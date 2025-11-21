@@ -1,24 +1,23 @@
 import { useState, useEffect } from 'react'
 import { MdVideocam, MdRefresh } from 'react-icons/md'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
-import { useVlog } from '../../../../../shared/useVlogData'
+import { useLog } from '../../../../../shared/useLogData'
 import { Button } from '../../../../../shared/ui/Button'
 
-interface ConvertButtonProps {
-  vlogId: string
+interface Props {
+  logId: string
   disabled?: boolean
 }
 
-export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
+export function ConvertButton({ logId, disabled }: Props) {
   const [isConverting, setIsConverting] = useState(false)
   const [progress, setProgress] = useState(0)
-  const { vlog } = useVlog(vlogId)
 
   // Check and restore conversion state on mount
   useEffect(() => {
     const checkConversionState = async () => {
       try {
-        const state = await getConversionState(vlogId)
+        const state = await getConversionState(logId)
         if (state.isActive) {
           setIsConverting(true)
           setProgress(state.progress ?? 0)
@@ -29,16 +28,16 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
     }
 
     checkConversionState()
-  }, [vlogId])
+  }, [logId])
 
   useEffect(() => {
-    const handleProgress = (updatedVlogId: string, updatedProgress: number) => {
+    const handleProgress = (updatedLogId: string, updatedProgress: number) => {
       console.log(
-        `[ConvertButton] Received progress: vlogId=${updatedVlogId}, progress=${updatedProgress}%`,
+        `[ConvertButton] Received progress: logId=${updatedLogId}, progress=${updatedProgress}%`,
       )
-      if (updatedVlogId === vlogId) {
+      if (updatedLogId === logId) {
         console.log(
-          `[ConvertButton] Updating progress for ${vlogId}: ${updatedProgress}%`,
+          `[ConvertButton] Updating progress for ${logId}: ${updatedProgress}%`,
         )
         setProgress(updatedProgress)
         // Reset state when conversion completes
@@ -60,7 +59,7 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
         window.electronAPI.removeConversionProgressListener()
       }
     }
-  }, [vlogId])
+  }, [logId])
 
   const handleConvertToMp4 = async () => {
     if (!confirm(`Convert file to MP4? This may take a few minutes.`)) {
@@ -71,7 +70,7 @@ export function ConvertButton({ vlogId, disabled }: ConvertButtonProps) {
     setProgress(0)
 
     try {
-      const result = await convertToMp4(vlogId)
+      const result = await convertToMp4(logId)
       alert(result.message)
     } catch (error) {
       console.error('Failed to convert video:', error)

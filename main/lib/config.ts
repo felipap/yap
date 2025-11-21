@@ -38,7 +38,7 @@ export const FILE_PATTERNS = {
   RECORDING_CHUNK: (recordingId: string, timestamp: number) =>
     `${recordingId}-chunk-${timestamp}.webm`,
 
-  RECORDING_FILE: (timestamp: string) => `vlog-${timestamp}.webm`,
+  RECORDING_FILE: (timestamp: string) => `log-${timestamp}.webm`,
 
   RECOVERED_FILE: (recordingId: string, timestamp: string) =>
     `recovered-${recordingId}-${timestamp}.webm`,

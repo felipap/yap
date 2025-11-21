@@ -1,3 +1,5 @@
+// Expose IPC methods. Prefer to calling window.electronAPI directly?
+
 import {
   EnrichedLog,
   ImportResult,
@@ -23,12 +25,12 @@ export async function getEnrichedLogs(): Promise<EnrichedLog[]> {
   return window.electronAPI.getEnrichedLogs()
 }
 
-export async function openFileLocation(vlogId: string): Promise<void> {
-  return window.electronAPI.openFileLocation(vlogId)
+export async function openFileLocation(logId: string): Promise<void> {
+  return window.electronAPI.openFileLocation(logId)
 }
 
-export async function untrackVlog(vlogId: string): Promise<boolean> {
-  return window.electronAPI.untrackVlog(vlogId)
+export async function untrackLog(logId: string): Promise<boolean> {
+  return window.electronAPI.untrackLog(logId)
 }
 
 export async function saveRecording(
@@ -104,33 +106,29 @@ export async function setGlobalPlaybackSpeed(speed: number): Promise<void> {
 
 // Transcription functions
 export async function transcribeVideo(
-  vlogId: string,
+  logId: string,
 ): Promise<TranscriptionResult> {
-  return window.electronAPI.transcribeVideo(vlogId)
+  return window.electronAPI.transcribeVideo(logId)
 }
 
 export async function getTranscription(
-  vlogId: string,
+  logId: string,
 ): Promise<TranscriptionResult | null> {
-  return window.electronAPI.getTranscription(vlogId)
-}
-
-export async function loadVideoDuration(vlogId: string): Promise<number> {
-  return window.electronAPI.loadVideoDuration(vlogId)
+  return window.electronAPI.getTranscription(logId)
 }
 
 export async function getTranscriptionState(
-  vlogId: string,
+  logId: string,
 ): Promise<TranscriptionState> {
-  return window.electronAPI.getTranscriptionState(vlogId)
+  return window.electronAPI.getTranscriptionState(logId)
 }
 
 // Summary functions
 export async function generateVideoSummary(
-  vlogId: string,
+  logId: string,
   transcription: string,
 ): Promise<string> {
-  return window.electronAPI.generateVideoSummary(vlogId, transcription)
+  return window.electronAPI.generateVideoSummary(logId, transcription)
 }
 
 // Import functions
@@ -140,37 +138,37 @@ export async function importVideoFile(filePath: string): Promise<ImportResult> {
 
 // Video position functions
 export async function saveVideoPosition(
-  vlogId: string,
+  logId: string,
   position: number,
 ): Promise<boolean> {
-  return window.electronAPI.saveVideoPosition(vlogId, position)
+  return window.electronAPI.saveVideoPosition(logId, position)
 }
 
 export async function getVideoPosition(
-  vlogId: string,
+  logId: string,
 ): Promise<{ position: number; timestamp: string } | null> {
-  return window.electronAPI.getVideoPosition(vlogId)
+  return window.electronAPI.getVideoPosition(logId)
 }
 
-export async function onViewLogEntry(vlogId: string): Promise<void> {
-  return window.electronAPI.onViewLogEntry(vlogId)
+export async function onViewLogEntry(logId: string): Promise<void> {
+  return window.electronAPI.onViewLogEntry(logId)
 }
 
-export async function getVlog(vlogId: string): Promise<EnrichedLog> {
-  return window.electronAPI.getEnrichedLog(vlogId)
+export async function getLog(logId: string): Promise<EnrichedLog> {
+  return window.electronAPI.getEnrichedLog(logId)
 }
 
-export async function setVlogTitle(
-  vlogId: string,
+export async function setLogTitle(
+  logId: string,
   title: string,
 ): Promise<boolean> {
-  return window.electronAPI.updateVlog(vlogId, { title })
+  return window.electronAPI.updateLog(logId, { title })
 }
 
-// General vlog events
-export function onVlogUpdated(callback: (vlogId: string) => void) {
-  if (window.electronAPI.onVlogUpdated) {
-    window.electronAPI.onVlogUpdated(callback)
+// General log events
+export function onLogUpdated(callback: (logId: string) => void) {
+  if (window.electronAPI.onLogUpdated) {
+    window.electronAPI.onLogUpdated(callback)
   }
 }
 
@@ -180,9 +178,9 @@ export function onStateChange(callback: (state: State) => void) {
   }
 }
 
-export function removeVlogUpdatedListener() {
-  if (window.electronAPI.removeVlogUpdatedListener) {
-    window.electronAPI.removeVlogUpdatedListener()
+export function removeLogUpdatedListener() {
+  if (window.electronAPI.removeLogUpdatedListener) {
+    window.electronAPI.removeLogUpdatedListener()
   }
 }
 
@@ -219,28 +217,28 @@ export async function openFolderPicker(): Promise<string | null> {
 }
 
 // MP4 conversion
-export async function convertToMp4(vlogId: string): Promise<{
+export async function convertToMp4(logId: string): Promise<{
   success: boolean
   message: string
-  newVlogId: string
+  newLogId: string
   outputPath: string
 }> {
-  return window.electronAPI.convertToMp4(vlogId)
+  return window.electronAPI.convertToMp4(logId)
 }
 
-export async function getConversionState(vlogId: string): Promise<{
+export async function getConversionState(logId: string): Promise<{
   isActive: boolean
   progress: number | null
 }> {
-  return window.electronAPI.getConversionState(vlogId)
+  return window.electronAPI.getConversionState(logId)
 }
 
-export async function moveToDefaultFolder(vlogId: string): Promise<{
+export async function moveToDefaultFolder(logId: string): Promise<{
   success: boolean
   message: string
   newPath?: string
 }> {
-  return window.electronAPI.moveToDefaultFolder(vlogId)
+  return window.electronAPI.moveToDefaultFolder(logId)
 }
 
 export async function onChangeTopLevelPage(

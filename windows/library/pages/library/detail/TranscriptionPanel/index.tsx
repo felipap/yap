@@ -14,13 +14,13 @@ import { twMerge } from 'tailwind-merge'
 
 interface Props {
   log: EnrichedLog
-  vlogId: string
+  logId: string
   playerRef: React.RefObject<PlayerRef>
 }
 
 export const TranscriptionPanel = withBoundary(function ({
   log,
-  vlogId,
+  logId,
   playerRef,
 }: Props) {
   const {
@@ -30,7 +30,7 @@ export const TranscriptionPanel = withBoundary(function ({
     progress,
     progressLabel,
     transcribe,
-  } = useTranscriptionState({ vlogId })
+  } = useTranscriptionState({ logId })
 
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
   const [isTeleprompterVisible, setIsTeleprompterVisible] = useState(false)
@@ -69,7 +69,7 @@ export const TranscriptionPanel = withBoundary(function ({
         <div className="flex items-center gap-2">
           <TranscribeButton
             className="bg-one"
-            vlogId={vlogId}
+            logId={logId}
             useExternal
             isTranscribing={isTranscribing}
             progress={progress}

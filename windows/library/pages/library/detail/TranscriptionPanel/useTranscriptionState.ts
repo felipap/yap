@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import {
   getTranscription,
   transcribeVideo,
-  getVlog,
+  getLog,
   getTranscriptionState,
 } from '../../../../../shared/ipc'
 import { TranscriptionResult } from '../../../../types'
 
 interface Args {
-  vlogId: string
+  logId: string
 }
 
 interface Return {
@@ -23,7 +23,7 @@ interface Return {
   refreshTranscription: () => Promise<void>
 }
 
-export function useTranscriptionState({ vlogId }: Args): Return {
+export function useTranscriptionState({ logId }: Args): Return {
   const [transcription, setTranscription] =
     useState<TranscriptionResult | null>(null)
   const [isTranscribing, setIsTranscribing] = useState(false)
@@ -37,7 +37,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
   // Load existing transcription
   const loadTranscription = async () => {
     try {
-      const existingTranscription = await getTranscription(vlogId)
+      const existingTranscription = await getTranscription(logId)
       if (existingTranscription) {
         setTranscription(existingTranscription)
         setHasTranscription(true)
@@ -56,7 +56,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
   useEffect(() => {
     const checkTranscriptionState = async () => {
       try {
-        const state = await getTranscriptionState(vlogId)
+        const state = await getTranscriptionState(logId)
         if (state.status === 'transcribing') {
           setIsTranscribing(true)
           setProgress(state.progress ?? 0)
@@ -76,20 +76,20 @@ export function useTranscriptionState({ vlogId }: Args): Return {
     }
 
     checkTranscriptionState()
-  }, [vlogId])
+  }, [logId])
 
-  // Load transcription on mount and when vlogId changes
+  // Load transcription on mount and when logId changes
   useEffect(() => {
     loadTranscription()
-  }, [vlogId])
+  }, [logId])
 
   // Listen for progress updates
   useEffect(() => {
     const handleProgressUpdate = (
-      updatedVlogId: string,
+      updatedLogId: string,
       updatedProgress: number,
     ) => {
-      if (updatedVlogId === vlogId) {
+      if (updatedLogId === logId) {
         // Set transcribing state to true when we receive progress updates (if not already complete)
         if (updatedProgress < 100) {
           setIsTranscribing(true)
@@ -128,7 +128,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
         )
       }
     }
-  }, [vlogId])
+  }, [logId])
 
   // Transcribe function
   const transcribe = async () => {
@@ -140,7 +140,7 @@ export function useTranscriptionState({ vlogId }: Args): Return {
     setProgressLabel('Starting')
 
     try {
-      const result = await transcribeVideo(vlogId)
+      const result = await transcribeVideo(logId)
       setTranscription(result)
       setHasTranscription(true)
       setProgress(100)

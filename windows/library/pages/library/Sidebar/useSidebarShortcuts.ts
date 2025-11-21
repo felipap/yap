@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react'
 import { SidebarItem } from './index'
 
 interface Args {
-  displayVlogs: SidebarItem[]
+  displayLogs: SidebarItem[]
   onVideoSelect: (file: SidebarItem) => void
-  selectedVlog?: SidebarItem | null
+  selectedLog?: SidebarItem | null
   onUnselect?: () => void
 }
 
-function useSelectionHistory(selectedVlog?: SidebarItem | null) {
+function useSelectionHistory(selectedLog?: SidebarItem | null) {
   const backStackRef = useRef<SidebarItem[]>([])
   const forwardStackRef = useRef<SidebarItem[]>([])
   const prevSelectedRef = useRef<SidebarItem | null>(null)
@@ -17,15 +17,15 @@ function useSelectionHistory(selectedVlog?: SidebarItem | null) {
   // Track selection changes to build history for normal navigation only
   useEffect(() => {
     const prev = prevSelectedRef.current
-    if (prev && selectedVlog && prev.id !== selectedVlog.id) {
+    if (prev && selectedLog && prev.id !== selectedLog.id) {
       if (navTypeRef.current === null) {
         backStackRef.current = [...backStackRef.current, prev]
         forwardStackRef.current = []
       }
     }
-    prevSelectedRef.current = selectedVlog ?? null
+    prevSelectedRef.current = selectedLog ?? null
     navTypeRef.current = null
-  }, [selectedVlog?.id])
+  }, [selectedLog?.id])
 
   function goBack(
     current: SidebarItem | null | undefined,
@@ -63,12 +63,12 @@ function useSelectionHistory(selectedVlog?: SidebarItem | null) {
 }
 
 export function useSidebarShortcuts({
-  displayVlogs,
+  displayLogs,
   onVideoSelect,
-  selectedVlog,
+  selectedLog,
   onUnselect,
 }: Args) {
-  const { goBack, goForward } = useSelectionHistory(selectedVlog)
+  const { goBack, goForward } = useSelectionHistory(selectedLog)
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -85,7 +85,7 @@ export function useSidebarShortcuts({
         if (isEditable) {
           return
         }
-        if (selectedVlog && onUnselect) {
+        if (selectedLog && onUnselect) {
           e.preventDefault()
           onUnselect()
         }
@@ -105,11 +105,11 @@ export function useSidebarShortcuts({
           return
         }
         e.preventDefault()
-        const currentIndex = selectedVlog
-          ? displayVlogs.findIndex((v) => v.id === selectedVlog.id)
+        const currentIndex = selectedLog
+          ? displayLogs.findIndex((v) => v.id === selectedLog.id)
           : -1
-        const nextIndex = Math.min(currentIndex + 1, displayVlogs.length - 1)
-        const nextItem = displayVlogs[nextIndex]
+        const nextIndex = Math.min(currentIndex + 1, displayLogs.length - 1)
+        const nextItem = displayLogs[nextIndex]
         if (nextItem && nextIndex !== currentIndex) {
           onVideoSelect(nextItem)
         }
@@ -125,11 +125,11 @@ export function useSidebarShortcuts({
           return
         }
         e.preventDefault()
-        const currentIndex = selectedVlog
-          ? displayVlogs.findIndex((v) => v.id === selectedVlog.id)
-          : displayVlogs.length
+        const currentIndex = selectedLog
+          ? displayLogs.findIndex((v) => v.id === selectedLog.id)
+          : displayLogs.length
         const prevIndex = Math.max(currentIndex - 1, 0)
-        const prevItem = displayVlogs[prevIndex]
+        const prevItem = displayLogs[prevIndex]
         if (prevItem && prevIndex !== currentIndex) {
           onVideoSelect(prevItem)
         }
@@ -149,20 +149,20 @@ export function useSidebarShortcuts({
           index = 10
         }
 
-        const target = displayVlogs[index - 1]
+        const target = displayLogs[index - 1]
         if (target) {
           onVideoSelect(target)
         }
       } else if (key === '[') {
         // Cmd + [ navigates back in selection history
-        const previous = goBack(selectedVlog ?? null)
+        const previous = goBack(selectedLog ?? null)
         if (previous) {
           e.preventDefault()
           onVideoSelect(previous)
         }
       } else if (key === ']') {
         // Cmd + ] navigates forward in selection history
-        const next = goForward(selectedVlog ?? null)
+        const next = goForward(selectedLog ?? null)
         if (next) {
           e.preventDefault()
           onVideoSelect(next)
@@ -174,5 +174,5 @@ export function useSidebarShortcuts({
     return () => {
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [displayVlogs, onVideoSelect, goBack, goForward, selectedVlog, onUnselect])
+  }, [displayLogs, onVideoSelect, goBack, goForward, selectedLog, onUnselect])
 }

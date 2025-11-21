@@ -1,7 +1,7 @@
 {
   "name": "yap-camera",
   "version": "0.9.31",
-  "description": "A seamless vlogging app with screen recording capabilities",
+  "description": "A seamless logging app with screen recording capabilities",
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer-library\" \"npm run dev:renderer-camera\" \"npm run dev:renderer-settings\" \"npm run dev:watch-main\"",

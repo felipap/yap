@@ -1,12 +1,13 @@
-import { appendFile, mkdir, unlink, writeFile } from 'fs/promises'
+import { appendFile, mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { createHash } from 'crypto'
 import { libraryWindow } from '../windows'
 import { RecordingState } from './types'
 import { Log } from '../../shared-types'
-import { setVlog } from '../store'
+import { setLog } from '../store'
 import { getActiveRecordingsDir } from '../store/default-folder'
 import { getVideoDuration } from '../lib/transcription'
+import { moveToTrash } from '../lib/filesystem'
 
 // Global recording state - only one recording at a time
 let recordingState: RecordingState = {
@@ -36,8 +37,8 @@ interface StreamingRecording {
 
 let currentStreamingRecording: StreamingRecording | null = null
 
-// Helper function to generate a unique ID for a vlog
-function generateVlogId(filePath: string): string {
+// Helper function to generate a unique ID for a log
+function generateLogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
 }
 
@@ -126,33 +127,33 @@ export async function finalizeStreamingRecording(): Promise<string> {
   const duration = await getVideoDuration(filepath)
   if (duration < 5) {
     console.log(
-      `Recording too short (${duration}s), deleting file: ${filepath}`,
+      `Recording too short (${duration}s), moving to trash: ${filepath}`,
     )
-    await unlink(filepath)
+    await moveToTrash(filepath)
     currentStreamingRecording = null
     throw new Error('Recording too short (less than 5 seconds)')
   }
 
-  // Generate unique ID for the vlog
-  const id = generateVlogId(filepath)
+  // Generate unique ID for the log
+  const id = generateLogId(filepath)
 
-  // Create vlog entry
-  const vlog: Log = {
+  // Create log entry
+  const log: Log = {
     id,
     name: filename,
     path: filepath,
     timestamp: new Date().toISOString(),
     isAudioOnly: currentStreamingRecording.config.type === 'audio',
   }
-  setVlog(vlog)
+  setLog(log)
 
-  // Notify library window about the new vlog
+  // Notify library window about the new log
   if (libraryWindow) {
-    libraryWindow.webContents.send('vlog-added', {
+    libraryWindow.webContents.send('log-added', {
       id,
       name: filename,
       path: filepath,
-      timestamp: vlog.timestamp,
+      timestamp: log.timestamp,
     })
   }
 

@@ -52,17 +52,17 @@ export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
       <div className="flex flex-col items-center gap-8 justify-start mt-5">
         <header className="px-0 flex flex-col gap-1 w-full">
           <TitleInput
-            vlogId={log.id}
+            logId={log.id}
             isVideo={!log.isAudioOnly}
             title={log.title || ''}
           />
           <div className="px-1.5">
-            <SummarySubtitle vlog={log} />
+            <SummarySubtitle log={log} />
           </div>
         </header>
 
         <div className="px-1 flex flex-col gap-4 w-full">
-          <TranscriptionPanel log={log} vlogId={log.id} playerRef={playerRef} />
+          <TranscriptionPanel log={log} logId={log.id} playerRef={playerRef} />
         </div>
 
         <div className="px-1 w-full">

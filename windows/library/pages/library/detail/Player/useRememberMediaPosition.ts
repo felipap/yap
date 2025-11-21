@@ -3,7 +3,7 @@ import { getVideoPosition, saveVideoPosition } from '../../../../../shared/ipc'
 
 interface UseRememberMediaPositionProps {
   videoRef: React.RefObject<HTMLVideoElement>
-  vlogId: string
+  logId: string
   onTimeUpdate?: (currentTime: number) => void
   onSeeked?: (currentTime: number) => void
   onLoadedData?: () => void
@@ -11,17 +11,17 @@ interface UseRememberMediaPositionProps {
 
 export function useRememberMediaPosition({
   videoRef,
-  vlogId,
+  logId,
   onTimeUpdate,
   onSeeked,
   onLoadedData,
 }: UseRememberMediaPositionProps) {
   const [hasRestoredPosition, setHasRestoredPosition] = useState(false)
 
-  // Reset restoration state when vlogId changes
+  // Reset restoration state when logId changes
   useEffect(() => {
     setHasRestoredPosition(false)
-  }, [vlogId])
+  }, [logId])
 
   // Restore video position on load
   useEffect(() => {
@@ -31,7 +31,7 @@ export function useRememberMediaPosition({
       }
 
       try {
-        const positionData = await getVideoPosition(vlogId)
+        const positionData = await getVideoPosition(logId)
         if (positionData && videoRef.current) {
           videoRef.current.currentTime = positionData.position
           setHasRestoredPosition(true)
@@ -58,7 +58,7 @@ export function useRememberMediaPosition({
         }
       }
     }
-  }, [vlogId, hasRestoredPosition, videoRef])
+  }, [logId, hasRestoredPosition, videoRef])
 
   // Track video position changes
   useEffect(() => {
@@ -78,7 +78,7 @@ export function useRememberMediaPosition({
       // Save position after 2 seconds of no changes (debounced)
       saveTimeout = setTimeout(() => {
         if (video.currentTime > 0) {
-          saveVideoPosition(vlogId, video.currentTime).catch(
+          saveVideoPosition(logId, video.currentTime).catch(
             (error: unknown) => {
               console.error('Failed to save video position:', error)
             },
@@ -93,7 +93,7 @@ export function useRememberMediaPosition({
     const handleSeeked = () => {
       // Save position immediately when user seeks
       if (video.currentTime > 0) {
-        saveVideoPosition(vlogId, video.currentTime).catch((error: unknown) => {
+        saveVideoPosition(logId, video.currentTime).catch((error: unknown) => {
           console.error('Failed to save video position:', error)
         })
       }
@@ -118,5 +118,5 @@ export function useRememberMediaPosition({
         clearTimeout(saveTimeout)
       }
     }
-  }, [vlogId, onTimeUpdate, onSeeked, onLoadedData, videoRef])
+  }, [logId, onTimeUpdate, onSeeked, onLoadedData, videoRef])
 }

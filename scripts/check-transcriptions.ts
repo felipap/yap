@@ -4,7 +4,7 @@
  * This script checks for:
  * 1. Items with no transcription at all
  * 2. Items with transcription.status !== 'completed'
- * 3. Items where transcription.result.duration < vlog.duration (incomplete transcription)
+ * 3. Items where transcription.result.duration < log.duration (incomplete transcription)
  *
  * Usage: bun run scripts/check-transcriptions.ts [--remove]
  */
@@ -110,32 +110,32 @@ function checkTranscriptions(): {
     process.exit(1)
   }
 
-  const vlogs = data.vlogs || {}
-  const vlogIds = Object.keys(vlogs)
+  const logs = data.logs || {}
+  const logIds = Object.keys(logs)
 
-  if (vlogIds.length === 0) {
-    console.log('No vlogs found in data.json')
+  if (logIds.length === 0) {
+    console.log('No logs found in data.json')
     process.exit(0)
   }
 
-  console.log(`Found ${vlogIds.length} vlog(s) to check\n`)
+  console.log(`Found ${logIds.length} log(s) to check\n`)
 
   const missingTranscriptions: MissingTranscription[] = []
   const incompleteTranscriptions: IncompleteTranscription[] = []
   const errorTranscriptions: ErrorTranscription[] = []
   const completeTranscriptions: CompleteTranscription[] = []
 
-  for (const vlogId of vlogIds) {
-    const vlog = vlogs[vlogId] as Log
-    const videoDuration = vlog.duration
-    const transcription = vlog.transcription
+  for (const logId of logIds) {
+    const log = logs[logId] as Log
+    const videoDuration = log.duration
+    const transcription = log.transcription
 
     // Check if transcription is missing
     if (!transcription) {
       missingTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         reason: 'No transcription field',
       })
@@ -145,9 +145,9 @@ function checkTranscriptions(): {
     // Check transcription status
     if (transcription.status === 'error') {
       errorTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         error: transcription.error || 'Unknown error',
       })
@@ -156,9 +156,9 @@ function checkTranscriptions(): {
 
     if (transcription.status !== 'completed') {
       missingTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         reason: `Status: ${transcription.status || 'unknown'}`,
       })
@@ -168,9 +168,9 @@ function checkTranscriptions(): {
     // Check if result exists
     if (!transcription.result) {
       missingTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         reason: 'Status is completed but no result field',
       })
@@ -182,9 +182,9 @@ function checkTranscriptions(): {
     // Check if transcription duration is available
     if (!transcriptionDuration || !isFinite(transcriptionDuration)) {
       incompleteTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         transcriptionDuration: 'N/A',
         reason: 'Transcription duration is missing or invalid',
@@ -196,9 +196,9 @@ function checkTranscriptions(): {
     if (!videoDuration || !isFinite(videoDuration)) {
       // Can't compare, but transcription exists
       completeTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: 'N/A',
         transcriptionDuration: formatDuration(transcriptionDuration),
         note: 'Video duration not available for comparison',
@@ -210,9 +210,9 @@ function checkTranscriptions(): {
     const durationDiff = videoDuration - transcriptionDuration
     if (durationDiff > DURATION_TOLERANCE) {
       incompleteTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         transcriptionDuration: formatDuration(transcriptionDuration),
         durationDiff: formatDuration(durationDiff),
@@ -220,9 +220,9 @@ function checkTranscriptions(): {
       })
     } else {
       completeTranscriptions.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
-        path: vlog.path,
+        id: logId,
+        name: log.name || 'Unknown',
+        path: log.path,
         videoDuration: formatDuration(videoDuration),
         transcriptionDuration: formatDuration(transcriptionDuration),
       })
@@ -233,7 +233,7 @@ function checkTranscriptions(): {
   console.log('='.repeat(80))
   console.log('SUMMARY')
   console.log('='.repeat(80))
-  console.log(`Total vlogs: ${vlogIds.length}`)
+  console.log(`Total logs: ${logIds.length}`)
   console.log(`Complete transcriptions: ${completeTranscriptions.length}`)
   console.log(`Missing transcriptions: ${missingTranscriptions.length}`)
   console.log(`Incomplete transcriptions: ${incompleteTranscriptions.length}`)
@@ -312,7 +312,7 @@ function checkTranscriptions(): {
   // Export results to JSON file
   const results: CheckResults = {
     summary: {
-      total: vlogIds.length,
+      total: logIds.length,
       complete: completeTranscriptions.length,
       missing: missingTranscriptions.length,
       incomplete: incompleteTranscriptions.length,
@@ -361,15 +361,15 @@ function removeIncompleteTranscriptions(): void {
     process.exit(1)
   }
 
-  const vlogs = data.vlogs || {}
-  const vlogIds = Object.keys(vlogs)
+  const logs = data.logs || {}
+  const logIds = Object.keys(logs)
   let removedCount = 0
   const removedItems: Array<{ id: string; name: string; reason: string }> = []
 
-  for (const vlogId of vlogIds) {
-    const vlog = vlogs[vlogId] as Log
-    const videoDuration = vlog.duration
-    const transcription = vlog.transcription
+  for (const logId of logIds) {
+    const log = logs[logId] as Log
+    const videoDuration = log.duration
+    const transcription = log.transcription
 
     if (!transcription) {
       continue // No transcription to remove
@@ -400,11 +400,11 @@ function removeIncompleteTranscriptions(): void {
     }
 
     if (shouldRemove) {
-      delete vlog.transcription
+      delete log.transcription
       removedCount++
       removedItems.push({
-        id: vlogId,
-        name: vlog.name || 'Unknown',
+        id: logId,
+        name: log.name || 'Unknown',
         reason,
       })
     }

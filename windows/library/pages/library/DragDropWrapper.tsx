@@ -61,8 +61,8 @@ export function DragDropWrapper({
             }
             const result = await importVideoFile(filePath)
 
-            if (result.success && result.vlog) {
-              console.log(`- Successfully imported: ${result.vlog.name}`)
+            if (result.success && result.log) {
+              console.log(`- Successfully imported: ${result.log.name}`)
               results.push({
                 file: file.name,
                 status: 'success',

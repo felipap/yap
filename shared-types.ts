@@ -7,7 +7,7 @@ export interface TranscriptionState {
 }
 
 /**
- * Vlog type - the raw data structure stored in data.json
+ * Log type - the raw data structure stored in data.json
  * This is the persisted representation of a recording.
  */
 export interface Log {
@@ -51,7 +51,7 @@ export interface State {
     x?: number
     y?: number
   }
-  vlogs?: Record<string, Log>
+  logs?: Record<string, Log>
   transcriptionSpeedUp?: boolean
   userProfile?: UserProfile
   wasLastFocused?: boolean
@@ -86,7 +86,7 @@ export interface TranscriptionResult {
 
 /**
  * EnrichedLog type - the enriched data structure returned to the frontend
- * This is computed from Vlog + file system stats at runtime.
+ * This is computed from Log + file system stats at runtime.
  * Used by the UI but not stored directly in data.json.
  */
 export interface EnrichedLog {
@@ -94,10 +94,10 @@ export interface EnrichedLog {
   name: string
   path: string
   size: number // Computed from file stats
-  created: Date // Computed from Vlog.timestamp
+  created: Date // Computed from Log.timestamp
   title?: string
   modified: Date // Computed from file stats
-  thumbnailPath?: string // Computed as vlog-thumbnail://{id}.jpg
+  thumbnailPath?: string // Computed as log-thumbnail://{id}.jpg
   duration?: number
   transcription?: TranscriptionResult
   summary?: string
@@ -112,17 +112,17 @@ export interface ImportResult {
   success: boolean
   isDuplicate: boolean
   message: string
-  vlog?: EnrichedLog
-  existingVlog?: EnrichedLog
+  log?: EnrichedLog
+  existingLog?: EnrichedLog
 }
 
 export type SharedIpcMethods = {
   getScreenSources: () => Promise<ScreenSource[]>
   getEnrichedLogs: () => Promise<EnrichedLog[]>
-  openFileLocation: (vlogId: string) => Promise<void>
+  openFileLocation: (logId: string) => Promise<void>
   setPartialState: (state: Partial<State>) => Promise<void>
   getState: () => Promise<State>
-  untrackVlog: (vlogId: string) => Promise<boolean>
+  untrackLog: (logId: string) => Promise<boolean>
   saveRecording: (filename: string, buffer: ArrayBuffer) => Promise<string>
   startStreamingRecording: (config: any) => Promise<string>
   appendRecordingChunk: (chunk: ArrayBuffer) => Promise<void>
@@ -133,39 +133,37 @@ export type SharedIpcMethods = {
     get: <T>(key: string) => Promise<T>
     set: (key: string, value: any) => Promise<void>
   }
-  transcribeVideo: (vlogId: string) => Promise<TranscriptionResult>
-  transcribeNextFive: () => Promise<{ started: number; total: number }>
-  getTranscription: (vlogId: string) => Promise<TranscriptionResult | null>
-  loadVideoDuration: (vlogId: string) => Promise<number>
-  getTranscriptionState: (vlogId: string) => Promise<TranscriptionState>
-  getVlog: (vlogId: string) => Promise<any>
-  getEnrichedLog: (vlogId: string) => Promise<EnrichedLog>
-  updateVlog: (vlogId: string, updates: any) => Promise<boolean>
+  transcribeVideo: (logId: string) => Promise<TranscriptionResult>
+  getTranscription: (logId: string) => Promise<TranscriptionResult | null>
+  getTranscriptionState: (logId: string) => Promise<TranscriptionState>
+  getLog: (logId: string) => Promise<any>
+  getEnrichedLog: (logId: string) => Promise<EnrichedLog>
+  updateLog: (logId: string, updates: any) => Promise<boolean>
   generateVideoSummary: (
-    vlogId: string,
+    logId: string,
     transcription: string,
   ) => Promise<string>
   importVideoFile: (filePath: string) => Promise<any>
-  saveVideoPosition: (vlogId: string, position: number) => Promise<boolean>
+  saveVideoPosition: (logId: string, position: number) => Promise<boolean>
   getVideoPosition: (
-    vlogId: string,
+    logId: string,
   ) => Promise<{ position: number; timestamp: string } | null>
-  onViewLogEntry: (vlogId: string) => Promise<void>
+  onViewLogEntry: (logId: string) => Promise<void>
   onSummaryGenerated: (
-    callback: (vlogId: string, summary: string) => void,
+    callback: (logId: string, summary: string) => void,
   ) => void
   removeSummaryGeneratedListener: (
-    callback: (vlogId: string, summary: string) => void,
+    callback: (logId: string, summary: string) => void,
   ) => void
   onTranscriptionProgressUpdated: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => void
   removeTranscriptionProgressListener: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => void
   onStateChange: (callback: (state: any) => void) => () => void
-  onVlogUpdated: (callback: (vlogId: string) => void) => void
-  removeVlogUpdatedListener: () => void
+  onLogUpdated: (callback: (logId: string) => void) => void
+  removeLogUpdatedListener: () => void
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
   hideSettingsWindow: () => Promise<void>
   getGeminiApiKey: () => Promise<string>
@@ -174,21 +172,21 @@ export type SharedIpcMethods = {
   setUserContext: (userContext: string) => Promise<boolean>
   getRecordingsFolder: () => Promise<string>
   openFolderPicker: () => Promise<string | null>
-  convertToMp4: (vlogId: string) => Promise<{
+  convertToMp4: (logId: string) => Promise<{
     success: boolean
     message: string
-    newVlogId: string
+    newLogId: string
     outputPath: string
   }>
-  getConversionState: (vlogId: string) => Promise<{
+  getConversionState: (logId: string) => Promise<{
     isActive: boolean
     progress: number | null
   }>
   onConversionProgress: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => void
   removeConversionProgressListener: () => void
-  moveToDefaultFolder: (vlogId: string) => Promise<{
+  moveToDefaultFolder: (logId: string) => Promise<{
     success: boolean
     message: string
     newPath?: string

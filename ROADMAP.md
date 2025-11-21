@@ -5,7 +5,7 @@
 - [ ] Feature to skip silent parts.
 - [ ] Keep recording if the window closes
 - [x] An icon that makes sense for "Yap".
-- [x] Don't lose the vlog if the program crashes
+- [x] Don't lose the log if the program crashes
 
 ## Later
 

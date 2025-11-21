@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { setVlogTitle } from '../../../../shared/ipc'
+import { setLogTitle } from '../../../../shared/ipc'
 
 interface Props {
-  vlogId: string
+  logId: string
   title: string
   isVideo: boolean
 }
 
-export function TitleInput({ vlogId, isVideo, title }: Props) {
+export function TitleInput({ logId, isVideo, title }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [localTitle, setLocalTitle] = useState(title)
 
@@ -45,7 +45,7 @@ export function TitleInput({ vlogId, isVideo, title }: Props) {
       onBlur={async (e) => {
         const value = e.target.value.trim()
         try {
-          await setVlogTitle(vlogId, value)
+          await setLogTitle(logId, value)
         } catch (error) {
           console.error('Failed to save title', error)
         }
@@ -56,7 +56,7 @@ export function TitleInput({ vlogId, isVideo, title }: Props) {
           const textarea = e.currentTarget as HTMLTextAreaElement
           const value = textarea.value.trim()
           try {
-            await setVlogTitle(vlogId, value)
+            await setLogTitle(logId, value)
             textarea.blur()
           } catch (error) {
             console.error('Failed to save title', error)

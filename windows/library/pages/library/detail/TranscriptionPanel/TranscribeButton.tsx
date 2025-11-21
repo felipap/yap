@@ -1,12 +1,12 @@
 import { MdClose, MdRefresh } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
-import { getVlog } from '../../../../../shared/ipc'
+import { getLog } from '../../../../../shared/ipc'
 import { MicIcon } from '../../../../../shared/icons'
 
 interface TranscribeButtonProps {
-  vlogId: string
+  logId: string
   onTranscriptionComplete?: (transcription: any) => void
-  onVlogUpdate?: (vlog: any) => void
+  onLogUpdate?: (log: any) => void
   className?: string
   disabled?: boolean
   useExternal?: boolean
@@ -18,9 +18,9 @@ interface TranscribeButtonProps {
 }
 
 export function TranscribeButton({
-  vlogId,
+  logId,
   onTranscriptionComplete,
-  onVlogUpdate,
+  onLogUpdate,
   className,
   disabled = false,
   useExternal = false,
@@ -38,7 +38,7 @@ export function TranscribeButton({
     // Lazy import to avoid circular deps if any
     const { useTranscriptionState } =
       require('./useTranscriptionState') as typeof import('./useTranscriptionState')
-    internalState = useTranscriptionState({ vlogId })
+    internalState = useTranscriptionState({ logId })
   }
 
   const computedIsTranscribing = isInternal
@@ -69,8 +69,8 @@ export function TranscribeButton({
     if (computedTranscription) {
       onTranscriptionComplete?.(computedTranscription)
 
-      const updatedVlog = await getVlog(vlogId)
-      onVlogUpdate?.(updatedVlog)
+      const updatedLog = await getLog(logId)
+      onLogUpdate?.(updatedLog)
     }
   }
 

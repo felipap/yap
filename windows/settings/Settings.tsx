@@ -189,7 +189,6 @@ export function Settings() {
             <Button onClick={handleSelectFolder}>Browse</Button>
           </div>
         </div>
-
       </div>
     </div>
   )

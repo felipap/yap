@@ -39,12 +39,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('getEnrichedLogs')
   },
 
-  openFileLocation: (vlogId: string): Promise<void> => {
-    return ipcRenderer.invoke('openFileLocation', vlogId)
+  openFileLocation: (logId: string): Promise<void> => {
+    return ipcRenderer.invoke('openFileLocation', logId)
   },
 
-  untrackVlog: (vlogId: string): Promise<boolean> => {
-    return ipcRenderer.invoke('untrackVlog', vlogId)
+  untrackLog: (logId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('untrackLog', logId)
   },
 
   saveRecording: (filename: string, buffer: ArrayBuffer): Promise<string> => {
@@ -71,95 +71,84 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Transcription functions
-  transcribeVideo: (vlogId: string): Promise<TranscriptionResult> => {
-    return ipcRenderer.invoke('transcribeVideo', vlogId)
+  transcribeVideo: (logId: string): Promise<TranscriptionResult> => {
+    return ipcRenderer.invoke('transcribeVideo', logId)
   },
 
-  transcribeNextFive: (): Promise<{
-    started: number
-    total: number
-  }> => {
-    return ipcRenderer.invoke('transcribeNextFive')
+  getTranscription: (logId: string): Promise<TranscriptionResult | null> => {
+    return ipcRenderer.invoke('getTranscription', logId)
   },
 
-  getTranscription: (vlogId: string): Promise<TranscriptionResult | null> => {
-    return ipcRenderer.invoke('getTranscription', vlogId)
+  getTranscriptionState: (logId: string): Promise<TranscriptionState> => {
+    return ipcRenderer.invoke('getTranscriptionState', logId)
   },
 
-  loadVideoDuration: (vlogId: string): Promise<number> => {
-    return ipcRenderer.invoke('loadVideoDuration', vlogId)
+  getLog: (logId: string) => {
+    return ipcRenderer.invoke('getLog', logId)
   },
-
-  getTranscriptionState: (vlogId: string): Promise<TranscriptionState> => {
-    return ipcRenderer.invoke('getTranscriptionState', vlogId)
+  getEnrichedLog: (logId: string) => {
+    return ipcRenderer.invoke('getEnrichedLog', logId)
   },
-
-  getVlog: (vlogId: string) => {
-    return ipcRenderer.invoke('getVlog', vlogId)
-  },
-  getEnrichedLog: (vlogId: string) => {
-    return ipcRenderer.invoke('getEnrichedLog', vlogId)
-  },
-  updateVlog: (vlogId: string, updates: any) => {
-    return ipcRenderer.invoke('updateVlog', vlogId, updates)
+  updateLog: (logId: string, updates: any) => {
+    return ipcRenderer.invoke('updateLog', logId, updates)
   },
   generateVideoSummary: (
-    vlogId: string,
+    logId: string,
     transcription: string,
   ): Promise<string> => {
-    return ipcRenderer.invoke('generateVideoSummary', vlogId, transcription)
+    return ipcRenderer.invoke('generateVideoSummary', logId, transcription)
   },
   importVideoFile: (filePath: string): Promise<any> => {
     return ipcRenderer.invoke('importVideoFile', filePath)
   },
 
   // Video position functions
-  saveVideoPosition: (vlogId: string, position: number): Promise<boolean> => {
-    return ipcRenderer.invoke('saveVideoPosition', vlogId, position)
+  saveVideoPosition: (logId: string, position: number): Promise<boolean> => {
+    return ipcRenderer.invoke('saveVideoPosition', logId, position)
   },
 
   getVideoPosition: (
-    vlogId: string,
+    logId: string,
   ): Promise<{ position: number; timestamp: string } | null> => {
-    return ipcRenderer.invoke('getVideoPosition', vlogId)
+    return ipcRenderer.invoke('getVideoPosition', logId)
   },
 
-  onViewLogEntry: (vlogId: string): Promise<void> => {
-    return ipcRenderer.invoke('onViewLogEntry', vlogId)
+  onViewLogEntry: (logId: string): Promise<void> => {
+    return ipcRenderer.invoke('onViewLogEntry', logId)
   },
 
   // Event listeners for real-time updates
-  onVlogUpdated: (callback: (vlogId: string) => void) => {
-    ipcRenderer.on('vlog-updated', (_, vlogId) => callback(vlogId))
+  onLogUpdated: (callback: (logId: string) => void) => {
+    ipcRenderer.on('log-updated', (_, logId) => callback(logId))
   },
 
-  removeVlogUpdatedListener: () => {
-    ipcRenderer.removeAllListeners('vlog-updated')
+  removeLogUpdatedListener: () => {
+    ipcRenderer.removeAllListeners('log-updated')
   },
 
-  onSummaryGenerated: (callback: (vlogId: string, summary: string) => void) => {
-    ipcRenderer.on('summary-generated', (_, vlogId, summary) =>
-      callback(vlogId, summary),
+  onSummaryGenerated: (callback: (logId: string, summary: string) => void) => {
+    ipcRenderer.on('summary-generated', (_, logId, summary) =>
+      callback(logId, summary),
     )
   },
 
   removeSummaryGeneratedListener: (
-    callback: (vlogId: string, summary: string) => void,
+    callback: (logId: string, summary: string) => void,
   ) => {
     ipcRenderer.removeAllListeners('summary-generated')
   },
 
   // Transcription progress events
   onTranscriptionProgressUpdated: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => {
-    ipcRenderer.on('transcription-progress-updated', (_, vlogId, progress) =>
-      callback(vlogId, progress),
+    ipcRenderer.on('transcription-progress-updated', (_, logId, progress) =>
+      callback(logId, progress),
     )
   },
 
   removeTranscriptionProgressListener: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => {
     ipcRenderer.removeAllListeners('transcription-progress-updated')
   },
@@ -201,30 +190,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // MP4 conversion
   convertToMp4: (
-    vlogId: string,
+    logId: string,
   ): Promise<{
     success: boolean
     message: string
-    newVlogId: string
+    newLogId: string
     outputPath: string
   }> => {
-    return ipcRenderer.invoke('convertToMp4', vlogId)
+    return ipcRenderer.invoke('convertToMp4', logId)
   },
 
   getConversionState: (
-    vlogId: string,
+    logId: string,
   ): Promise<{
     isActive: boolean
     progress: number | null
   }> => {
-    return ipcRenderer.invoke('getConversionState', vlogId)
+    return ipcRenderer.invoke('getConversionState', logId)
   },
 
   onConversionProgress: (
-    callback: (vlogId: string, progress: number) => void,
+    callback: (logId: string, progress: number) => void,
   ) => {
-    ipcRenderer.on('conversion-progress', (_, vlogId, progress) =>
-      callback(vlogId, progress),
+    ipcRenderer.on('conversion-progress', (_, logId, progress) =>
+      callback(logId, progress),
     )
   },
 
@@ -234,13 +223,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Move to default folder
   moveToDefaultFolder: (
-    vlogId: string,
+    logId: string,
   ): Promise<{
     success: boolean
     message: string
     newPath?: string
   }> => {
-    return ipcRenderer.invoke('moveToDefaultFolder', vlogId)
+    return ipcRenderer.invoke('moveToDefaultFolder', logId)
   },
 
   // Window management

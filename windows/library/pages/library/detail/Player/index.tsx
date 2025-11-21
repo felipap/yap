@@ -52,7 +52,7 @@ export const Player = withBoundary(
       // Use the hook to handle position restoration and saving
       useRememberMediaPosition({
         videoRef,
-        vlogId: logId,
+        logId: logId,
         onTimeUpdate,
         onSeeked,
         onLoadedData,

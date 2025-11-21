@@ -49,7 +49,7 @@ const schema: Schema<State> = {
       y: { type: 'number' },
     },
   },
-  vlogs: {
+  logs: {
     type: 'object',
     default: {},
     patternProperties: {
@@ -106,31 +106,31 @@ export function generateLogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
 }
 
-// Vlog management functions
-export function getLog(vlogId: string): Log | null {
-  const vlogs = store.get('vlogs') || {}
-  return vlogs[vlogId] || null
+// Log management functions
+export function getLog(logId: string): Log | null {
+  const logs = store.get('logs') || {}
+  return logs[logId] || null
 }
 
-export function setVlog(vlog: Log): void {
-  const vlogs = store.get('vlogs') || {}
-  vlogs[vlog.id] = vlog
-  store.set('vlogs', vlogs)
+export function setLog(log: Log): void {
+  const logs = store.get('logs') || {}
+  logs[log.id] = log
+  store.set('logs', logs)
 }
 
-export function updateVlog(vlogId: string, updates: Partial<Log>): void {
-  const vlogs = store.get('vlogs') || {}
-  const existing = vlogs[vlogId] || {}
-  vlogs[vlogId] = { ...existing, ...updates }
-  store.set('vlogs', vlogs)
+export function updateLog(logId: string, updates: Partial<Log>): void {
+  const logs = store.get('logs') || {}
+  const existing = logs[logId] || {}
+  logs[logId] = { ...existing, ...updates }
+  store.set('logs', logs)
 }
 
-export function deleteVlog(vlogId: string): void {
-  const vlogs = store.get('vlogs') || {}
-  delete vlogs[vlogId]
-  store.set('vlogs', vlogs)
+export function deleteLog(logId: string): void {
+  const logs = store.get('logs') || {}
+  delete logs[logId]
+  store.set('logs', logs)
 }
 
-export function getAllVlogs(): Record<string, Log> {
-  return store.get('vlogs') || {}
+export function getAllLogs(): Record<string, Log> {
+  return store.get('logs') || {}
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { MdDelete, MdFolder, MdRefresh } from 'react-icons/md'
 import { MovieIcon } from '../../../../shared/icons'
-import { openFileLocation, untrackVlog } from '../../../../shared/ipc'
+import { openFileLocation, untrackLog } from '../../../../shared/ipc'
 import { Button } from '../../../../shared/ui/Button'
 import { EnrichedLog } from '../../../types'
 
@@ -31,7 +31,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
 
     setIsDeleting(true)
     try {
-      await untrackVlog(log.id)
+      await untrackLog(log.id)
       onBack()
     } catch (error) {
       console.error('Failed to remove from library:', error)

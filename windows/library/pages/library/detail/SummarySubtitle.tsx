@@ -5,10 +5,10 @@ import { generateVideoSummary } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
 
 interface Props {
-  vlog: EnrichedLog
+  log: EnrichedLog
 }
 
-export function SummarySubtitle({ vlog }: Props) {
+export function SummarySubtitle({ log }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isTruncated, setIsTruncated] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -16,12 +16,12 @@ export function SummarySubtitle({ vlog }: Props) {
   const [copied, setCopied] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
 
-  const summary = vlog.summary || ''
+  const summary = log.summary || ''
 
   // Check if transcription exists but has no words
   const hasTranscriptionButNoWords =
-    vlog.transcription &&
-    (!vlog.transcription.text || vlog.transcription.text.trim().length === 0)
+    log.transcription &&
+    (!log.transcription.text || log.transcription.text.trim().length === 0)
 
   const isNothingToTranscribe = !summary && hasTranscriptionButNoWords
 
@@ -34,7 +34,7 @@ export function SummarySubtitle({ vlog }: Props) {
   }, [summary])
 
   const handleGenerateSummary = async () => {
-    if (!vlog.transcription) {
+    if (!log.transcription) {
       setError('No transcription available to generate summary')
       return
     }
@@ -44,7 +44,7 @@ export function SummarySubtitle({ vlog }: Props) {
     setError(null)
 
     try {
-      await generateVideoSummary(vlog.id, vlog.transcription.text || '')
+      await generateVideoSummary(log.id, log.transcription.text || '')
     } catch (error) {
       console.error('Summary generation failed:', error)
       setError(
@@ -72,7 +72,7 @@ export function SummarySubtitle({ vlog }: Props) {
   }
 
   if (!summary) {
-    if (!vlog.transcription) {
+    if (!log.transcription) {
       return null
     }
 

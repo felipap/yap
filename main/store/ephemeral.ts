@@ -11,27 +11,27 @@ interface TranscriptionState {
 // Track active conversions
 const activeConversions = new Map<string, ConversionState>()
 
-export function setConversionProgress(vlogId: string, progress: number): void {
-  activeConversions.set(vlogId, { progress })
+export function setConversionProgress(logId: string, progress: number): void {
+  activeConversions.set(logId, { progress })
 }
 
-export function getConversionProgress(vlogId: string): number | null {
-  const state = activeConversions.get(vlogId)
+export function getConversionProgress(logId: string): number | null {
+  const state = activeConversions.get(logId)
   return state ? state.progress : null
 }
 
-export function removeConversion(vlogId: string): void {
-  activeConversions.delete(vlogId)
+export function removeConversion(logId: string): void {
+  activeConversions.delete(logId)
 }
 
-export function isConversionActive(vlogId: string): boolean {
-  return activeConversions.has(vlogId)
+export function isConversionActive(logId: string): boolean {
+  return activeConversions.has(logId)
 }
 
 export function getAllActiveConversions(): Record<string, ConversionState> {
   const result: Record<string, ConversionState> = {}
-  activeConversions.forEach((state, vlogId) => {
-    result[vlogId] = state
+  activeConversions.forEach((state, logId) => {
+    result[logId] = state
   })
   return result
 }
@@ -40,23 +40,23 @@ export function getAllActiveConversions(): Record<string, ConversionState> {
 const activeTranscriptions = new Map<string, TranscriptionState>()
 
 export function setTranscriptionProgress(
-  vlogId: string,
+  logId: string,
   progress: number,
 ): void {
-  activeTranscriptions.set(vlogId, { progress })
+  activeTranscriptions.set(logId, { progress })
 }
 
-export function getTranscriptionProgress(vlogId: string): number | null {
-  const state = activeTranscriptions.get(vlogId)
+export function getTranscriptionProgress(logId: string): number | null {
+  const state = activeTranscriptions.get(logId)
   return state ? state.progress : null
 }
 
-export function removeTranscription(vlogId: string): void {
-  activeTranscriptions.delete(vlogId)
+export function removeTranscription(logId: string): void {
+  activeTranscriptions.delete(logId)
 }
 
-export function isTranscriptionActive(vlogId: string): boolean {
-  return activeTranscriptions.has(vlogId)
+export function isTranscriptionActive(logId: string): boolean {
+  return activeTranscriptions.has(logId)
 }
 
 export function getAllActiveTranscriptions(): Record<
@@ -64,8 +64,8 @@ export function getAllActiveTranscriptions(): Record<
   TranscriptionState
 > {
   const result: Record<string, TranscriptionState> = {}
-  activeTranscriptions.forEach((state, vlogId) => {
-    result[vlogId] = state
+  activeTranscriptions.forEach((state, logId) => {
+    result[logId] = state
   })
   return result
 }

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { MdDelete, MdRefresh } from 'react-icons/md'
-import { untrackVlog } from '../../../../../shared/ipc'
+import { untrackLog } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
 
 interface Props {
-  vlogId: string
+  logId: string
   disabled?: boolean
   onDeleted: () => void
 }
 
-export function DeleteButton({ vlogId, disabled, onDeleted }: Props) {
+export function DeleteButton({ logId, disabled, onDeleted }: Props) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
@@ -23,11 +23,11 @@ export function DeleteButton({ vlogId, disabled, onDeleted }: Props) {
 
     setIsDeleting(true)
     try {
-      await untrackVlog(vlogId)
+      await untrackLog(logId)
       onDeleted()
     } catch (error) {
-      console.error('Failed to remove vlog from library:', error)
-      alert('Failed to remove vlog from library')
+      console.error('Failed to remove log from library:', error)
+      alert('Failed to remove log from library')
       setIsDeleting(false)
     }
   }

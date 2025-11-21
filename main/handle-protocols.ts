@@ -2,7 +2,7 @@ import { spawn } from 'child_process'
 import { protocol } from 'electron'
 import { createReadStream } from 'fs'
 import { access, readFile, stat } from 'fs/promises'
-import { vlogIdToPath } from './ipc'
+import { logIdToPath } from './ipc'
 import { debug } from './lib/logger'
 import { generateThumbnail } from './lib/thumbnails'
 import { getVideoDuration } from './lib/transcription'
@@ -115,7 +115,7 @@ export function registerProtocols() {
       },
     },
     {
-      scheme: 'vlog-thumbnail',
+      scheme: 'log-thumbnail',
       privileges: {
         standard: true,
         secure: true,
@@ -133,21 +133,21 @@ export function setupProtocolHandlers() {
   protocol.handle(
     'log-media',
     withErrorHandling(async (request) => {
-      // Remove the protocol and get the vlog ID
-      const vlogId = request.url
+      // Remove the protocol and get the log ID
+      const logId = request.url
         .replace('log-media://', '')
         .replace('/', '')
         .replace(/(\.mp4)|(\.webm)/, '')
 
       debug('Video request URL:', request.url)
-      debug('Vlog ID:', vlogId)
+      debug('Log ID:', logId)
       debug('Request headers:', Object.fromEntries(request.headers.entries()))
 
-      const filePath = vlogIdToPath.get(vlogId)
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        // console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        debug('Available vlog IDs:', Array.from(vlogIdToPath.keys()))
-        return new Response('Vlog not found', { status: 404 })
+        // console.error(`Log with ID ${logId} not found in mapping`)
+        debug('Available log IDs:', Array.from(logIdToPath.keys()))
+        return new Response('Log not found', { status: 404 })
       }
 
       debug('Resolved file path:', filePath)
@@ -239,26 +239,26 @@ export function setupProtocolHandlers() {
 
   // Register custom protocol to serve thumbnail images in lazy fashion.
   protocol.handle(
-    'vlog-thumbnail',
+    'log-thumbnail',
     withErrorHandling(async (request) => {
-      // Remove the protocol and get the vlog ID
-      const vlogId = request.url
-        .replace('vlog-thumbnail://', '')
+      // Remove the protocol and get the log ID
+      const logId = request.url
+        .replace('log-thumbnail://', '')
         .replace('/', '')
         .replace('.jpg', '')
 
       debug('Thumbnail request URL:', request.url)
-      debug('Vlog ID:', vlogId)
+      debug('Log ID:', logId)
 
-      const filePath = vlogIdToPath.get(vlogId)
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        console.error(`Vlog with ID ${vlogId} not found in mapping`)
-        return new Response('Vlog not found', { status: 404 })
+        console.error(`Log with ID ${logId} not found in mapping`)
+        return new Response('Log not found', { status: 404 })
       }
 
       // Check if this is an audio-only file
-      const vlog = getLog(vlogId)
-      if (vlog?.isAudioOnly) {
+      const log = getLog(logId)
+      if (log?.isAudioOnly) {
         debug('Skipping thumbnail generation for audio-only file:', filePath)
         return new Response('Thumbnail not available for audio-only files', {
           status: 404,

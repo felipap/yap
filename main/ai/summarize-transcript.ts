@@ -5,7 +5,7 @@ import { store } from '../store'
 const GEMINI_API_KEY = store.get('geminiApiKey') || null
 
 const Schema = z.object({
-  summary: z.string().describe('The objective summary of the vlog transcript'),
+  summary: z.string().describe('The objective summary of the log transcript'),
   hasContent: z
     .boolean()
     .describe(
@@ -16,7 +16,7 @@ const Schema = z.object({
 export type Result = z.infer<typeof Schema>
 
 export async function generateVideoSummary(
-  vlogId: string,
+  logId: string,
   transcription: string,
 ): Promise<string> {
   if (!GEMINI_API_KEY) {
@@ -31,7 +31,7 @@ export async function generateVideoSummary(
     ? `\n\nAdditional context about the speaker:\n${userContext}`
     : ''
 
-  const prompt = `You are a helpful assistant that creates objective, factual summaries of video vlogs.
+  const prompt = `You are a helpful assistant that creates objective, factual summaries of video logs.
 
 Create a summary that:
 - Captures the main points, key topics, and important insights in 2-3 paragraphs
@@ -45,7 +45,7 @@ Create a summary that:
 
 If the transcript is empty or contains no meaningful words, set hasContent to false.
 
-Please create an objective summary of this vlog transcript:
+Please create an objective summary of this log transcript:
 
 ${transcription || ''}`
 
@@ -63,8 +63,7 @@ ${transcription || ''}`
           properties: {
             summary: {
               type: 'string',
-              description:
-                'The objective summary of the vlog transcript',
+              description: 'The objective summary of the log transcript',
             },
             hasContent: {
               type: 'boolean',
@@ -100,5 +99,3 @@ ${transcription || ''}`
 
   return parsedResponse.summary
 }
-
-

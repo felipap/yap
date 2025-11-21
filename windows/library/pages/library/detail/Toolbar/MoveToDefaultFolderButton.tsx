@@ -4,18 +4,18 @@ import { moveToDefaultFolder } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
 
 interface Props {
-  vlogId: string
+  logId: string
   disabled?: boolean
 }
 
 // Default folder is the recordings folder where new recordings are saved (can be custom or system default)
-export function MoveToDefaultFolderButton({ vlogId, disabled }: Props) {
+export function MoveToDefaultFolderButton({ logId, disabled }: Props) {
   const [isMoving, setIsMoving] = useState(false)
 
   const handleMoveToDefaultFolder = async () => {
     setIsMoving(true)
     try {
-      const result = await moveToDefaultFolder(vlogId)
+      const result = await moveToDefaultFolder(logId)
       if (!result.success) {
         alert(result.message)
       }

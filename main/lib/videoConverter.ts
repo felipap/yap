@@ -1,7 +1,7 @@
 import { spawn } from 'child_process'
-import { unlink } from 'fs/promises'
 import { findFFmpegPath, getFFmpegEnv } from './ffmpeg'
 import { isFileActuallyReadable } from './file-utils'
+import { moveToTrash } from './filesystem'
 
 export class VideoConverter {
   static async convertWebMToMP4(
@@ -53,11 +53,10 @@ export class VideoConverter {
       ffmpeg.on('close', async (code) => {
         if (code === 0) {
           try {
-            // Remove the original WebM file after successful conversion
-            await unlink(inputPath)
+            await moveToTrash(inputPath)
             resolve()
           } catch (error) {
-            console.warn('Failed to delete original WebM file:', error)
+            console.warn('Failed to move original WebM file to trash:', error)
             resolve() // Still resolve as conversion was successful
           }
         } else {

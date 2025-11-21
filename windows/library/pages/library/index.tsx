@@ -1,27 +1,27 @@
 import { useState } from 'react'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { MovieIcon } from '../../../shared/icons'
-import { useVlog } from '../../../shared/useVlogData'
+import { useLog } from '../../../shared/useLogData'
 import { EnrichedLog } from '../../types'
 import { DetailPage } from './detail'
 import { DragDropWrapper } from './DragDropWrapper'
 import { Sidebar } from './Sidebar'
 
 export default function Page() {
-  const [selectedVlogId, setSelectedVlogId] = useState<string | null>(null)
-  const { vlog } = useVlog(selectedVlogId)
+  const [selectedLogId, setSelectedLogId] = useState<string | null>(null)
+  const { log } = useLog(selectedLogId)
 
-  function handleSelectVlog(next: EnrichedLog) {
-    setSelectedVlogId(next.id)
+  function handleSelectLog(next: EnrichedLog) {
+    setSelectedLogId(next.id)
   }
 
   let main
-  if (vlog) {
+  if (log) {
     main = (
       <DetailPage
-        key={vlog.id}
-        log={vlog}
-        onBack={() => setSelectedVlogId(null)}
+        key={log.id}
+        log={log}
+        onBack={() => setSelectedLogId(null)}
       />
     )
   } else {
@@ -34,9 +34,9 @@ export default function Page() {
         <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-1.5 pb-2">
           <div className="h-full bg-sidebar rounded-md">
             <Sidebar
-              selectedVlog={vlog ?? null}
-              onVideoSelect={handleSelectVlog}
-              onClose={() => setSelectedVlogId(null)}
+              selectedLog={log ?? null}
+              onVideoSelect={handleSelectLog}
+              onClose={() => setSelectedLogId(null)}
             />
           </div>
 

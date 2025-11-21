@@ -11,6 +11,7 @@ import { dirname, join, basename, resolve } from 'path'
 import { State, Log, EnrichedLog } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { getDefaultRecordingsDir, getRecordingsDir } from './lib/config'
+import { moveToTrash } from './lib/filesystem'
 import { debug } from './lib/logger'
 import { getVideoDuration, transcribeVideo } from './lib/transcription'
 import { VideoConverter } from './lib/videoConverter'
@@ -27,26 +28,21 @@ import {
   startStreamingRecording,
 } from './recording'
 import {
-  deleteVlog,
+  deleteLog,
   generateLogId,
-  getAllVlogs,
+  getAllLogs,
   getLog,
-  setVlog,
+  setLog,
   store,
-  updateVlog,
+  updateLog,
 } from './store'
 import { getActiveRecordingsDir } from './store/default-folder'
 import * as ephemeral from './store/ephemeral'
 import { libraryWindow, settingsWindow, onChangeTopLevelPage } from './windows'
 
-export const vlogIdToPath = new Map<string, string>()
+export const logIdToPath = new Map<string, string>()
 
 // Initialize recording system
-
-// Helper function to generate a unique ID for a vlog
-function generateVlogId(filePath: string): string {
-  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
-}
 
 // Helper function to detect if a file is audio-only
 function isAudioOnlyFile(filePath: string): boolean {
@@ -87,7 +83,7 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
       size: stats.size,
       created: createdDate,
       modified: stats.mtime,
-      thumbnailPath: `vlog-thumbnail://${log.id}.jpg`,
+      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
       duration: log.duration,
       summary: log.summary,
       transcription: log.transcription?.result || undefined,
@@ -105,7 +101,7 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
       size: 0,
       created: createdDate,
       modified: createdDate, // Fallback to created date
-      thumbnailPath: `vlog-thumbnail://${log.id}.jpg`,
+      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
       duration: log.duration,
       summary: log.summary,
       transcription: log.transcription?.result || undefined,
@@ -119,8 +115,8 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
 /**
  * Gets an enriched log by ID
  */
-async function getEnrichedLog(vlogId: string): Promise<EnrichedLog | null> {
-  const log = getLog(vlogId)
+async function getEnrichedLog(logId: string): Promise<EnrichedLog | null> {
+  const log = getLog(logId)
   if (!log) {
     return null
   }
@@ -139,13 +135,19 @@ export function setupIpcHandlers() {
     }),
   )
 
-  ipcMain.handle('getState', async () => {
-    return store.store
-  })
+  ipcMain.handle(
+    'getState',
+    tryCatchIpcMain(async () => {
+      return store.store
+    }),
+  )
 
-  ipcMain.handle('setPartialState', async (_, state: Partial<State>) => {
-    store.set(state)
-  })
+  ipcMain.handle(
+    'setPartialState',
+    tryCatchIpcMain(async (_, state: Partial<State>) => {
+      store.set(state)
+    }),
+  )
 
   ipcMain.handle(
     'getEnrichedLogs',
@@ -154,14 +156,14 @@ export function setupIpcHandlers() {
 
       await mkdir(documentsPath, { recursive: true })
 
-      const storedVlogs = getAllVlogs()
+      const storedLogs = getAllLogs()
 
-      debug(`Found ${Object.keys(storedVlogs).length} logs in store`)
+      debug(`Found ${Object.keys(storedLogs).length} logs in store`)
       const enrichedLogs = await Promise.all(
-        Object.entries(storedVlogs).map(async ([id, log]) => {
+        Object.entries(storedLogs).map(async ([id, log]) => {
           debug(`Processing log: ${log.path}`)
 
-          vlogIdToPath.set(id, log.path)
+          logIdToPath.set(id, log.path)
 
           return enrichLog(log)
         }),
@@ -180,20 +182,20 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'openFileLocation',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const filePath = vlogIdToPath.get(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
+        throw new Error(`Log with ID ${logId} not found`)
       }
       await shell.showItemInFolder(filePath)
     }),
   )
 
   ipcMain.handle(
-    'untrackVlog',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      deleteVlog(vlogId)
-      vlogIdToPath.delete(vlogId)
+    'untrackLog',
+    tryCatchIpcMain(async (_, logId: string) => {
+      deleteLog(logId)
+      logIdToPath.delete(logId)
       return true
     }),
   )
@@ -203,17 +205,26 @@ export function setupIpcHandlers() {
   //
   //
 
-  ipcMain.handle('startStreamingRecording', async (_, config: any) => {
-    return startStreamingRecording(config)
-  })
+  ipcMain.handle(
+    'startStreamingRecording',
+    tryCatchIpcMain(async (_, config: any) => {
+      return await startStreamingRecording(config)
+    }),
+  )
 
-  ipcMain.handle('appendRecordingChunk', async (_, chunk: ArrayBuffer) => {
-    return appendRecordingChunk(chunk)
-  })
+  ipcMain.handle(
+    'appendRecordingChunk',
+    tryCatchIpcMain(async (_, chunk: ArrayBuffer) => {
+      return await appendRecordingChunk(chunk)
+    }),
+  )
 
-  ipcMain.handle('finalizeStreamingRecording', async () => {
-    return finalizeStreamingRecording()
-  })
+  ipcMain.handle(
+    'finalizeStreamingRecording',
+    tryCatchIpcMain(async () => {
+      return await finalizeStreamingRecording()
+    }),
+  )
 
   //
   //
@@ -221,39 +232,45 @@ export function setupIpcHandlers() {
   //
 
   // Store handlers
-  ipcMain.handle('storeGet', (_, key: string) => {
-    return store.get(key)
-  })
+  ipcMain.handle(
+    'storeGet',
+    tryCatchIpcMain((_, key: string) => {
+      return store.get(key)
+    }),
+  )
 
-  ipcMain.handle('storeSet', (_, key: string, value: any) => {
-    store.set(key, value)
-  })
+  ipcMain.handle(
+    'storeSet',
+    tryCatchIpcMain(async (_, key: string, value: any) => {
+      store.set(key, value)
+    }),
+  )
 
   ipcMain.handle(
     'transcribeVideo',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const filePath = vlogIdToPath.get(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
+        throw new Error(`Log with ID ${logId} not found`)
       }
 
-      ephemeral.setTranscriptionProgress(vlogId, 0)
+      ephemeral.setTranscriptionProgress(logId, 0)
 
       const speedUp = store.get('transcriptionSpeedUp') || false
 
       try {
         const result = await transcribeVideo(filePath, speedUp, (progress) => {
-          ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+          ephemeral.setTranscriptionProgress(logId, Math.round(progress))
           libraryWindow?.webContents.send(
             'transcription-progress-updated',
-            vlogId,
+            logId,
             Math.round(progress),
           )
         })
 
-        ephemeral.removeTranscription(vlogId)
+        ephemeral.removeTranscription(logId)
 
-        updateVlog(vlogId, {
+        updateLog(logId, {
           transcription: {
             status: 'completed',
             result,
@@ -261,11 +278,11 @@ export function setupIpcHandlers() {
         })
 
         try {
-          const summary = await generateVideoSummary(vlogId, result.text)
+          const summary = await generateVideoSummary(logId, result.text)
           // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
           if (summary) {
-            updateVlog(vlogId, { summary })
-            libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+            updateLog(logId, { summary })
+            libraryWindow?.webContents.send('summary-generated', logId, summary)
           }
         } catch (summaryError) {
           console.error('Error generating automatic summary:', summaryError)
@@ -273,13 +290,13 @@ export function setupIpcHandlers() {
 
         return result
       } catch (error) {
-        ephemeral.removeTranscription(vlogId)
+        ephemeral.removeTranscription(logId)
 
         const errorState = {
           status: 'error' as const,
           error: error instanceof Error ? error.message : 'Unknown error',
         }
-        updateVlog(vlogId, { transcription: errorState })
+        updateLog(logId, { transcription: errorState })
 
         throw error
       }
@@ -288,38 +305,38 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'getTranscription',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const vlog = getLog(vlogId)
-      if (!vlog || !vlog.transcription) {
+    tryCatchIpcMain(async (_, logId: string) => {
+      const log = getLog(logId)
+      if (!log || !log.transcription) {
         return null
       }
       // Return the TranscriptionResult, not the TranscriptionState
       if (
-        vlog.transcription.status === 'completed' &&
-        vlog.transcription.result
+        log.transcription.status !== 'completed' ||
+        !log.transcription.result
       ) {
-        return vlog.transcription.result
+        return null
       }
-      return null
+      return log.transcription.result
     }),
   )
 
   ipcMain.handle(
     'getTranscriptionState',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      if (ephemeral.isTranscriptionActive(vlogId)) {
-        const progress = ephemeral.getTranscriptionProgress(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      if (ephemeral.isTranscriptionActive(logId)) {
+        const progress = ephemeral.getTranscriptionProgress(logId)
         return {
           status: 'transcribing',
           progress: progress ?? 0,
         }
       }
 
-      const vlog = getLog(vlogId)
-      if (vlog?.transcription) {
+      const log = getLog(logId)
+      if (log?.transcription) {
         return {
           status: 'completed',
-          result: vlog.transcription,
+          result: log.transcription,
         }
       }
 
@@ -327,164 +344,23 @@ export function setupIpcHandlers() {
     }),
   )
 
-  ipcMain.handle(
-    'loadVideoDuration',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const vlog = getLog(vlogId)
-      if (!vlog) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
-      }
-
-      if (vlog.duration !== undefined) {
-        return vlog.duration
-      }
-
-      const filePath = vlogIdToPath.get(vlogId)
-      if (!filePath) {
-        throw new Error(`File path not found for vlog ${vlogId}`)
-      }
-
-      const duration = await getVideoDuration(filePath)
-
-      if (duration) {
-        updateVlog(vlogId, { duration })
-      }
-
-      return duration
-    }),
-  )
-
-  ipcMain.handle(
-    'transcribeNextFive',
-    tryCatchIpcMain(async () => {
-      const allVlogs = getAllVlogs()
-      const vlogEntries = Object.entries(allVlogs)
-
-      // Find vlogs that need transcription
-      const needsTranscription = vlogEntries.filter(([vlogId, vlog]) => {
-        // Skip if already transcribing
-        if (ephemeral.isTranscriptionActive(vlogId)) {
-          return false
-        }
-
-        // Skip if file doesn't exist
-        const filePath = vlogIdToPath.get(vlogId)
-        if (!filePath) {
-          return false
-        }
-
-        // Check if transcription is missing or incomplete
-        if (!vlog.transcription) {
-          return true
-        }
-
-        if (vlog.transcription.status !== 'completed') {
-          return true
-        }
-
-        return false
-      })
-
-      // Take up to 5, sorted by creation date (oldest first)
-      const toTranscribe = needsTranscription
-        .sort(([, a], [, b]) => {
-          const dateA = new Date(a.timestamp).getTime()
-          const dateB = new Date(b.timestamp).getTime()
-          return dateA - dateB
-        })
-        .slice(0, 5)
-        .map(([vlogId]) => vlogId)
-
-      const speedUp = store.get('transcriptionSpeedUp') || false
-
-      // Start transcribing each one (fire and forget)
-      for (const vlogId of toTranscribe) {
-        const filePath = vlogIdToPath.get(vlogId)
-        if (!filePath) {
-          continue
-        }
-
-        ephemeral.setTranscriptionProgress(vlogId, 0)
-
-        // Don't await - let them run in parallel
-        transcribeVideo(filePath, speedUp, (progress) => {
-          ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
-          libraryWindow?.webContents.send(
-            'transcription-progress-updated',
-            vlogId,
-            Math.round(progress),
-          )
-        })
-          .then((result) => {
-            ephemeral.removeTranscription(vlogId)
-
-            updateVlog(vlogId, {
-              transcription: {
-                status: 'completed',
-                result,
-              },
-            })
-
-            // Generate summary asynchronously
-            generateVideoSummary(vlogId, result.text)
-              .then((summary) => {
-                // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
-                if (summary) {
-                  updateVlog(vlogId, { summary })
-                  libraryWindow?.webContents.send(
-                    'summary-generated',
-                    vlogId,
-                    summary,
-                  )
-                }
-              })
-              .catch((summaryError) => {
-                console.error(
-                  'Error generating automatic summary:',
-                  summaryError,
-                )
-              })
-          })
-          .catch((error) => {
-            ephemeral.removeTranscription(vlogId)
-
-            const errorState = {
-              status: 'error' as const,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            }
-            updateVlog(vlogId, { transcription: errorState })
-
-            console.error(`Failed to transcribe ${vlogId}:`, error)
-          })
-      }
-
-      return {
-        started: toTranscribe.length,
-        total: needsTranscription.length,
-      }
-    }),
-  )
-
   // Helper function to start transcription and generate summary asynchronously
-  async function startTranscriptionAndSummary(
-    vlogId: string,
-    filePath: string,
-  ) {
+  async function startTranscriptionAndSummary(logId: string, filePath: string) {
     const speedUp = store.get('transcriptionSpeedUp') || false
 
     try {
       const result = await transcribeVideo(filePath, speedUp, (progress) => {
-        ephemeral.setTranscriptionProgress(vlogId, Math.round(progress))
+        ephemeral.setTranscriptionProgress(logId, Math.round(progress))
         libraryWindow?.webContents.send(
           'transcription-progress-updated',
-          vlogId,
+          logId,
           Math.round(progress),
         )
       })
 
-      ephemeral.removeTranscription(vlogId)
+      ephemeral.removeTranscription(logId)
 
-      updateVlog(vlogId, {
+      updateLog(logId, {
         transcription: {
           status: 'completed',
           result,
@@ -493,90 +369,88 @@ export function setupIpcHandlers() {
 
       // Generate summary asynchronously
       try {
-        const summary = await generateVideoSummary(vlogId, result.text)
+        const summary = await generateVideoSummary(logId, result.text)
         // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
         if (summary) {
-          updateVlog(vlogId, { summary })
-          libraryWindow?.webContents.send('summary-generated', vlogId, summary)
+          updateLog(logId, { summary })
+          libraryWindow?.webContents.send('summary-generated', logId, summary)
         }
       } catch (summaryError) {
         console.error('Error generating automatic summary:', summaryError)
       }
     } catch (error) {
-      ephemeral.removeTranscription(vlogId)
+      ephemeral.removeTranscription(logId)
 
       const errorState = {
         status: 'error' as const,
         error: error instanceof Error ? error.message : 'Unknown error',
       }
-      updateVlog(vlogId, { transcription: errorState })
+      updateLog(logId, { transcription: errorState })
     }
   }
 
   ipcMain.handle(
     'onViewLogEntry',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const vlog = getLog(vlogId)
-      if (!vlog) {
-        return
+    tryCatchIpcMain(async (_, logId: string) => {
+      const log = getLog(logId)
+      if (!log) {
+        return { error: 'Log not found' }
       }
 
-      const filePath = vlogIdToPath.get(vlogId)
+      const filePath = logIdToPath.get(logId)
 
       // Auto-load duration if not present
-      if (vlog.duration === undefined && filePath) {
+      if (log.duration === undefined && filePath) {
         const duration = await getVideoDuration(filePath)
         if (duration) {
-          updateVlog(vlogId, { duration })
+          updateLog(logId, { duration })
         }
       }
 
       // Auto-trigger transcription if not present or idle
       const needsTranscription =
-        (!vlog.transcription || vlog.transcription.status === 'idle') &&
+        (!log.transcription || log.transcription.status === 'idle') &&
         filePath &&
-        !ephemeral.isTranscriptionActive(vlogId)
+        !ephemeral.isTranscriptionActive(logId)
 
       if (needsTranscription) {
         // Trigger transcription asynchronously (don't block)
-        startTranscriptionAndSummary(vlogId, filePath)
+        startTranscriptionAndSummary(logId, filePath)
       }
     }),
   )
 
   ipcMain.handle(
-    'getVlog',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      return getLog(vlogId)
+    'getLog',
+    tryCatchIpcMain(async (_, logId: string) => {
+      return getLog(logId)
     }),
   )
 
   ipcMain.handle(
     'getEnrichedLog',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      return await getEnrichedLog(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      return await getEnrichedLog(logId)
     }),
   )
 
   ipcMain.handle(
-    'updateVlog',
-    tryCatchIpcMain(async (_, vlogId: string, updates: Partial<Log>) => {
-      updateVlog(vlogId, updates)
+    'updateLog',
+    tryCatchIpcMain(async (_, logId: string, updates: Partial<Log>) => {
+      updateLog(logId, updates)
       return true
     }),
   )
-
-  // Transcription settings handlers
 
   // Summary handlers
 
   ipcMain.handle(
     'generateVideoSummary',
-    tryCatchIpcMain(async (_, vlogId: string, transcription: string) => {
-      const summary = await generateVideoSummary(vlogId, transcription)
+    tryCatchIpcMain(async (_, logId: string, transcription: string) => {
+      const summary = await generateVideoSummary(logId, transcription)
       // Only update if summary is not empty (don't set summary field for "nothing to transcribe")
       if (summary) {
-        updateVlog(vlogId, { summary })
+        updateLog(logId, { summary })
       }
       return summary
     }),
@@ -587,7 +461,6 @@ export function setupIpcHandlers() {
     tryCatchIpcMain(async (_, filePath: string) => {
       await access(filePath)
 
-      const stats = await stat(filePath)
       const fileName =
         filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'
 
@@ -599,11 +472,11 @@ export function setupIpcHandlers() {
           success: false,
           isDuplicate: true,
           message: `"${fileName}" is already in your library`,
-          existingVlog: await enrichLog(existingLog),
+          existingLog: await enrichLog(existingLog),
         }
       }
 
-      vlogIdToPath.set(id, filePath)
+      logIdToPath.set(id, filePath)
 
       let createdDate: Date
 
@@ -613,36 +486,36 @@ export function setupIpcHandlers() {
 
         const metadata = await extractVideoMetadata(filePath)
 
-        if (metadata.creationDate) {
-          const formattedDate = formatDateForPrompt(metadata.creationDate)
-
-          const response = await dialog.showMessageBox(libraryWindow, {
-            type: 'question',
-            buttons: ['Cancel', 'Use This Date'],
-            defaultId: 1,
-            cancelId: 0,
-            title: 'Confirm Video Date',
-            message: `iPhone video: ${fileName}`,
-            detail: `Date found: ${formattedDate}\n\nClick "Use This Date" to confirm, or "Cancel" to skip this video.\n\n(Note: Date format is YYYY-MM-DD HH:MM)`,
-          })
-
-          if (response.response === 0) {
-            debug(`User cancelled import for ${fileName}`)
-            vlogIdToPath.delete(id)
-            return {
-              success: false,
-              isDuplicate: false,
-              message: `Import cancelled`,
-            }
-          }
-
-          createdDate = metadata.creationDate
-          debug(`Using metadata date for ${fileName}: ${createdDate}`)
-        } else {
+        if (!metadata.creationDate) {
           throw new Error(
             `Could not extract creation date from iPhone video metadata for: "${fileName}"`,
           )
         }
+
+        const formattedDate = formatDateForPrompt(metadata.creationDate)
+
+        const response = await dialog.showMessageBox(libraryWindow, {
+          type: 'question',
+          buttons: ['Cancel', 'Use This Date'],
+          defaultId: 1,
+          cancelId: 0,
+          title: 'Confirm Video Date',
+          message: `iPhone video: ${fileName}`,
+          detail: `Date found: ${formattedDate}\n\nClick "Use This Date" to confirm, or "Cancel" to skip this video.\n\n(Note: Date format is YYYY-MM-DD HH:MM)`,
+        })
+
+        if (response.response === 0) {
+          debug(`User cancelled import for ${fileName}`)
+          logIdToPath.delete(id)
+          return {
+            success: false,
+            isDuplicate: false,
+            message: `Import cancelled`,
+          }
+        }
+
+        createdDate = metadata.creationDate
+        debug(`Using metadata date for ${fileName}: ${createdDate}`)
       } else {
         // Use the existing date extraction from title for non-iPhone videos
         const dateResult = await extractDateFromTitle(fileName)
@@ -675,23 +548,23 @@ export function setupIpcHandlers() {
         timestamp: createdDate.toISOString(),
         isAudioOnly: isAudioOnlyFile(filePath),
       }
-      setVlog(log)
+      setLog(log)
 
       debug(`Imported video file: ${filePath}`)
       return {
         success: true,
         isDuplicate: false,
         message: `Successfully imported "${fileName}"`,
-        vlog: await enrichLog(log),
+        log: await enrichLog(log),
       }
     }),
   )
 
   ipcMain.handle(
     'saveVideoPosition',
-    tryCatchIpcMain(async (_, vlogId: string, position: number) => {
+    tryCatchIpcMain(async (_, logId: string, position: number) => {
       const now = new Date().toISOString()
-      updateVlog(vlogId, {
+      updateLog(logId, {
         lastPosition: position,
         lastPositionTimestamp: now,
       })
@@ -701,27 +574,29 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'getVideoPosition',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const vlog = getLog(vlogId)
-      if (!vlog) {
+    tryCatchIpcMain(async (_, logId: string) => {
+      const log = getLog(logId)
+      if (!log) {
         return null
       }
 
-      if (vlog.lastPositionTimestamp) {
-        const lastPositionTime = new Date(vlog.lastPositionTimestamp)
-        const now = new Date()
-        const timeDiff = now.getTime() - lastPositionTime.getTime()
-        const thirtyMinutes = 30 * 60 * 1000
-
-        if (timeDiff < thirtyMinutes && vlog.lastPosition !== undefined) {
-          return {
-            position: vlog.lastPosition,
-            timestamp: vlog.lastPositionTimestamp,
-          }
-        }
+      if (!log.lastPositionTimestamp) {
+        return null
       }
 
-      return null
+      const lastPositionTime = new Date(log.lastPositionTimestamp)
+      const now = new Date()
+      const timeDiff = now.getTime() - lastPositionTime.getTime()
+      const thirtyMinutes = 30 * 60 * 1000
+
+      if (timeDiff >= thirtyMinutes || log.lastPosition === undefined) {
+        return null
+      }
+
+      return {
+        position: log.lastPosition,
+        timestamp: log.lastPositionTimestamp,
+      }
     }),
   )
 
@@ -797,10 +672,10 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'convertToMp4',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const filePath = vlogIdToPath.get(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
+        throw new Error(`Log with ID ${logId} not found`)
       }
 
       if (
@@ -818,24 +693,26 @@ export function setupIpcHandlers() {
         await access(outputPath)
         throw new Error('MP4 file already exists')
       } catch (err: any) {
-        if (err.code !== 'ENOENT') {
+        if (err.code === 'ENOENT') {
+          // File doesn't exist, which is what we want - continue
+        } else {
           throw err
         }
       }
 
-      ephemeral.setConversionProgress(vlogId, 0)
+      ephemeral.setConversionProgress(logId, 0)
 
       try {
         await VideoConverter.convertToMP4(filePath, outputPath, (progress) => {
-          ephemeral.setConversionProgress(vlogId, progress)
+          ephemeral.setConversionProgress(logId, progress)
           libraryWindow?.webContents.send(
             'conversion-progress',
-            vlogId,
+            logId,
             progress,
           )
         })
 
-        ephemeral.removeConversion(vlogId)
+        ephemeral.removeConversion(logId)
 
         const stats = await stat(outputPath)
         const fileName =
@@ -844,21 +721,21 @@ export function setupIpcHandlers() {
           'unknown'
         const id = generateLogId(outputPath)
 
-        const originalVlog = getLog(vlogId)
-        const timestamp = originalVlog?.timestamp || new Date().toISOString()
+        const originalLog = getLog(logId)
+        const timestamp = originalLog?.timestamp || new Date().toISOString()
 
-        vlogIdToPath.set(id, outputPath)
+        logIdToPath.set(id, outputPath)
 
-        const vlog: Log = {
+        const log: Log = {
           id,
           name: fileName,
           path: outputPath,
           timestamp: timestamp,
-          title: originalVlog?.title,
-          transcription: originalVlog?.transcription,
-          summary: originalVlog?.summary,
+          title: originalLog?.title,
+          transcription: originalLog?.transcription,
+          summary: originalLog?.summary,
         }
-        setVlog(vlog)
+        setLog(log)
 
         debug(`Converted video to MP4: ${outputPath}`)
 
@@ -875,9 +752,9 @@ export function setupIpcHandlers() {
 
         if (response.response === 1) {
           try {
-            await shell.trashItem(filePath)
-            deleteVlog(vlogId)
-            vlogIdToPath.delete(vlogId)
+            await moveToTrash(filePath)
+            deleteLog(logId)
+            logIdToPath.delete(logId)
             debug(`Moved original WebM to trash: ${filePath}`)
           } catch (trashError) {
             console.error('Failed to move original file to trash:', trashError)
@@ -887,30 +764,33 @@ export function setupIpcHandlers() {
         return {
           success: true,
           message: `Successfully converted to MP4`,
-          newVlogId: id,
+          newLogId: id,
           outputPath: outputPath,
         }
       } catch (error) {
-        ephemeral.removeConversion(vlogId)
+        ephemeral.removeConversion(logId)
         throw error
       }
     }),
   )
 
   // Get conversion state
-  ipcMain.handle('getConversionState', async (_, vlogId: string) => {
-    return {
-      isActive: ephemeral.isConversionActive(vlogId),
-      progress: ephemeral.getConversionProgress(vlogId),
-    }
-  })
+  ipcMain.handle(
+    'getConversionState',
+    tryCatchIpcMain(async (_, logId: string) => {
+      return {
+        isActive: ephemeral.isConversionActive(logId),
+        progress: ephemeral.getConversionProgress(logId),
+      }
+    }),
+  )
 
   ipcMain.handle(
     'moveToDefaultFolder',
-    tryCatchIpcMain(async (_, vlogId: string) => {
-      const filePath = vlogIdToPath.get(vlogId)
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = logIdToPath.get(logId)
       if (!filePath) {
-        throw new Error(`Vlog with ID ${vlogId} not found`)
+        throw new Error(`Log with ID ${logId} not found`)
       }
 
       const recordingsDir = getActiveRecordingsDir()
@@ -934,7 +814,9 @@ export function setupIpcHandlers() {
           `A file named "${fileName}" already exists in the recordings folder`,
         )
       } catch (err: any) {
-        if (err.code !== 'ENOENT') {
+        if (err.code === 'ENOENT') {
+          // File doesn't exist, which is what we want - continue
+        } else {
           throw err
         }
       }
@@ -943,8 +825,8 @@ export function setupIpcHandlers() {
 
       debug(`Copied video to recordings folder: ${newPath}`)
 
-      vlogIdToPath.set(vlogId, newPath)
-      updateVlog(vlogId, { path: newPath, name: fileName })
+      logIdToPath.set(logId, newPath)
+      updateLog(logId, { path: newPath, name: fileName })
 
       const response = await dialog.showMessageBox(libraryWindow, {
         type: 'question',
@@ -957,7 +839,7 @@ export function setupIpcHandlers() {
 
       if (response.response === 1) {
         try {
-          await shell.trashItem(filePath)
+          await moveToTrash(filePath)
           debug(`Moved original file to trash: ${filePath}`)
         } catch (trashError) {
           console.error('Failed to move original file to trash:', trashError)
@@ -973,9 +855,12 @@ export function setupIpcHandlers() {
   )
 
   // Window resizing for Record view
-  ipcMain.handle('onChangeTopLevelPage', (_, page: 'library' | 'record') => {
-    onChangeTopLevelPage(page)
-  })
+  ipcMain.handle(
+    'onChangeTopLevelPage',
+    tryCatchIpcMain(async (_, page: 'library' | 'record') => {
+      onChangeTopLevelPage(page)
+    }),
+  )
 
   // Set up state change listener
   store.onDidAnyChange((state) => {
@@ -984,26 +869,23 @@ export function setupIpcHandlers() {
     libraryWindow?.webContents.send('state-changed', serializableState)
   })
 
-  // Broadcast electron-store vlog changes to all renderer windows
+  // Broadcast electron-store log changes to all renderer windows
   store.onDidChange(
-    'vlogs',
-    (
-      newVlogs: Record<string, any> = {},
-      oldVlogs: Record<string, any> = {},
-    ) => {
-      console.log('vlogs changed')
+    'logs',
+    (newLogs: Record<string, any> = {}, oldLogs: Record<string, any> = {}) => {
+      console.log('logs changed')
 
       try {
         const changedIds = new Set<string>()
-        for (const id of Object.keys(newVlogs || {})) {
-          const before = oldVlogs ? oldVlogs[id] : undefined
-          const after = newVlogs[id]
+        for (const id of Object.keys(newLogs || {})) {
+          const before = oldLogs ? oldLogs[id] : undefined
+          const after = newLogs[id]
           if (!before || JSON.stringify(before) !== JSON.stringify(after)) {
             changedIds.add(id)
           }
         }
         // Also include ids that were removed if needed in future
-        // for now, we only emit updates for added/modified vlogs as requested
+        // for now, we only emit updates for added/modified logs as requested
 
         if (changedIds.size === 0) {
           return
@@ -1012,14 +894,14 @@ export function setupIpcHandlers() {
         BrowserWindow.getAllWindows().forEach((window) => {
           if (!window.isDestroyed()) {
             changedIds.forEach((id) => {
-              console.log('sending vlog-updated', id)
+              console.log('sending log-updated', id)
 
-              window.webContents.send('vlog-updated', id)
+              window.webContents.send('log-updated', id)
             })
           }
         })
       } catch (error) {
-        console.error('Error broadcasting vlog-updated:', error)
+        console.error('Error broadcasting log-updated:', error)
       }
     },
   )

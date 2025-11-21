@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from 'react'
-import { useVlogData } from '../../../../shared/useVlogData'
+import { useLogData } from '../../../../shared/useLogData'
 import { EnrichedLog } from '../../../types'
 import { FilterBox } from './FilterBox'
 import { buildSearchableDate, formatDateOrRelative } from './formatters'
 import { Item } from './Item'
-import { useVlogFilter } from './useVlogFilter'
+import { useLogFilter } from './useLogFilter'
 import { useSidebarShortcuts } from './useSidebarShortcuts'
 
 export type SidebarItem = EnrichedLog & {
@@ -12,28 +12,27 @@ export type SidebarItem = EnrichedLog & {
   displayTitle: string
   searchableText: string
 }
-export { useVlogFilter } from './useVlogFilter'
+export { useLogFilter } from './useLogFilter'
 
 interface Props {
-  selectedVlog: EnrichedLog | null
+  selectedLog: EnrichedLog | null
   onVideoSelect: (file: EnrichedLog) => void
   onClose: () => void
 }
 
-export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
-  const { displayVlogs, loading } = useIndexedVlogData()
-  const { filteredVlogs, filterText, setFilterText } =
-    useVlogFilter(displayVlogs)
+export function Sidebar({ selectedLog, onVideoSelect, onClose }: Props) {
+  const { displayLogs, loading } = useIndexedLogData()
+  const { filteredLogs, filterText, setFilterText } = useLogFilter(displayLogs)
 
   const selectedSidebarItem = useMemo(
-    () => displayVlogs.find((v) => v.id === selectedVlog?.id),
-    [displayVlogs, selectedVlog?.id],
+    () => displayLogs.find((v) => v.id === selectedLog?.id),
+    [displayLogs, selectedLog?.id],
   )
 
   useSidebarShortcuts({
-    displayVlogs: filteredVlogs,
+    displayLogs: filteredLogs,
     onVideoSelect,
-    selectedVlog: selectedSidebarItem,
+    selectedLog: selectedSidebarItem,
     onUnselect: onClose,
   })
 
@@ -41,23 +40,23 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
     <div className="w-[240px] h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-1 divide/20 py-1 px-0.5">
-          {filteredVlogs.map((vlog) => (
+          {filteredLogs.map((log) => (
             <Item
-              key={vlog.id}
-              data={vlog}
-              selected={selectedVlog?.id === vlog.id}
+              key={log.id}
+              data={log}
+              selected={selectedLog?.id === log.id}
               onClick={() => {
-                onVideoSelect(vlog)
+                onVideoSelect(log)
               }}
             />
           ))}
-          {filteredVlogs.length === 0 && (
+          {filteredLogs.length === 0 && (
             <div className="text-center text-xs text-secondary/50 p-4 track-10">
               {filterText
                 ? 'Nothing found'
                 : loading
                   ? 'Loading...'
-                  : 'No vlogs yet'}
+                  : 'No logs yet'}
             </div>
           )}
         </div>
@@ -68,17 +67,17 @@ export function Sidebar({ selectedVlog, onVideoSelect, onClose }: Props) {
   )
 }
 
-function useIndexedVlogData() {
-  const { vlogs, loading } = useVlogData()
+function useIndexedLogData() {
+  const { logs, loading } = useLogData()
 
   function getKeyForDate(date: Date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
-  const displayVlogs: SidebarItem[] = useMemo(() => {
+  const displayLogs: SidebarItem[] = useMemo(() => {
     // Build a day key map (YYYY-MM-DD) to total counts
     const dayToCount = new Map<string, number>()
-    for (const file of vlogs) {
+    for (const file of logs) {
       const d = file.created
       const key = getKeyForDate(d)
       dayToCount.set(key, (dayToCount.get(key) || 0) + 1)
@@ -88,7 +87,7 @@ function useIndexedVlogData() {
     const dayToRunningIndex = new Map<string, number>()
     const idToDayIndex = new Map<string, number>()
 
-    const ascendingByTime = [...vlogs].sort(
+    const ascendingByTime = [...logs].sort(
       (a, b) => a.created.getTime() - b.created.getTime(),
     )
 
@@ -104,7 +103,7 @@ function useIndexedVlogData() {
     }
 
     // Map back to original order with computed indices and display title
-    return vlogs.map((file: EnrichedLog) => {
+    return logs.map((file: EnrichedLog) => {
       const displayTitle = file.title || formatDateOrRelative(file.created)
       const searchableDate = buildSearchableDate(file.created)
       const searchableText = [
@@ -123,7 +122,7 @@ function useIndexedVlogData() {
         searchableText,
       }
     })
-  }, [vlogs])
+  }, [logs])
 
-  return { displayVlogs, loading }
+  return { displayLogs, loading }
 }

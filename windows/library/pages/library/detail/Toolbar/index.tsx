@@ -34,9 +34,9 @@ export function Toolbar({ log, onBack }: Props) {
           <MdFolder size={16} />
           <span>Show in Finder</span>
         </Button>
-        {(isWebm || isMov) && <ConvertButton vlogId={log.id} />}
-        {!inDefaultFolder && <MoveToDefaultFolderButton vlogId={log.id} />}
-        <DeleteButton vlogId={log.id} onDeleted={onBack} />
+        {(isWebm || isMov) && <ConvertButton logId={log.id} />}
+        {!inDefaultFolder && <MoveToDefaultFolderButton logId={log.id} />}
+        <DeleteButton logId={log.id} onDeleted={onBack} />
       </div>
       {IS_DEV && <JsonViewer log={log} />}
     </div>
