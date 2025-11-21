@@ -1,4 +1,3 @@
-import { UserProfile } from '../../shared-types'
 import { store } from '../store'
 
 const GEMINI_API_KEY = store.get('geminiApiKey') || null
@@ -34,15 +33,13 @@ export async function generateVideoSummary(
     throw new Error('Cannot generate summary: transcription is empty')
   }
 
-  // Get user profile for personalized context
-  const userProfile: UserProfile = store.get('userProfile') || {
-    name: 'Felipe',
-    role: 'Solo founder/entrepreneur',
-    interests: ['AI', 'tech projects', 'workflow automation', 'inbox agents'],
-    languages: ['English', 'Portuguese'],
-    context:
-      'Working on AI and tech projects, exploring business ideas, considering co-founders for certain projects',
-  }
+  // Get user context for personalized summaries
+  const userContext = store.get('userContext') || ''
+
+  // Build the prompt with optional user context
+  const contextSection = userContext.trim()
+    ? `\n\nAdditional context about the speaker:\n${userContext}`
+    : ''
 
   // Call Gemini API to generate a proper summary
   const res = await fetch(
@@ -65,9 +62,9 @@ Create a summary that:
 - Notes any specific people mentioned
 - Highlights any concrete next steps or decisions made
 - Mentions the context and mood of the recording
-- Is written in third person, objective tone using the speaker's name (${userProfile.name})
+- Is written in third person, objective tone
 - Avoids addressing the speaker directly or giving advice
-- Simply reports what was said and discussed
+- Simply reports what was said and discussed${contextSection}
 
 Please create an objective summary of this vlog transcript:\n\n${transcription}`,
               },
@@ -90,10 +87,50 @@ Please create an objective summary of this vlog transcript:\n\n${transcription}`
   }
 
   const data = (await res.json()) as GeminiResponse
-  const summary = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+
+  // Extract all text parts and concatenate them (in case there are multiple parts)
+  const allParts = data.candidates?.[0]?.content?.parts || []
+  const summary = allParts
+    .map((part) => part.text || '')
+    .join(' ')
+    .trim()
 
   if (!summary) {
     throw new Error('No summary generated from Gemini API')
+  }
+
+  // Validate that the response is actually a summary, not a request for more information
+  // This happens when the AI responds with a request rather than an actual summary
+  const lowerSummary = summary.toLowerCase()
+
+  // Check for patterns indicating the AI is asking for the transcript instead of providing a summary
+  // Pattern 1: "I need the vlog transcript to create..."
+  const isRequestingTranscript =
+    (lowerSummary.includes('i need') || lowerSummary.includes('need the') || lowerSummary.includes('i require')) &&
+    (lowerSummary.includes('transcript') || lowerSummary.includes('vlog transcript')) &&
+    (lowerSummary.includes('to create') || lowerSummary.includes('create the') || lowerSummary.includes('create a'))
+
+  // Pattern 2: "Please provide the transcript..."
+  const isRequestingInput =
+    lowerSummary.includes('please provide') &&
+    (lowerSummary.includes('transcript') || lowerSummary.includes('the transcript'))
+
+  // Pattern 3: "to create the summary you've requested" + mentions transcript
+  const isAskingForMoreInfo =
+    (lowerSummary.includes('to create') || lowerSummary.includes('create the summary')) &&
+    (lowerSummary.includes('you\'ve requested') || lowerSummary.includes('you have requested')) &&
+    lowerSummary.includes('transcript')
+
+  // Pattern 4: "I will generate" + "based on your specifications" (indicates it's a promise, not a summary)
+  const isPromisingToGenerate =
+    lowerSummary.includes('i will generate') &&
+    (lowerSummary.includes('based on your specifications') || lowerSummary.includes('once you provide')) &&
+    lowerSummary.includes('transcript')
+
+  if (isRequestingTranscript || isRequestingInput || isAskingForMoreInfo || isPromisingToGenerate) {
+    throw new Error(
+      'AI returned a request for transcript instead of a summary. The transcription may be too short or invalid.',
+    )
   }
 
   return summary

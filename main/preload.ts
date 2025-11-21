@@ -181,6 +181,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('setGeminiApiKey', apiKey)
   },
 
+  getUserContext: (): Promise<string> => {
+    return ipcRenderer.invoke('getUserContext')
+  },
+
+  setUserContext: (userContext: string): Promise<boolean> => {
+    return ipcRenderer.invoke('setUserContext', userContext)
+  },
+
   getRecordingsFolder: (): Promise<string> => {
     return ipcRenderer.invoke('getRecordingsFolder')
   },

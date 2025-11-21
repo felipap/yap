@@ -46,7 +46,6 @@
 
   /*  */
   --color-sidebar: #ffffffd0;
-  --border-color-one: #eaeaea;
 
   /* font sizes */
   --text-sm: 13px;
@@ -65,9 +64,6 @@
     --background-color-one: #000;
     --background-color-two: #161616;
     --background-color-three: #2a2a2a;
-
-    --border-color-primary: red;
-    --border-color-two: red;
 
     --color-apple-highlight-color: var(--apple-highlight-color-dark);
   }

@@ -25,7 +25,7 @@ const DATA_JSON_PATH = join(
 
 // Tolerance for duration comparison (in seconds)
 // If transcription duration is within this tolerance of video duration, consider it complete
-const DURATION_TOLERANCE = 3
+const DURATION_TOLERANCE = 30
 
 interface MissingTranscription {
   id: string

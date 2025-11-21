@@ -56,6 +56,7 @@ export interface State {
   userProfile?: UserProfile
   wasLastFocused?: boolean
   recordingsFolder?: string
+  userContext?: string
 }
 
 //
@@ -169,6 +170,8 @@ export type SharedIpcMethods = {
   hideSettingsWindow: () => Promise<void>
   getGeminiApiKey: () => Promise<string>
   setGeminiApiKey: (apiKey: string) => Promise<boolean>
+  getUserContext: () => Promise<string>
+  setUserContext: (userContext: string) => Promise<boolean>
   getRecordingsFolder: () => Promise<string>
   openFolderPicker: () => Promise<string | null>
   convertToMp4: (vlogId: string) => Promise<{

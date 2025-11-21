@@ -745,6 +745,21 @@ export function setupIpcHandlers() {
   )
 
   ipcMain.handle(
+    'getUserContext',
+    tryCatchIpcMain(async () => {
+      return store.get('userContext') || ''
+    }),
+  )
+
+  ipcMain.handle(
+    'setUserContext',
+    tryCatchIpcMain(async (_, userContext: string) => {
+      store.set('userContext', userContext)
+      return true
+    }),
+  )
+
+  ipcMain.handle(
     'getRecordingsFolder',
     tryCatchIpcMain(async () => {
       return getActiveRecordingsDir()
