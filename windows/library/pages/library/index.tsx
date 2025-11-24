@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { MovieIcon } from '../../../shared/icons'
 import { useLog } from '../../../shared/useLogData'
@@ -15,37 +15,41 @@ export default function Page() {
     setSelectedLogId(next.id)
   }
 
+  useEffect(() => {
+    console.log('useEffect')
+  }, [])
+
   let main
   if (log) {
     main = (
-      <DetailPage
-        key={log.id}
-        log={log}
-        onBack={() => setSelectedLogId(null)}
-      />
+      <PlaybackPreferencesProvider>
+        <DetailPage
+          key={log.id}
+          log={log}
+          onBack={() => setSelectedLogId(null)}
+        />
+      </PlaybackPreferencesProvider>
     )
   } else {
     main = <NoVideoPage />
   }
 
   return (
-    <PlaybackPreferencesProvider>
-      <DragDropWrapper>
-        <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-1.5 pb-2">
-          <div className="h-full bg-sidebar rounded-md">
-            <Sidebar
-              selectedLog={log ?? null}
-              onVideoSelect={handleSelectLog}
-              onClose={() => setSelectedLogId(null)}
-            />
-          </div>
-
-          <div className="flex-1 flex flex-col h-full overflow-hidden rounded-md">
-            {main}
-          </div>
+    <DragDropWrapper>
+      <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-1.5 pb-2">
+        <div className="h-full bg-sidebar rounded-md">
+          <Sidebar
+            selectedLog={log ?? null}
+            onVideoSelect={handleSelectLog}
+            onClose={() => setSelectedLogId(null)}
+          />
         </div>
-      </DragDropWrapper>
-    </PlaybackPreferencesProvider>
+
+        <div className="flex-1 flex flex-col h-full overflow-hidden rounded-md">
+          {main}
+        </div>
+      </div>
+    </DragDropWrapper>
   )
 }
 

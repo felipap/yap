@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { homedir } from 'os'
 
-export const DEBUG = false
+export const DEBUG = true
 
 // Default recording path
 const DEFAULT_RECORDINGS_PATH = join(homedir(), 'Documents', 'YapRecordings')

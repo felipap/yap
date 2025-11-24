@@ -93,10 +93,10 @@ export interface EnrichedLog {
   id: string
   name: string
   path: string
-  size: number // Computed from file stats
+  // size: number // Computed from file stats
   created: Date // Computed from Log.timestamp
   title?: string
-  modified: Date // Computed from file stats
+  // modified: Date // Computed from file stats
   thumbnailPath?: string // Computed as log-thumbnail://{id}.jpg
   duration?: number
   transcription?: TranscriptionResult

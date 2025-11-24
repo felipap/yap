@@ -33,7 +33,7 @@ export function createLibraryWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       preload: join(__dirname, '../preload.js'),
-      backgroundThrottling: false,
+      // backgroundThrottling: false,
     },
     titleBarStyle: 'hiddenInset',
     vibrancy: 'fullscreen-ui',
@@ -92,11 +92,12 @@ export function createLibraryWindow(): BrowserWindow {
     libraryWindow.loadFile(rendererPath)
   }
 
-  // Show window after content is loaded in development to prevent focus stealing
+  // Show window after content is loaded in development to prevent focus
+  // stealing.
   if (process.env.NODE_ENV === 'development' && wasLastFocused) {
-    libraryWindow.once('ready-to-show', () => {
-      libraryWindow!.show()
-    })
+    // libraryWindow.once('ready-to-show', () => {
+    //   libraryWindow!.show()
+    // })
   }
 
   return libraryWindow

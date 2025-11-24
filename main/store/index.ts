@@ -120,7 +120,23 @@ export function setLog(log: Log): void {
 
 export function updateLog(logId: string, updates: Partial<Log>): void {
   const logs = store.get('logs') || {}
-  const existing = logs[logId] || {}
+  const existing = logs[logId]
+
+  // Only update if the log exists and has all required fields
+  // This prevents creating incomplete log entries that violate the schema
+  if (
+    !existing ||
+    !existing.id ||
+    !existing.name ||
+    !existing.path ||
+    !existing.timestamp
+  ) {
+    console.warn(
+      `Cannot update log ${logId}: log does not exist or is missing required fields`,
+    )
+    return
+  }
+
   logs[logId] = { ...existing, ...updates }
   store.set('logs', logs)
 }

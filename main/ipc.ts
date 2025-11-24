@@ -55,64 +55,6 @@ function isAudioOnlyFile(filePath: string): boolean {
 }
 
 /**
- * Converts a persisted Log to an EnrichedLog with file system stats
- * Checks if the file exists and enriches with stats accordingly
- * @param log - The persisted Log from data.json
- */
-async function enrichLog(log: Log): Promise<EnrichedLog> {
-  const createdDate = new Date(log.timestamp)
-
-  // Check if file is in default folder
-  const recordingsDir = getActiveRecordingsDir()
-  const defaultDir = resolve(recordingsDir)
-  const fileDir = resolve(dirname(log.path))
-
-  // Compare normalized paths (handle case sensitivity on macOS)
-  const isInDefaultFolder = fileDir.toLowerCase() === defaultDir.toLowerCase()
-
-  try {
-    // Try to get file stats
-    await access(log.path)
-    const stats = await stat(log.path)
-
-    return {
-      id: log.id,
-      name: log.name,
-      title: log.title,
-      path: log.path,
-      size: stats.size,
-      created: createdDate,
-      modified: stats.mtime,
-      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
-      duration: log.duration,
-      summary: log.summary,
-      transcription: log.transcription?.result || undefined,
-      isAudioOnly: log.isAudioOnly,
-      fileExists: true,
-      isInDefaultFolder,
-    }
-  } catch (error) {
-    // File doesn't exist, return with missing file indicator
-    return {
-      id: log.id,
-      name: log.name,
-      title: log.title,
-      path: log.path,
-      size: 0,
-      created: createdDate,
-      modified: createdDate, // Fallback to created date
-      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
-      duration: log.duration,
-      summary: log.summary,
-      transcription: log.transcription?.result || undefined,
-      isAudioOnly: log.isAudioOnly,
-      fileExists: false,
-      isInDefaultFolder,
-    }
-  }
-}
-
-/**
  * Gets an enriched log by ID
  */
 async function getEnrichedLog(logId: string): Promise<EnrichedLog | null> {
@@ -152,22 +94,25 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'getEnrichedLogs',
     tryCatchIpcMain(async () => {
-      const documentsPath = getActiveRecordingsDir()
-
-      await mkdir(documentsPath, { recursive: true })
+      // const documentsPath = getActiveRecordingsDir()
+      // await mkdir(documentsPath, { recursive: true })
 
       const storedLogs = getAllLogs()
 
       debug(`Found ${Object.keys(storedLogs).length} logs in store`)
+
+      const start = Date.now()
       const enrichedLogs = await Promise.all(
         Object.entries(storedLogs).map(async ([id, log]) => {
-          debug(`Processing log: ${log.path}`)
+          // debug(`Processing log: ${log.path}`)
 
           logIdToPath.set(id, log.path)
 
           return enrichLog(log)
         }),
       )
+      const end = Date.now()
+      console.log(`Time taken: ${end - start}ms`)
 
       const sortedEnrichedLogs = enrichedLogs.sort(
         (a, b) => b.created.getTime() - a.created.getTime(),
@@ -257,16 +202,26 @@ export function setupIpcHandlers() {
       ephemeral.setTranscriptionProgress(logId, 0)
 
       const speedUp = store.get('transcriptionSpeedUp') || false
+      const openaiApiKey = store.get('openaiApiKey') || null
+
+      if (!openaiApiKey) {
+        throw new Error('OpenAI API key is not set')
+      }
 
       try {
-        const result = await transcribeVideo(filePath, speedUp, (progress) => {
-          ephemeral.setTranscriptionProgress(logId, Math.round(progress))
-          libraryWindow?.webContents.send(
-            'transcription-progress-updated',
-            logId,
-            Math.round(progress),
-          )
-        })
+        const result = await transcribeVideo(
+          filePath,
+          openaiApiKey,
+          speedUp,
+          (progress) => {
+            ephemeral.setTranscriptionProgress(logId, Math.round(progress))
+            libraryWindow?.webContents.send(
+              'transcription-progress-updated',
+              logId,
+              Math.round(progress),
+            )
+          },
+        )
 
         ephemeral.removeTranscription(logId)
 
@@ -347,16 +302,26 @@ export function setupIpcHandlers() {
   // Helper function to start transcription and generate summary asynchronously
   async function startTranscriptionAndSummary(logId: string, filePath: string) {
     const speedUp = store.get('transcriptionSpeedUp') || false
+    const openaiApiKey = store.get('openaiApiKey') || null
+
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key is not set')
+    }
 
     try {
-      const result = await transcribeVideo(filePath, speedUp, (progress) => {
-        ephemeral.setTranscriptionProgress(logId, Math.round(progress))
-        libraryWindow?.webContents.send(
-          'transcription-progress-updated',
-          logId,
-          Math.round(progress),
-        )
-      })
+      const result = await transcribeVideo(
+        filePath,
+        openaiApiKey,
+        speedUp,
+        (progress) => {
+          ephemeral.setTranscriptionProgress(logId, Math.round(progress))
+          libraryWindow?.webContents.send(
+            'transcription-progress-updated',
+            logId,
+            Math.round(progress),
+          )
+        },
+      )
 
       ephemeral.removeTranscription(logId)
 
@@ -401,9 +366,15 @@ export function setupIpcHandlers() {
 
       // Auto-load duration if not present
       if (log.duration === undefined && filePath) {
-        const duration = await getVideoDuration(filePath)
-        if (duration) {
-          updateLog(logId, { duration })
+        try {
+          const duration = await getVideoDuration(filePath)
+          if (duration) {
+            updateLog(logId, { duration })
+          }
+        } catch (error) {
+          // File may be in cloud storage or not accessible
+          // Log the error but don't fail the entire operation
+          console.warn(`Failed to get video duration for ${logId}:`, error)
         }
       }
 
@@ -916,4 +887,60 @@ function tryCatchIpcMain(handler: (...args: any[]) => Promise<any>) {
       return { error: error instanceof Error ? error.message : String(error) }
     }
   }
+}
+
+// Converts a persisted Log to an EnrichedLog with file system stats
+// Checks if the file exists and enriches with stats accordingly
+// @param log - The persisted Log from data.json
+async function enrichLog(log: Log): Promise<EnrichedLog> {
+  const createdDate = new Date(log.timestamp)
+
+  // Check if file is in default folder
+  const recordingsDir = getActiveRecordingsDir()
+  const defaultDir = resolve(recordingsDir)
+  const fileDir = resolve(dirname(log.path))
+
+  // Compare normalized paths (handle case sensitivity on macOS)
+  const isInDefaultFolder = fileDir.toLowerCase() === defaultDir.toLowerCase()
+
+  // try {
+  //   // Try to get file stats
+  //   await access(log.path)
+  //   const stats = await stat(log.path)
+
+  return {
+    id: log.id,
+    name: log.name,
+    title: log.title,
+    path: log.path,
+    // size: 0,
+    created: createdDate,
+    // modified: createdDate,
+    thumbnailPath: `log-thumbnail://${log.id}.jpg`,
+    duration: log.duration,
+    summary: log.summary,
+    transcription: log.transcription?.result || undefined,
+    isAudioOnly: log.isAudioOnly,
+    fileExists: true,
+    isInDefaultFolder,
+  }
+  // } catch (error) {
+  //   // File doesn't exist, return with missing file indicator
+  //   return {
+  //     id: log.id,
+  //     name: log.name,
+  //     title: log.title,
+  //     path: log.path,
+  //     size: 0,
+  //     created: createdDate,
+  //     modified: createdDate, // Fallback to created date
+  //     thumbnailPath: `log-thumbnail://${log.id}.jpg`,
+  //     duration: log.duration,
+  //     summary: log.summary,
+  //     transcription: log.transcription?.result || undefined,
+  //     isAudioOnly: log.isAudioOnly,
+  //     fileExists: false,
+  //     isInDefaultFolder,
+  //   }
+  // }
 }

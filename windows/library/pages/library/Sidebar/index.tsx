@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useLogData } from '../../../../shared/useLogData'
 import { EnrichedLog } from '../../../types'
 import { FilterBox } from './FilterBox'
@@ -36,30 +37,60 @@ export function Sidebar({ selectedLog, onVideoSelect, onClose }: Props) {
     onUnselect: onClose,
   })
 
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: filteredLogs.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 62, // 70px item height + 4px gap
+    overscan: 5,
+  })
+
   return (
     <div className="w-[240px] h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-1 divide/20 py-1 px-0.5">
-          {filteredLogs.map((log) => (
-            <Item
-              key={log.id}
-              data={log}
-              selected={selectedLog?.id === log.id}
-              onClick={() => {
-                onVideoSelect(log)
-              }}
-            />
-          ))}
-          {filteredLogs.length === 0 && (
-            <div className="text-center text-xs text-secondary/50 p-4 track-10">
-              {filterText
-                ? 'Nothing found'
-                : loading
-                  ? 'Loading...'
-                  : 'No logs yet'}
-            </div>
-          )}
-        </div>
+      <div ref={parentRef} className="flex-1 overflow-y-auto">
+        {filteredLogs.length === 0 ? (
+          <div className="text-center text-xs text-secondary/50 p-4 track-10">
+            {filterText
+              ? 'Nothing found'
+              : loading
+                ? 'Loading...'
+                : 'No logs yet'}
+          </div>
+        ) : (
+          <div
+            className="relative pt-[4px] pb-[4px] w-full"
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const log = filteredLogs[virtualItem.index]
+              return (
+                <div
+                  key={log.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '2px',
+                    right: '2px',
+                    width: 'calc(100% - 4px)',
+                    height: '60px',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  <Item
+                    data={log}
+                    selected={selectedLog?.id === log.id}
+                    onClick={() => {
+                      onVideoSelect(log)
+                    }}
+                  />
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <FilterBox value={filterText} onChange={setFilterText} />

@@ -10,6 +10,7 @@ import { TitleInput } from './TitleInput'
 import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
+import { PlaybackPreferencesProvider } from '../../../../shared/PlaybackPreferencesProvider'
 
 interface Props {
   log: EnrichedLog

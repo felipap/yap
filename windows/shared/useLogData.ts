@@ -52,13 +52,30 @@ export function useBackendState() {
 }
 
 export function useLogData() {
-  const { stateCount } = useBackendState()
+  // const { stateCount } = useBackendState()
 
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState<EnrichedLog[]>([])
 
+  const loadLogs = async () => {
+    try {
+      setLoading(true)
+      console.log('calling getEnrichedLogs')
+      const files = await getEnrichedLogs()
+      console.log('files', files)
+      // const files = []
+      setLogs(files)
+    } catch (error) {
+      console.error('Failed to load logs:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    loadLogs()
+    setTimeout(() => {
+      loadLogs()
+    }, 10)
 
     // Refresh file list periodically
     // const intervalId = setInterval(loadLogs, 2000)
@@ -67,25 +84,13 @@ export function useLogData() {
     const handleStateChange = () => {
       void loadLogs()
     }
-    onStateChange(handleStateChange)
+    // onStateChange(handleStateChange)
 
     return () => {
       // clearInterval(intervalId)
-      removeLogUpdatedListener()
+      // removeLogUpdatedListener()
     }
-  }, [stateCount])
-
-  const loadLogs = async () => {
-    try {
-      setLoading(true)
-      const files = await getEnrichedLogs()
-      setLogs(files)
-    } catch (error) {
-      console.error('Failed to load logs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [])
 
   return { logs, loading }
 }

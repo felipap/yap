@@ -241,14 +241,16 @@ export function setupProtocolHandlers() {
   protocol.handle(
     'log-thumbnail',
     withErrorHandling(async (request) => {
+      // return new Response('Log not found', { status: 404 })
+
       // Remove the protocol and get the log ID
       const logId = request.url
         .replace('log-thumbnail://', '')
         .replace('/', '')
         .replace('.jpg', '')
 
-      debug('Thumbnail request URL:', request.url)
-      debug('Log ID:', logId)
+      // debug('Thumbnail request URL:', request.url)
+      // debug('Log ID:', logId)
 
       const filePath = logIdToPath.get(logId)
       if (!filePath) {
@@ -259,7 +261,7 @@ export function setupProtocolHandlers() {
       // Check if this is an audio-only file
       const log = getLog(logId)
       if (log?.isAudioOnly) {
-        debug('Skipping thumbnail generation for audio-only file:', filePath)
+        // debug('Skipping thumbnail generation for audio-only file:', filePath)
         return new Response('Thumbnail not available for audio-only files', {
           status: 404,
         })
@@ -274,7 +276,7 @@ export function setupProtocolHandlers() {
         return new Response('Thumbnail not available', { status: 404 })
       }
 
-      debug('Resolved thumbnail path:', thumbnailPath)
+      // debug('Resolved thumbnail path:', thumbnailPath)
 
       let data: Buffer
       try {
@@ -284,13 +286,13 @@ export function setupProtocolHandlers() {
         return new Response('Thumbnail file not found', { status: 404 })
       }
 
-      debug(
-        'Successfully loaded thumbnail:',
-        thumbnailPath,
-        'Size:',
-        data.length,
-        'bytes',
-      )
+      // debug(
+      //   'Successfully loaded thumbnail:',
+      //   thumbnailPath,
+      //   'Size:',
+      //   data.length,
+      //   'bytes',
+      // )
 
       return new Response(new Uint8Array(data), {
         headers: {
