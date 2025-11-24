@@ -70,6 +70,10 @@ export function ConvertButton({ logId, disabled }: Props) {
 
     try {
       const result = await convertToMp4(logId)
+      if ('error' in result) {
+        alert(result.error)
+        return
+      }
       alert(result.message)
     } catch (error) {
       console.error('Failed to convert video:', error)

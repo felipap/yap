@@ -144,33 +144,61 @@ export function SummarySubtitle({ log }: Props) {
             {isExpanded ? 'Show less' : 'Show more'}
           </button>
         )}
-        <button
-          onClick={handleCopy}
-          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-          title={copied ? 'Copied!' : 'Copy summary'}
-        >
-          <CopyIcon className="w-2.5 h-3" />
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-        <button
-          onClick={handleGenerateSummary}
-          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-          disabled={isGenerating}
-        >
-          {isGenerating ? (
-            <>
-              <ClockIcon className="w-3 h-3" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <RefreshIcon className="w-3 h-3" />
-              Regenerate
-            </>
-          )}
-        </button>
+        <CopySummaryButton onCopy={handleCopy} copied={copied} />
+        <RegenerateSummaryButton
+          onRegenerate={handleGenerateSummary}
+          isGenerating={isGenerating}
+        />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
     </div>
+  )
+}
+
+interface CopySummaryButtonProps {
+  onCopy: () => void
+  copied: boolean
+}
+
+function CopySummaryButton({ onCopy, copied }: CopySummaryButtonProps) {
+  return (
+    <button
+      onClick={onCopy}
+      className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+      title={copied ? 'Copied!' : 'Copy summary'}
+    >
+      <CopyIcon className="w-2.5 h-3" />
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
+}
+
+interface RegenerateSummaryButtonProps {
+  onRegenerate: () => void
+  isGenerating: boolean
+}
+
+function RegenerateSummaryButton({
+  onRegenerate,
+  isGenerating,
+}: RegenerateSummaryButtonProps) {
+  return (
+    <button
+      onClick={onRegenerate}
+      className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+      disabled={isGenerating}
+    >
+      {isGenerating ? (
+        <>
+          <ClockIcon className="w-3 h-3" />
+          Generating...
+        </>
+      ) : (
+        <>
+          <RefreshIcon className="w-3 h-3" />
+          Regenerate
+        </>
+      )}
+    </button>
   )
 }

@@ -9,7 +9,7 @@ import { access, copyFile, mkdir, stat } from 'fs/promises'
 import { basename, dirname, join, resolve } from 'path'
 import { EnrichedLog, Log, State } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
-import { moveToTrash } from './lib/filesystem'
+import { fileExists, moveToTrash } from './lib/filesystem'
 import { debug } from './lib/logger'
 import { getVideoDuration } from './lib/transcription'
 import {
@@ -116,8 +116,14 @@ export function setupIpcHandlers() {
       if (!log) {
         throw new Error(`Log with ID ${logId} not found`)
       }
-      const parentFolder = dirname(log.path)
-      await shell.showItemInFolder(parentFolder)
+      let pathToOpen: string
+      const exists = await fileExists(log.path)
+      if (exists) {
+        pathToOpen = log.path
+      } else {
+        pathToOpen = dirname(log.path)
+      }
+      await shell.showItemInFolder(pathToOpen)
     }),
   )
 
@@ -547,7 +553,10 @@ export function setupIpcHandlers() {
 
       try {
         await access(outputPath)
-        throw new Error('MP4 file already exists')
+        return {
+          success: false,
+          message: 'MP4 file already exists',
+        }
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
           throw err

@@ -218,12 +218,15 @@ export async function openFolderPicker(): Promise<string | null> {
 }
 
 // MP4 conversion
-export async function convertToMp4(logId: string): Promise<{
-  success: boolean
-  message: string
-  newLogId: string
-  outputPath: string
-}> {
+export async function convertToMp4(logId: string): Promise<
+  | {
+      success: boolean
+      message: string
+      newLogId: string
+      outputPath: string
+    }
+  | { error: string }
+> {
   return window.electronAPI.convertToMp4(logId)
 }
 

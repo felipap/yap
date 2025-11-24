@@ -32,7 +32,7 @@ export function Toolbar({ log, onBack }: Props) {
       <div className="no-drag-region flex gap-2 w-full  overflow-x-scroll">
         <Button onClick={handleOpenLocation}>
           <MdFolder size={16} />
-          <span>Show in Finder</span>
+          <span>Open Folder</span>
         </Button>
         {(isWebm || isMov) && <ConvertButton logId={log.id} />}
         {!inDefaultFolder && <MoveToDefaultFolderButton logId={log.id} />}
