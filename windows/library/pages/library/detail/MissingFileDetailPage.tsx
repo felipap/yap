@@ -76,7 +76,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
           <div className="flex justify-center gap-2">
             <Button onClick={handleOpenLocation} disabled={isDeleting}>
               <MdFolder size={16} />
-              <span>Open in Finder</span>
+              <span>Open Folder</span>
             </Button>
             <Button onClick={handleUntrack} disabled={isDeleting}>
               {isDeleting ? (

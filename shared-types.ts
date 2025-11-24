@@ -144,10 +144,7 @@ export type SharedIpcMethods = {
   getLog: (logId: string) => Promise<any>
   getEnrichedLog: (logId: string) => Promise<EnrichedLog>
   updateLog: (logId: string, updates: any) => Promise<boolean>
-  triggerGenerateSummary: (
-    logId: string,
-    transcription: string,
-  ) => Promise<void>
+  triggerGenerateSummary: (logId: string) => Promise<void>
   importVideoFile: (filePath: string) => Promise<any>
   saveVideoPosition: (logId: string, position: number) => Promise<boolean>
   getVideoPosition: (

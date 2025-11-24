@@ -1,9 +1,9 @@
 // ~/Library/Application Support/yap-camera/data.json
 
-import Store, { Schema } from 'electron-store'
-import { State, Log } from '../../shared-types'
-import { app } from 'electron'
 import { createHash } from 'crypto'
+import { app } from 'electron'
+import Store, { Schema } from 'electron-store'
+import { Log, State } from '../../shared-types'
 
 export type { State } from '../../shared-types'
 
@@ -110,6 +110,13 @@ export function generateLogId(filePath: string): string {
 export function getLog(logId: string): Log | null {
   const logs = store.get('logs') || {}
   return logs[logId] || null
+}
+
+export function appendLog(log: Log): Log {
+  const logs = store.get('logs') || {}
+  logs[log.id] = log
+  store.set('logs', logs)
+  return log
 }
 
 export function setLog(log: Log): void {

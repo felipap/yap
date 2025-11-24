@@ -1,4 +1,8 @@
-export { libraryWindow, createLibraryWindow, getMainWindow } from './library'
+export {
+  libraryWindow,
+  createLibraryWindow,
+  getLibraryWindow as getMainWindow,
+} from './library'
 export {
   settingsWindow,
   createSettingsWindow,

@@ -5,7 +5,7 @@ import {
   ImportResult,
   RecordingMode,
   ScreenSource,
-  SharedIpcMethods,
+  ExposedElectronAPI,
   SidebarLog,
   State,
   TranscriptionResult,
@@ -14,7 +14,7 @@ import {
 
 declare global {
   interface Window {
-    electronAPI: SharedIpcMethods
+    electronAPI: ExposedElectronAPI
   }
 }
 
@@ -124,12 +124,8 @@ export async function getTranscriptionState(
   return window.electronAPI.getTranscriptionState(logId)
 }
 
-// Summary functions
-export async function triggerGenerateSummary(
-  logId: string,
-  transcription: string,
-): Promise<string> {
-  return window.electronAPI.triggerGenerateSummary(logId, transcription)
+export async function triggerGenerateSummary(logId: string): Promise<void> {
+  return window.electronAPI.triggerGenerateSummary(logId)
 }
 
 // Import functions

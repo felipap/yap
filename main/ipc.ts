@@ -11,7 +11,7 @@ import { EnrichedLog, Log, State } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { moveToTrash } from './lib/filesystem'
 import { debug } from './lib/logger'
-import { getVideoDuration, transcribeVideo } from './lib/transcription'
+import { getVideoDuration } from './lib/transcription'
 import {
   extractVideoMetadata,
   formatDateForPrompt,
@@ -34,7 +34,7 @@ import {
 } from './store'
 import { getActiveRecordingsDir } from './store/default-folder'
 import * as ephemeral from './store/ephemeral'
-import { triggerGenerateSummary } from './tasks'
+import { triggerGenerateSummary, triggerTranscribe } from './tasks'
 import { libraryWindow, onChangeTopLevelPage, settingsWindow } from './windows'
 
 // Helper function to detect if a file is audio-only
@@ -116,7 +116,8 @@ export function setupIpcHandlers() {
       if (!log) {
         throw new Error(`Log with ID ${logId} not found`)
       }
-      await shell.showItemInFolder(log.path)
+      const parentFolder = dirname(log.path)
+      await shell.showItemInFolder(parentFolder)
     }),
   )
 
@@ -182,8 +183,12 @@ export function setupIpcHandlers() {
         throw new Error(`Log with ID ${logId} not found`)
       }
 
-      ephemeral.setTranscriptionProgress(logId, 0)
-      return await startTranscriptionAndSummary(logId, log.path)
+      const openaiApiKey = store.get('openaiApiKey') || null
+      if (!openaiApiKey) {
+        throw new Error('OpenAI API key is not set')
+      }
+
+      triggerTranscribe(logId, openaiApiKey)
     }),
   )
 
@@ -228,64 +233,6 @@ export function setupIpcHandlers() {
     }),
   )
 
-  // Helper function to start transcription and generate summary asynchronously
-  async function startTranscriptionAndSummary(
-    logId: string,
-    filePath: string,
-  ): Promise<Awaited<ReturnType<typeof transcribeVideo>>> {
-    const speedUp = store.get('transcriptionSpeedUp') || false
-
-    const openaiApiKey = store.get('openaiApiKey') || null
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key is not set')
-    }
-
-    let result: Awaited<ReturnType<typeof transcribeVideo>>
-    try {
-      result = await transcribeVideo(
-        filePath,
-        openaiApiKey,
-        speedUp,
-        (progress) => {
-          ephemeral.setTranscriptionProgress(logId, Math.round(progress))
-          libraryWindow?.webContents.send(
-            'transcription-progress-updated',
-            logId,
-            Math.round(progress),
-          )
-        },
-      )
-    } catch (error) {
-      ephemeral.removeTranscription(logId)
-
-      const errorState = {
-        status: 'error' as const,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
-      updateLog(logId, { transcription: errorState })
-
-      throw error
-    }
-
-    ephemeral.removeTranscription(logId)
-
-    updateLog(logId, {
-      transcription: {
-        status: 'completed',
-        result,
-      },
-    })
-
-    // Generate summary asynchronously
-    const geminiApiKey = store.get('geminiApiKey') || null
-    if (geminiApiKey) {
-      // Try to kick-off summary generation.
-      triggerGenerateSummary(logId, result.text, geminiApiKey)
-    }
-
-    return result
-  }
-
   ipcMain.handle(
     'onViewLogEntry',
     tryCatchIpcMain(async (_, logId: string) => {
@@ -314,12 +261,15 @@ export function setupIpcHandlers() {
         log.path &&
         !ephemeral.isTranscriptionActive(logId)
 
-      if (!needsTranscription) {
-        return
+      if (needsTranscription) {
+        // Try to trigger transcription
+        const openaiApiKey = store.get('openaiApiKey') || null
+        if (openaiApiKey) {
+          triggerTranscribe(logId, openaiApiKey)
+        } else {
+          console.warn('No OpenAI API key found, skipping transcription')
+        }
       }
-
-      // Trigger transcription asynchronously (don't block)
-      void startTranscriptionAndSummary(logId, log.path)
     }),
   )
 
@@ -353,12 +303,12 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(
     'triggerGenerateSummary',
-    tryCatchIpcMain(async (_, logId: string, transcription: string) => {
+    tryCatchIpcMain(async (_, logId: string) => {
       const geminiApiKey = store.get('geminiApiKey') || null
       if (!geminiApiKey) {
         throw new Error('Gemini API key is not set')
       }
-      triggerGenerateSummary(logId, transcription, geminiApiKey)
+      triggerGenerateSummary(logId, geminiApiKey)
       return true
     }),
   )

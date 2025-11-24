@@ -1,5 +1,6 @@
-import { BrowserWindow, app } from 'electron'
+import { BrowserWindow, app, dialog } from 'electron'
 import { join } from 'path'
+import { cancelStreamingRecording, isRecordingActive } from '../recording'
 import { store } from '../store'
 import { findIconPath } from './utils'
 
@@ -47,6 +48,7 @@ export function createLibraryWindow(): BrowserWindow {
   }
 
   libraryWindow = new BrowserWindow(windowOptions)
+  console.log('did set library window')
 
   if (iconPath) {
     app.dock?.setIcon(iconPath)
@@ -54,15 +56,46 @@ export function createLibraryWindow(): BrowserWindow {
   }
 
   // Hide instead of destroy - prevent window from ever being destroyed
-  libraryWindow.on('close', (event) => {
+  libraryWindow.on('close', async (event) => {
+    console.log('close called')
+
     // Save window bounds before hiding
     const bounds = libraryWindow!.getBounds()
     store.set('windowBounds', bounds)
 
+    console.log('currentStreamingRecording', isRecordingActive())
+
     if (!app.isQuitting) {
-      // Don't let closing the window destroy the window
-      event.preventDefault()
-      libraryWindow!.hide()
+      // Check if recording is active
+      if (isRecordingActive()) {
+        // Prevent closing
+        event.preventDefault()
+
+        // Show confirmation dialog
+        const response = await dialog.showMessageBox(libraryWindow, {
+          type: 'warning',
+          buttons: ['Cancel', 'Close Anyway'],
+          defaultId: 0,
+          cancelId: 0,
+          title: 'Recording in Progress',
+          message: 'A recording is currently in progress.',
+          detail:
+            'Closing the window will stop the recording. Are you sure you want to close?',
+        })
+
+        // If user clicked "Close Anyway", stop recording and proceed with closing
+        if (response.response === 1) {
+          // Send message to frontend to stop recording
+          libraryWindow!.webContents.send('stop-recording-requested')
+          // Cancel the recording on the backend
+          await cancelStreamingRecording()
+          libraryWindow!.hide()
+        }
+      } else {
+        // Don't let closing the window destroy the window
+        event.preventDefault()
+        libraryWindow!.hide()
+      }
     }
   })
 
@@ -103,6 +136,6 @@ export function createLibraryWindow(): BrowserWindow {
   return libraryWindow
 }
 
-export function getMainWindow(): BrowserWindow | undefined {
+export function getLibraryWindow(): BrowserWindow | undefined {
   return libraryWindow ?? undefined
 }

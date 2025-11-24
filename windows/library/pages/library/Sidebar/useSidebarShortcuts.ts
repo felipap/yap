@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { SidebarItem } from './index'
+import { SidebarItem } from './useIndexedLogData'
 
 interface Args {
   displayLogs: SidebarItem[]

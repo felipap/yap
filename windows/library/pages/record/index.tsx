@@ -31,6 +31,7 @@ export default function Page() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const previewRef = useRef<PreviewScreenRef | null>(null)
+  const handleStopRecordingRef = useRef<(() => Promise<void>) | null>(null)
 
   useEffect(() => {
     loadCameras()
@@ -68,9 +69,22 @@ export default function Page() {
 
     window.addEventListener('beforeunload', handleBeforeUnload)
 
+    // Listen for stop recording request from main process (when window is closed)
+    const removeStopRecordingListener = window.electronAPI.onIpcEvent?.(
+      'stop-recording-requested',
+      () => {
+        if (handleStopRecordingRef.current) {
+          handleStopRecordingRef.current().catch(console.error)
+        }
+      },
+    )
+
     return () => {
       clearInterval(interval)
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      if (removeStopRecordingListener) {
+        removeStopRecordingListener()
+      }
     }
   }, [isRecording, recorder])
 
@@ -315,6 +329,11 @@ export default function Page() {
       alert('Failed to stop recording.')
     }
   }
+
+  // Keep ref updated with latest handleStopRecording
+  useEffect(() => {
+    handleStopRecordingRef.current = handleStopRecording
+  }, [recorder])
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-one">

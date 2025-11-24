@@ -95,11 +95,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateLog: (logId: string, updates: any) => {
     return ipcRenderer.invoke('updateLog', logId, updates)
   },
-  triggerGenerateSummary: (
-    logId: string,
-    transcription: string,
-  ): Promise<void> => {
-    return ipcRenderer.invoke('triggerGenerateSummary', logId, transcription)
+  triggerGenerateSummary: (logId: string): Promise<void> => {
+    return ipcRenderer.invoke('triggerGenerateSummary', logId)
   },
   importVideoFile: (filePath: string): Promise<any> => {
     return ipcRenderer.invoke('importVideoFile', filePath)

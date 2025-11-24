@@ -7,7 +7,7 @@ import { App } from './App'
 
 import '../shared/css/tailwind.css'
 
-export const IS_DEV = false // true // import.meta.env.DEV
+export const IS_DEV = true // true // import.meta.env.DEV
 
 function MainWindowErrorBoundary({ children }: { children: React.ReactNode }) {
   return (

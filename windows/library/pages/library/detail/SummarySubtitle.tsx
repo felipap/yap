@@ -44,7 +44,7 @@ export function SummarySubtitle({ log }: Props) {
     setError(null)
 
     try {
-      await triggerGenerateSummary(log.id, log.transcription.text || '')
+      await triggerGenerateSummary(log.id)
     } catch (error) {
       console.error('Summary generation failed:', error)
       setError(

@@ -1,21 +1,12 @@
+import { createHash } from 'crypto'
 import { appendFile, mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
-import { createHash } from 'crypto'
-import { libraryWindow } from '../windows'
-import { RecordingState } from './types'
 import { Log } from '../../shared-types'
-import { setLog } from '../store'
-import { getActiveRecordingsDir } from '../store/default-folder'
-import { getVideoDuration } from '../lib/transcription'
 import { moveToTrash } from '../lib/filesystem'
-
-// Global recording state - only one recording at a time
-let recordingState: RecordingState = {
-  isRecording: false,
-  recordingId: null,
-  startTime: null,
-  duration: 0,
-}
+import { getVideoDuration } from '../lib/transcription'
+import { appendLog, setLog } from '../store'
+import { getActiveRecordingsDir } from '../store/default-folder'
+import { libraryWindow } from '../windows'
 
 // Configuration for streaming recording
 interface StreamingRecordingConfig {
@@ -36,11 +27,6 @@ interface StreamingRecording {
 }
 
 let currentStreamingRecording: StreamingRecording | null = null
-
-// Helper function to generate a unique ID for a log
-function generateLogId(filePath: string): string {
-  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
-}
 
 // Helper function to generate a filename in the format "Log YYYY-MM-DD at H.MM.SS AM/PM.webm"
 function generateRecordingFilename(config: StreamingRecordingConfig): string {
@@ -68,10 +54,6 @@ function generateRecordingFilename(config: StreamingRecordingConfig): string {
 
   // Use .webm extension for all recordings (audio and video both use webm)
   return `${typePrefix} Log ${year}-${month}-${day} at ${hour12}.${minutes}.${seconds} ${ampm}.webm`
-}
-
-export function getRecordingState(): RecordingState {
-  return { ...recordingState }
 }
 
 // Streaming recording functions
@@ -116,6 +98,8 @@ export async function appendRecordingChunk(chunk: ArrayBuffer): Promise<void> {
 }
 
 export async function finalizeStreamingRecording(): Promise<string> {
+  console.log('finalizeStreamingRecording')
+
   if (!currentStreamingRecording) {
     throw new Error('No streaming recording in progress')
   }
@@ -123,9 +107,16 @@ export async function finalizeStreamingRecording(): Promise<string> {
   const filepath = currentStreamingRecording.filepath
   const filename = currentStreamingRecording.filename
 
-  // Check video duration - don't save if less than 5 seconds
-  const duration = await getVideoDuration(filepath)
-  if (duration < 5) {
+  // Check video duration and don't save if less than 5 seconds.
+  let duration = null
+  try {
+    duration = await getVideoDuration(filepath)
+  } catch (error) {
+    console.error('Error getting video duration. Will continue.', error)
+    duration = null
+  }
+
+  if (duration && duration < 5) {
     console.log(
       `Recording too short (${duration}s), moving to trash: ${filepath}`,
     )
@@ -134,18 +125,15 @@ export async function finalizeStreamingRecording(): Promise<string> {
     throw new Error('Recording too short (less than 5 seconds)')
   }
 
-  // Generate unique ID for the log
   const id = generateLogId(filepath)
 
-  // Create log entry
-  const log: Log = {
+  const log = appendLog({
     id,
     name: filename,
     path: filepath,
     timestamp: new Date().toISOString(),
     isAudioOnly: currentStreamingRecording.config.type === 'audio',
-  }
-  setLog(log)
+  })
 
   // Notify library window about the new log
   if (libraryWindow) {
@@ -163,15 +151,28 @@ export async function finalizeStreamingRecording(): Promise<string> {
   return filepath
 }
 
-function notifyRecordingStateChange(): void {
-  if (libraryWindow) {
-    // Ensure we only send serializable data
-    const serializableState = {
-      isRecording: recordingState.isRecording,
-      recordingId: recordingState.recordingId,
-      startTime: recordingState.startTime,
-      duration: recordingState.duration,
-    }
-    libraryWindow.webContents.send('recording-state-changed', serializableState)
+function generateLogId(filePath: string): string {
+  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
+}
+
+export function isRecordingActive(): boolean {
+  return currentStreamingRecording !== null
+}
+
+export async function cancelStreamingRecording(): Promise<void> {
+  if (!currentStreamingRecording) {
+    return
   }
+
+  const filepath = currentStreamingRecording.filepath
+
+  // Move the file to trash since recording was cancelled
+  try {
+    await moveToTrash(filepath)
+  } catch (error) {
+    console.error('Error moving cancelled recording to trash:', error)
+  }
+
+  // Clean up the streaming recording
+  currentStreamingRecording = null
 }
