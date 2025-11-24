@@ -1,38 +1,14 @@
-import { LibraryIcon, RecordIcon } from '../icons'
 import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
+import { LibraryIcon, RecordIcon } from '../icons'
 import { openSettingsWindow } from '../ipc'
 
-interface TopNavProps {
+interface Props {
   currentTab: 'library' | 'record'
 }
 
-function useTabShortcuts() {
-  const router = useRouter()
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === 'L') {
-        e.preventDefault()
-        router.navigate({ name: 'library' })
-      } else if (e.metaKey && e.key === 'R') {
-        e.preventDefault()
-        router.navigate({ name: 'record' })
-      } else if (e.metaKey && e.key === ',') {
-        e.preventDefault()
-        openSettingsWindow()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [router])
-}
-
-export function TopNav({ currentTab }: TopNavProps) {
+export function TopNav({ currentTab }: Props) {
   const router = useRouter()
   useTabShortcuts()
 
@@ -68,7 +44,7 @@ export function TopNav({ currentTab }: TopNavProps) {
             )}
           >
             Record
-            <RecordIcon className="w-4 h-4 ml-1" />
+            <RecordIcon className="w-4 h-4 ml-0.5 mt-[1px]" />
           </TabButton>
         </div>
       </div>
@@ -103,4 +79,28 @@ function TabButton({
       {children}
     </button>
   )
+}
+
+function useTabShortcuts() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === 'L') {
+        e.preventDefault()
+        router.navigate({ name: 'library' })
+      } else if (e.metaKey && e.key === 'R') {
+        e.preventDefault()
+        router.navigate({ name: 'record' })
+      } else if (e.metaKey && e.key === ',') {
+        e.preventDefault()
+        openSettingsWindow()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [router])
 }

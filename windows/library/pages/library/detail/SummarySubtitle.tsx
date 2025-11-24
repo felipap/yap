@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { ClockIcon, CopyIcon, RefreshIcon } from '../../../../shared/icons'
-import { generateVideoSummary } from '../../../../shared/ipc'
+import { triggerGenerateSummary } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
 
 interface Props {
@@ -44,7 +44,7 @@ export function SummarySubtitle({ log }: Props) {
     setError(null)
 
     try {
-      await generateVideoSummary(log.id, log.transcription.text || '')
+      await triggerGenerateSummary(log.id, log.transcription.text || '')
     } catch (error) {
       console.error('Summary generation failed:', error)
       setError(

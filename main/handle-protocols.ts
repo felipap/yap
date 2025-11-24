@@ -2,7 +2,6 @@ import { spawn } from 'child_process'
 import { protocol } from 'electron'
 import { createReadStream } from 'fs'
 import { access, readFile, stat } from 'fs/promises'
-import { logIdToPath } from './ipc'
 import { debug } from './lib/logger'
 import { generateThumbnail } from './lib/thumbnails'
 import { getVideoDuration } from './lib/transcription'
@@ -143,12 +142,11 @@ export function setupProtocolHandlers() {
       debug('Log ID:', logId)
       debug('Request headers:', Object.fromEntries(request.headers.entries()))
 
-      const filePath = logIdToPath.get(logId)
-      if (!filePath) {
-        // console.error(`Log with ID ${logId} not found in mapping`)
-        debug('Available log IDs:', Array.from(logIdToPath.keys()))
+      const log = getLog(logId)
+      if (!log) {
         return new Response('Log not found', { status: 404 })
       }
+      const filePath = log.path
 
       debug('Resolved file path:', filePath)
 
@@ -252,14 +250,14 @@ export function setupProtocolHandlers() {
       // debug('Thumbnail request URL:', request.url)
       // debug('Log ID:', logId)
 
-      const filePath = logIdToPath.get(logId)
-      if (!filePath) {
-        console.error(`Log with ID ${logId} not found in mapping`)
+      const log = getLog(logId)
+      if (!log) {
+        console.error(`Log with ID ${logId} not found`)
         return new Response('Log not found', { status: 404 })
       }
+      const filePath = log.path
 
       // Check if this is an audio-only file
-      const log = getLog(logId)
       if (log?.isAudioOnly) {
         // debug('Skipping thumbnail generation for audio-only file:', filePath)
         return new Response('Thumbnail not available for audio-only files', {

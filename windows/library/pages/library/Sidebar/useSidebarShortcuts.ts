@@ -3,7 +3,7 @@ import { SidebarItem } from './index'
 
 interface Args {
   displayLogs: SidebarItem[]
-  onVideoSelect: (file: SidebarItem) => void
+  onSelect: (file: SidebarItem) => void
   selectedLog?: SidebarItem | null
   onUnselect?: () => void
 }
@@ -64,7 +64,7 @@ function useSelectionHistory(selectedLog?: SidebarItem | null) {
 
 export function useSidebarShortcuts({
   displayLogs,
-  onVideoSelect,
+  onSelect,
   selectedLog,
   onUnselect,
 }: Args) {
@@ -111,7 +111,7 @@ export function useSidebarShortcuts({
         const nextIndex = Math.min(currentIndex + 1, displayLogs.length - 1)
         const nextItem = displayLogs[nextIndex]
         if (nextItem && nextIndex !== currentIndex) {
-          onVideoSelect(nextItem)
+          onSelect(nextItem)
         }
         return
       } else if (key === 'ArrowUp') {
@@ -131,7 +131,7 @@ export function useSidebarShortcuts({
         const prevIndex = Math.max(currentIndex - 1, 0)
         const prevItem = displayLogs[prevIndex]
         if (prevItem && prevIndex !== currentIndex) {
-          onVideoSelect(prevItem)
+          onSelect(prevItem)
         }
         return
       }
@@ -151,21 +151,21 @@ export function useSidebarShortcuts({
 
         const target = displayLogs[index - 1]
         if (target) {
-          onVideoSelect(target)
+          onSelect(target)
         }
       } else if (key === '[') {
         // Cmd + [ navigates back in selection history
         const previous = goBack(selectedLog ?? null)
         if (previous) {
           e.preventDefault()
-          onVideoSelect(previous)
+          onSelect(previous)
         }
       } else if (key === ']') {
         // Cmd + ] navigates forward in selection history
         const next = goForward(selectedLog ?? null)
         if (next) {
           e.preventDefault()
-          onVideoSelect(next)
+          onSelect(next)
         }
       }
     }
@@ -174,5 +174,5 @@ export function useSidebarShortcuts({
     return () => {
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [displayLogs, onVideoSelect, goBack, goForward, selectedLog, onUnselect])
+  }, [displayLogs, onSelect, goBack, goForward, selectedLog, onUnselect])
 }

@@ -84,24 +84,29 @@ export interface TranscriptionResult {
   duration: number
 }
 
+// Just the bare minimum required to render the sidebar. It's important that
+// this doesn't require any file system stats or other expensive operations,
+// because it'll be called frequently.
+// TODO restore the `isMissing` here, but do it in a cached way.
+export interface SidebarLog {
+  id: string
+  name: string
+  path: string
+  created: Date // Computed from Log.timestamp
+  title?: string
+  thumbnailPath?: string // Computed as log-thumbnail://{id}.jpg
+  duration?: number
+  isAudioOnly?: boolean
+}
+
 /**
  * EnrichedLog type - the enriched data structure returned to the frontend
  * This is computed from Log + file system stats at runtime.
  * Used by the UI but not stored directly in data.json.
  */
-export interface EnrichedLog {
-  id: string
-  name: string
-  path: string
-  // size: number // Computed from file stats
-  created: Date // Computed from Log.timestamp
-  title?: string
-  // modified: Date // Computed from file stats
-  thumbnailPath?: string // Computed as log-thumbnail://{id}.jpg
-  duration?: number
-  transcription?: TranscriptionResult
+export interface EnrichedLog extends SidebarLog {
   summary?: string
-  isAudioOnly?: boolean
+  transcription?: TranscriptionResult
   fileExists: boolean // Computed at runtime - true if file exists on disk
   isInDefaultFolder: boolean // Computed at runtime - true if file is in default recordings folder
 }
@@ -118,7 +123,7 @@ export interface ImportResult {
 
 export type SharedIpcMethods = {
   getScreenSources: () => Promise<ScreenSource[]>
-  getEnrichedLogs: () => Promise<EnrichedLog[]>
+  getSidebarLogs: () => Promise<SidebarLog[]>
   openFileLocation: (logId: string) => Promise<void>
   setPartialState: (state: Partial<State>) => Promise<void>
   getState: () => Promise<State>
@@ -139,10 +144,10 @@ export type SharedIpcMethods = {
   getLog: (logId: string) => Promise<any>
   getEnrichedLog: (logId: string) => Promise<EnrichedLog>
   updateLog: (logId: string, updates: any) => Promise<boolean>
-  generateVideoSummary: (
+  triggerGenerateSummary: (
     logId: string,
     transcription: string,
-  ) => Promise<string>
+  ) => Promise<void>
   importVideoFile: (filePath: string) => Promise<any>
   saveVideoPosition: (logId: string, position: number) => Promise<boolean>
   getVideoPosition: (

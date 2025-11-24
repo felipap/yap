@@ -1,8 +1,7 @@
 import { MdLinkOff, MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
-import { SidebarItem } from '.'
-import { IS_DEV } from '../../..'
 import { formatDate, formatDateOrRelative } from './formatters'
+import { SidebarItem } from './useIndexedLogData'
 
 interface Props {
   data: SidebarItem
@@ -11,7 +10,8 @@ interface Props {
 }
 
 export function Item({ data, selected, onClick }: Props) {
-  const isMissing = !data.fileExists
+  // const isMissing = !data.fileExists
+  const isMissing = false
 
   return (
     <button
@@ -20,9 +20,9 @@ export function Item({ data, selected, onClick }: Props) {
         `w-full text-left pl-2 py-1.5 transition-colors select-none`,
         'hover:bg-one hover:dark:bg-one rounded-md',
         selected
-          ? '!bg-blue-500 dark:!bg-[#2A2A2A] hover:dark:!bg-[#1F1F1F] text-white'
+          ? 'bg-blue-500! dark:bg-[#2A2A2A]! hover:dark:bg-[#1F1F1F]! text-white'
           : 'text-contrast',
-        isMissing && 'opacity-60',
+        // isMissing && 'opacity-60',
       )}
     >
       <div className="flex items-center gap-2.5">
@@ -40,14 +40,14 @@ export function Item({ data, selected, onClick }: Props) {
                   #{data.dayIndex}
                 </span>
               )}
-              {IS_DEV && !data.transcription && (
+              {/* {IS_DEV && !data.transcription && (
                 <span
                   className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-500 dark:text-yellow-400"
                   title="No transcription"
                 >
                   No transcript
                 </span>
-              )}
+              )} */}
             </div>
             {data.title && (
               <div className="text-xs opacity-50 truncate flex items-center gap-1">

@@ -2,9 +2,7 @@ import { GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
 import { store } from '../store'
 
-const GEMINI_API_KEY = store.get('geminiApiKey') || null
-
-const Schema = z.object({
+const ApiResponseSchema = z.object({
   summary: z.string().describe('The objective summary of the log transcript'),
   hasContent: z
     .boolean()
@@ -13,13 +11,23 @@ const Schema = z.object({
     ),
 })
 
-export type Result = z.infer<typeof Schema>
+const ResultSchema = z.object({
+  success: z.boolean().describe('Was the summary generated successfully'),
+  summary: z.string().describe('The objective summary of the log transcript'),
+  hasContent: z
+    .boolean()
+    .describe(
+      'Whether the transcript contains meaningful content to summarize',
+    ),
+})
 
-export async function generateVideoSummary(
-  logId: string,
+export type Result = z.infer<typeof ResultSchema>
+
+export async function generateSummary(
   transcription: string,
-): Promise<string> {
-  if (!GEMINI_API_KEY) {
+  geminiApiKey: string,
+): Promise<Result> {
+  if (!geminiApiKey) {
     throw new Error('Gemini API key is not set')
   }
 
@@ -49,11 +57,11 @@ Please create an objective summary of this log transcript:
 
 ${transcription || ''}`
 
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+  const client = new GoogleGenAI({ apiKey: geminiApiKey })
 
   let res
   try {
-    res = await ai.models.generateContent({
+    res = await client.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
@@ -80,7 +88,7 @@ ${transcription || ''}`
   } catch (error) {
     // If transcription is empty, return empty string (don't set summary)
     if (!transcription || transcription.trim().length === 0) {
-      return ''
+      return { success: false, summary: '', hasContent: false }
     }
     throw new Error(
       `Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -89,13 +97,13 @@ ${transcription || ''}`
 
   const rawResponse = JSON.parse(res.text || '{}')
 
-  // Validate with Zod
-  const parsedResponse = Schema.parse(rawResponse)
+  // Validate with Zod (API response doesn't include success)
+  const parsedResponse = ApiResponseSchema.parse(rawResponse)
 
   // If the AI determined there's no content, return empty string (don't set summary)
   if (!parsedResponse.hasContent) {
-    return ''
+    return { success: false, summary: '', hasContent: false }
   }
 
-  return parsedResponse.summary
+  return { success: true, summary: parsedResponse.summary, hasContent: true }
 }

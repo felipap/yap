@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
 import { MovieIcon } from '../../../shared/icons'
-import { useLog } from '../../../shared/useLogData'
-import { EnrichedLog } from '../../types'
+import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
+import { useLog } from '../../../shared/useLog'
+import { SidebarLog } from '../../types'
 import { DetailPage } from './detail'
 import { DragDropWrapper } from './DragDropWrapper'
 import { Sidebar } from './Sidebar'
@@ -11,7 +11,7 @@ export default function Page() {
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null)
   const { log } = useLog(selectedLogId)
 
-  function handleSelectLog(next: EnrichedLog) {
+  function handleSelectLog(next: SidebarLog) {
     setSelectedLogId(next.id)
   }
 
@@ -40,7 +40,7 @@ export default function Page() {
         <div className="h-full bg-sidebar rounded-md">
           <Sidebar
             selectedLog={log ?? null}
-            onVideoSelect={handleSelectLog}
+            onSelect={handleSelectLog}
             onClose={() => setSelectedLogId(null)}
           />
         </div>

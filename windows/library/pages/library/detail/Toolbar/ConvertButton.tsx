@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import { MdVideocam, MdRefresh } from 'react-icons/md'
+import { useEffect, useState } from 'react'
+import { MdRefresh, MdVideocam } from 'react-icons/md'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
-import { useLog } from '../../../../../shared/useLogData'
 import { Button } from '../../../../../shared/ui/Button'
 
 interface Props {
@@ -96,7 +95,7 @@ export function ConvertButton({ logId, disabled }: Props) {
       return (
         <>
           <MdRefresh size={16} className="animate-spin" />
-          <span>Converting...</span>
+          <span>Converting</span>
         </>
       )
     }

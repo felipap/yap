@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { MdFolder } from 'react-icons/md'
 import { importVideoFile } from '../../../shared/ipc'
+import { ImportResult as IpcImportResult } from '../../../../shared-types'
 import { twMerge } from 'tailwind-merge'
-
-interface DragDropWrapperProps {
-  children: React.ReactNode
-  onImportComplete?: (results: ImportResult[]) => void
-}
 
 interface ImportResult {
   file: string
@@ -13,10 +10,92 @@ interface ImportResult {
   message: string
 }
 
-export function DragDropWrapper({
-  children,
-  onImportComplete,
-}: DragDropWrapperProps) {
+// Electron extends File with a path property
+interface ElectronFile extends File {
+  path: string
+}
+
+interface Props {
+  children: React.ReactNode
+  onImportComplete?: (results: ImportResult[]) => void
+}
+
+export function DragDropWrapper({ children, onImportComplete }: Props) {
+  const handleDrop = useCallback(
+    async (files: ElectronFile[]) => {
+      const results: ImportResult[] = []
+
+      for (const file of files) {
+        if (!file.path) {
+          results.push({
+            file: file.name,
+            status: 'error',
+            message: 'Could not get file path',
+          })
+          continue
+        }
+
+        try {
+          const result: IpcImportResult = await importVideoFile(file.path)
+
+          if (result.success && result.log) {
+            results.push({
+              file: file.name,
+              status: 'success',
+              message: result.message,
+            })
+          } else if (result.isDuplicate) {
+            results.push({
+              file: file.name,
+              status: 'duplicate',
+              message: result.message,
+            })
+          } else {
+            results.push({
+              file: file.name,
+              status: 'error',
+              message: result.message || 'Import failed',
+            })
+          }
+        } catch (error) {
+          results.push({
+            file: file.name,
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      }
+
+      if (onImportComplete) {
+        onImportComplete(results)
+      }
+    },
+    [onImportComplete],
+  )
+
+  const { isDragOver } = useDragDropMedia(handleDrop)
+
+  return (
+    <div className="relative h-full w-full">
+      <div
+        className={twMerge(
+          'absolute inset-0 transition-colors duration-200 flex items-center justify-center',
+          isDragOver ? 'bg-blue-500/30 border-2 border-blue-500 z-10 ' : '',
+        )}
+      >
+        <div className="flex items-center gap-3 text-[30px] text-blue-800 dark:text-blue-300">
+          {isDragOver && <AnimatedFolderIcon />}
+          <span>Drop media file</span>
+        </div>
+      </div>
+      <div className="relative h-full w-full">{children}</div>
+    </div>
+  )
+}
+
+function useDragDropMedia(
+  onDrop: (files: ElectronFile[]) => void | Promise<void>,
+) {
   const [isDragOver, setIsDragOver] = useState(false)
 
   useEffect(() => {
@@ -45,77 +124,10 @@ export function DragDropWrapper({
           file.name.match(
             /\.(mp4|webm|mov|avi|mkv|mp3|m4a|wav|ogg|aac|flac)$/i,
           ),
-      )
+      ) as ElectronFile[]
 
       if (mediaFiles.length > 0) {
-        console.log('Dropped media files:')
-        const results: ImportResult[] = []
-
-        for (const file of mediaFiles) {
-          try {
-            console.log(`- Importing: ${file.name}`)
-            // Use file.path to get the full file path (available in Electron)
-            const filePath = (file as any).path
-            if (!filePath) {
-              throw new Error('Could not get file path')
-            }
-            const result = await importVideoFile(filePath)
-
-            if (result.success && result.log) {
-              console.log(`- Successfully imported: ${result.log.name}`)
-              results.push({
-                file: file.name,
-                status: 'success',
-                message: result.message,
-              })
-            } else if (result.isDuplicate) {
-              console.log(`- Duplicate found: ${file.name}`)
-              results.push({
-                file: file.name,
-                status: 'duplicate',
-                message: result.message,
-              })
-            }
-          } catch (error) {
-            console.error(`- Failed to import ${file.name}:`, error)
-            results.push({
-              file: file.name,
-              status: 'error',
-              message: error instanceof Error ? error.message : 'Unknown error',
-            })
-          }
-        }
-
-        // Show summary of import results
-        const successCount = results.filter(
-          (r) => r.status === 'success',
-        ).length
-        const duplicateCount = results.filter(
-          (r) => r.status === 'duplicate',
-        ).length
-        const errorResults = results.filter((r) => r.status === 'error')
-        const errorCount = errorResults.length
-
-        let summaryMessage = `Import complete: ${successCount} imported`
-        if (duplicateCount > 0) {
-          summaryMessage += `, ${duplicateCount} duplicates skipped`
-        }
-        if (errorCount > 0) {
-          summaryMessage += `, ${errorCount} failed`
-
-          // Add detailed error messages
-          summaryMessage += '\n\nErrors:'
-          errorResults.forEach((result) => {
-            summaryMessage += `\n• ${result.file}: ${result.message}`
-          })
-        }
-
-        alert(summaryMessage)
-
-        // Call the callback if provided
-        if (onImportComplete) {
-          onImportComplete(results)
-        }
+        await onDrop(mediaFiles)
       }
     }
 
@@ -128,21 +140,18 @@ export function DragDropWrapper({
       window.removeEventListener('dragleave', handleDragLeave)
       window.removeEventListener('drop', handleDrop)
     }
-  }, [onImportComplete])
+  }, [onDrop])
 
+  return { isDragOver }
+}
+
+function AnimatedFolderIcon() {
   return (
-    <div className="relative h-full w-full">
-      <div
-        className={twMerge(
-          'absolute inset-0 transition-colors duration-200 flex items-center justify-center',
-          isDragOver ? 'bg-blue-500/30 border-2 border-blue-500 z-10 ' : '',
-        )}
-      >
-        <div className="text-[30px] text-blue-800 dark:text-blue-300">
-          Drop media file
-        </div>
-      </div>
-      <div className="relative h-full w-full">{children}</div>
-    </div>
+    <MdFolder
+      size={32}
+      style={{
+        animation: 'tilt 1s ease-in-out',
+      }}
+    />
   )
 }

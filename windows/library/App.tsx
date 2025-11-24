@@ -16,14 +16,14 @@ export function App() {
     }
   }, [currentRoute.name])
 
-  let inner = <LibraryPage />
-  // if (currentRoute.name === 'library') {
-  //   inner = <LibraryPage />
-  // } else if (currentRoute.name === 'record') {
-  //   inner = <RecordPage />
-  // } else {
-  //   inner = <LibraryPage />
-  // }
+  let inner = null
+  if (currentRoute.name === 'library') {
+    inner = <LibraryPage />
+  } else if (currentRoute.name === 'record') {
+    inner = <RecordPage />
+  } else {
+    inner = <LibraryPage />
+  }
 
   return (
     <div className="flex flex-col h-screen text-[14px] track-10 dark:antialiased">

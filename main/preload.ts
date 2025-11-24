@@ -1,9 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import {
   ExposedElectronAPI,
-  EnrichedLog,
   ScreenSource,
   SharedIpcMethods,
+  SidebarLog,
   State,
   TranscriptionResult,
   TranscriptionState,
@@ -38,8 +38,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('getScreenSources')
   },
 
-  getEnrichedLogs: (): Promise<EnrichedLog[]> => {
-    return ipcRenderer.invoke('getEnrichedLogs')
+  getSidebarLogs: (): Promise<SidebarLog[]> => {
+    return ipcRenderer.invoke('getSidebarLogs')
   },
 
   openFileLocation: (logId: string): Promise<void> => {
@@ -95,11 +95,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateLog: (logId: string, updates: any) => {
     return ipcRenderer.invoke('updateLog', logId, updates)
   },
-  generateVideoSummary: (
+  triggerGenerateSummary: (
     logId: string,
     transcription: string,
-  ): Promise<string> => {
-    return ipcRenderer.invoke('generateVideoSummary', logId, transcription)
+  ): Promise<void> => {
+    return ipcRenderer.invoke('triggerGenerateSummary', logId, transcription)
   },
   importVideoFile: (filePath: string): Promise<any> => {
     return ipcRenderer.invoke('importVideoFile', filePath)

@@ -6,6 +6,7 @@ import {
   RecordingMode,
   ScreenSource,
   SharedIpcMethods,
+  SidebarLog,
   State,
   TranscriptionResult,
   TranscriptionState,
@@ -21,8 +22,8 @@ export async function getScreenSources(): Promise<ScreenSource[]> {
   return window.electronAPI.getScreenSources()
 }
 
-export async function getEnrichedLogs(): Promise<EnrichedLog[]> {
-  return window.electronAPI.getEnrichedLogs()
+export async function getSidebarLogs(): Promise<SidebarLog[]> {
+  return window.electronAPI.getSidebarLogs()
 }
 
 export async function openFileLocation(logId: string): Promise<void> {
@@ -124,11 +125,11 @@ export async function getTranscriptionState(
 }
 
 // Summary functions
-export async function generateVideoSummary(
+export async function triggerGenerateSummary(
   logId: string,
   transcription: string,
 ): Promise<string> {
-  return window.electronAPI.generateVideoSummary(logId, transcription)
+  return window.electronAPI.triggerGenerateSummary(logId, transcription)
 }
 
 // Import functions
@@ -210,6 +211,10 @@ export async function getRecordingsFolder(): Promise<string> {
 
 export async function setRecordingsFolder(folderPath: string): Promise<void> {
   return window.electronAPI.setPartialState({ recordingsFolder: folderPath })
+}
+
+export async function setPartialState(state: Partial<State>) {
+  return await window.electronAPI.setPartialState(state)
 }
 
 export async function openFolderPicker(): Promise<string | null> {
