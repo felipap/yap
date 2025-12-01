@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.36](https://github.com/felipap/yap/compare/v0.9.35...v0.9.36) (2025-12-01)
+
+
+### Features
+
+* improve drag-and-drop UX and logging ([3143bd0](https://github.com/felipap/yap/commit/3143bd0d59f75a62e9eaacfff03d3f96d934bb69))
+
 ### [0.9.35](https://github.com/felipap/yap/compare/v0.9.34...v0.9.35) (2025-11-24)
 
 ### [0.9.34](https://github.com/felipap/yap/compare/v0.9.33...v0.9.34) (2025-11-24)
