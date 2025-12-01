@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { MdFolder } from 'react-icons/md'
-import { importVideoFile } from '../../../shared/ipc'
-import { ImportResult as IpcImportResult } from '../../../../shared-types'
 import { twMerge } from 'tailwind-merge'
+import { ImportResult as IpcImportResult } from '../../../../shared-types'
+import { FolderIcon } from '../../../shared/icons'
+import { importVideoFile } from '../../../shared/ipc'
 
 interface ImportResult {
   file: string
@@ -13,6 +13,52 @@ interface ImportResult {
 // Electron extends File with a path property
 interface ElectronFile extends File {
   path: string
+}
+
+function getImportSummary(results: ImportResult[]): string | null {
+  if (results.length === 0) {
+    return null
+  }
+
+  if (results.length === 1) {
+    const [result] = results
+
+    if (result.status === 'success') {
+      return `Imported "${result.file}" successfully.`
+    }
+
+    if (result.status === 'duplicate') {
+      return `"${result.file}" is already in your library.`
+    }
+
+    return `Could not import "${result.file}": ${result.message}`
+  }
+
+  const successCount = results.filter(
+    (result) => result.status === 'success',
+  ).length
+  const duplicateCount = results.filter(
+    (result) => result.status === 'duplicate',
+  ).length
+  const errorCount = results.filter(
+    (result) => result.status === 'error',
+  ).length
+
+  const parts: string[] = []
+
+  if (successCount > 0) {
+    parts.push(`${successCount} imported`)
+  }
+
+  if (duplicateCount > 0) {
+    parts.push(`${duplicateCount} already in your library`)
+  }
+
+  if (errorCount > 0) {
+    parts.push(`${errorCount} failed`)
+  }
+
+  return `Finished importing ${results.length} files: ${parts.join(', ')}.`
 }
 
 interface Props {
@@ -66,6 +112,13 @@ export function DragDropWrapper({ children, onImportComplete }: Props) {
         }
       }
 
+      console.log('results', results)
+
+      const summary = getImportSummary(results)
+      if (summary) {
+        window.alert(summary)
+      }
+
       if (onImportComplete) {
         onImportComplete(results)
       }
@@ -83,9 +136,20 @@ export function DragDropWrapper({ children, onImportComplete }: Props) {
           isDragOver ? 'bg-blue-500/30 border-2 border-blue-500 z-10 ' : '',
         )}
       >
-        <div className="flex items-center gap-3 text-[30px] text-blue-800 dark:text-blue-300">
-          {isDragOver && <AnimatedFolderIcon />}
-          <span>Drop media file</span>
+        <div className="flex flex-col items-center gap-3 text-blue-800 dark:text-blue-300">
+          {isDragOver && (
+            <FolderIcon
+              className="ml-[-10px]"
+              size={60}
+              style={{
+                animation: 'tilt 300ms ease-in-out forwards',
+                // animationDelay: '50ms',
+              }}
+            />
+          )}
+          <span className="text-[25px] font-medium track-20">
+            Drop media file
+          </span>
         </div>
       </div>
       <div className="relative h-full w-full">{children}</div>
@@ -100,20 +164,27 @@ function useDragDropMedia(
 
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
+      // Allow dropping by preventing the browser's default handling
       e.preventDefault()
-      e.stopPropagation()
-      setIsDragOver(true)
+
+      // Event fired over the window.
+      if (e.relatedTarget === null) {
+        setIsDragOver(true)
+        // console.log('handleDragOver window')
+      }
     }
 
     const handleDragLeave = (e: DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragOver(false)
+      // Event fired over the window.
+      if (e.relatedTarget === null) {
+        setIsDragOver(false)
+      }
     }
 
     const handleDrop = async (e: DragEvent) => {
       e.preventDefault()
       e.stopPropagation()
+
       setIsDragOver(false)
 
       const files = Array.from(e.dataTransfer?.files || [])
@@ -127,7 +198,10 @@ function useDragDropMedia(
       ) as ElectronFile[]
 
       if (mediaFiles.length > 0) {
+        console.log('Media files dropped', mediaFiles)
         await onDrop(mediaFiles)
+      } else {
+        console.log('No media files dropped')
       }
     }
 
@@ -143,15 +217,4 @@ function useDragDropMedia(
   }, [onDrop])
 
   return { isDragOver }
-}
-
-function AnimatedFolderIcon() {
-  return (
-    <MdFolder
-      size={32}
-      style={{
-        animation: 'tilt 1s ease-in-out',
-      }}
-    />
-  )
 }

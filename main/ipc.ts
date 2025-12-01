@@ -322,7 +322,12 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'importVideoFile',
     tryCatchIpcMain(async (_, filePath: string) => {
-      await access(filePath)
+      try {
+        await access(filePath)
+      } catch (error) {
+        console.error('Error accessing file:', error)
+        throw new Error(`Could not access file: ${filePath}`)
+      }
 
       const fileName =
         filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown'

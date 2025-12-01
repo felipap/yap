@@ -1,7 +1,10 @@
 import { join } from 'path'
 import { homedir } from 'os'
+import { app } from 'electron'
 
-export const DEBUG = false
+// Enable debug logging automatically for packaged (production) builds.
+// This ensures end-user installs always have detailed logs available.
+export const DEBUG = app.isPackaged
 
 // Default recording path
 const DEFAULT_RECORDINGS_PATH = join(homedir(), 'Documents', 'YapRecordings')

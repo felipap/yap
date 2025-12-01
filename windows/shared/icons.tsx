@@ -2,6 +2,7 @@ import { BsFillCollectionFill } from 'react-icons/bs'
 import {
   MdAccessTime,
   MdContentCopy,
+  MdFolder,
   MdMic,
   MdMovie,
   MdMovieFilter,
@@ -12,7 +13,7 @@ import {
   MdVisibilityOff,
 } from 'react-icons/md'
 
-interface IconProps {
+interface IconProps extends React.HTMLAttributes<SVGSVGElement> {
   size?: number
   className?: string
 }
@@ -46,6 +47,10 @@ export function VideocamIcon({ size = 16, className }: IconProps) {
 
 export function MicIcon({ size = 16, className }: IconProps) {
   return <MdMic size={size} className={className} />
+}
+
+export function FolderIcon({ size = 16, className, ...props }: IconProps) {
+  return <MdFolder size={size} className={className} {...props} />
 }
 
 export function LibraryIcon({ size = 16, className }: IconProps) {

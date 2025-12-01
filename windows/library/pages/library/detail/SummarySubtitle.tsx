@@ -144,7 +144,6 @@ export function SummarySubtitle({ log }: Props) {
             {isExpanded ? 'Show less' : 'Show more'}
           </button>
         )}
-        <CopySummaryButton onCopy={handleCopy} copied={copied} />
         <RegenerateSummaryButton
           onRegenerate={handleGenerateSummary}
           isGenerating={isGenerating}
@@ -152,24 +151,6 @@ export function SummarySubtitle({ log }: Props) {
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
     </div>
-  )
-}
-
-interface CopySummaryButtonProps {
-  onCopy: () => void
-  copied: boolean
-}
-
-function CopySummaryButton({ onCopy, copied }: CopySummaryButtonProps) {
-  return (
-    <button
-      onClick={onCopy}
-      className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-      title={copied ? 'Copied!' : 'Copy summary'}
-    >
-      <CopyIcon className="w-2.5 h-3" />
-      {copied ? 'Copied' : 'Copy'}
-    </button>
   )
 }
 
