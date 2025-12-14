@@ -25,7 +25,7 @@ export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
     onViewLogEntry(log.id)
   }, [log.id])
 
-  usePlayerShortcuts({ playerRef })
+  usePlayerShortcuts({ playerRef, onBack })
 
   const isMissing = !log.fileExists
   if (isMissing) {
