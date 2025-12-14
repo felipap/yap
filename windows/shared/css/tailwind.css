@@ -22,6 +22,9 @@
   --font-sans:
     'SF Pro', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Noto Color Emoji';
+  --font-text:
+    'SF Pro Text', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
@@ -40,7 +43,8 @@
   --background-color-one: #f4f6f6;
   --background-color-two: #fff;
   --background-color-three: #fff;
-  --highlight-color: #3b82f6;
+  /* --highlight-color: #3b82f6; */
+  --background-color-highlight: #0277f8;
   --twitter-blue: #1da1f2;
   --text-color-link: #007aff;
 
@@ -64,6 +68,7 @@
     --background-color-one: #000;
     --background-color-two: #161616;
     --background-color-three: #2a2a2a;
+    --background-color-highlight: #0f7eff;
 
     --color-apple-highlight-color: var(--apple-highlight-color-dark);
   }
@@ -130,6 +135,10 @@ textarea {
   letter-spacing: 0.01rem !important;
 }
 
+.font-text {
+  font-family: var(--font-text);
+}
+
 /* Text colors */
 
 .textarea-reset {
@@ -138,6 +147,12 @@ textarea {
 
 .shadow-inset-bottom {
   box-shadow: inset 0 -10px 10px -10px rgba(0, 0, 0, 0.05);
+}
+
+.native-input {
+  @apply border-0 focus:outline-none ring-1 ring-contrast/5 focus:ring-4 transition duration-100 focus:ring-blue-500/60 focus:border-blue-500/60 rounded-[7px] px-2.5;
+  font-family: var(--font-text);
+  letter-spacing: 0.01rem;
 }
 
 strong {

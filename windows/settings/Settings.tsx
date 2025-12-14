@@ -1,11 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { Button } from '../shared/ui/Button'
+import { useEffect, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
+import { MacOsButton } from '../shared/ui/macos-native'
+import { AISettings } from './ai'
+import { GeneralSettings } from './general'
+
+const TABS = ['General Settings']
 
 export function Settings() {
+  const [activeTab, setActiveTab] = useState('General Settings')
   const [apiKey, setApiKey] = useState('')
   const [recordingsFolder, setRecordingsFolder] = useState('')
   const [userContext, setUserContext] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const isInitialLoad = useRef(true)
 
   useEffect(() => {
@@ -100,95 +105,59 @@ export function Settings() {
     }
   }, [])
 
-  const handleSelectFolder = async () => {
-    try {
-      const selectedFolder = await window.electronAPI.openFolderPicker()
-      if (selectedFolder) {
-        setRecordingsFolder(selectedFolder)
-      }
-    } catch (error) {
-      console.error('Failed to select folder:', error)
-    }
-  }
-
-  const handleSave = async () => {
-    setIsLoading(true)
-    try {
-      await window.electronAPI.setGeminiApiKey(apiKey)
-      await window.electronAPI.setPartialState({ recordingsFolder })
-      await window.electronAPI.setUserContext(userContext)
-    } catch (error) {
-      console.error('Failed to save settings:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-one p-4 track-10 dark:antialiased">
-      <div className="space-y-8">
-        <div>
-          <label
-            htmlFor="userContext"
-            className="block text-md font-medium mb-1 text-contrast"
-          >
-            About you
-          </label>
-          <p className="text-sm track-20 text-secondary mb-2">
-            Context to help AI generate better summaries
-          </p>
-          <textarea
-            id="userContext"
-            value={userContext}
-            onChange={(e) => setUserContext(e.target.value)}
-            placeholder="Enter information about yourself, your role, interests, and context..."
-            rows={6}
-            className="w-full px-3 py-2 text-md rounded leading-[1.4] bg-three border text-contrast focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-secondary"
-          />
-        </div>
+    <div className="min-h-screen select-none dark:bg-[#2B2C2C] bg-[#FFF] py-5 px-[16px]  dark:antialiased">
+      <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div>
-          <label
-            htmlFor="apiKey"
-            className="block text-md font-medium mb-1 text-contrast"
-          >
-            Gemini API Key
-          </label>
-          <p className="text-sm track-20 text-secondary mb-2">
-            Used for AI transcription features
-          </p>
-          <input
-            id="apiKey"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your API key"
-            className="w-full h-8 text-md rounded bg-three border-none text-contrast focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-lg">
+        {activeTab === 'General Settings' && (
+          <GeneralSettings
+            recordingsFolder={recordingsFolder}
+            onRecordingsFolderChange={setRecordingsFolder}
+            userContext={userContext}
+            onUserContextChange={setUserContext}
+            apiKey={apiKey}
+            onApiKeyChange={setApiKey}
           />
-        </div>
+        )}
 
-        <div>
-          <label
-            htmlFor="recordingsFolder"
-            className="block text-md font-medium mb-1 text-contrast"
+        {activeTab === 'Logs' && (
+          <AISettings apiKey={apiKey} onApiKeyChange={setApiKey} />
+        )}
+      </div>
+
+      <footer className="mt-2">
+        <MacOsButton onClick={() => {}}>Save</MacOsButton>
+      </footer>
+    </div>
+  )
+}
+
+interface Props {
+  tabs: string[]
+  activeTab: string
+  onTabChange: (tab: string) => void
+}
+
+export function Tabs({ tabs, activeTab, onTabChange }: Props) {
+  return (
+    <div className="flex justify-center">
+      <div className="inline-flex bg-neutral-200 dark:bg-neutral-700 rounded-lg">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => onTabChange(tab)}
+            className={twMerge(
+              'w-[120px] p-0 h-[24px] text-sm font-medium antialiased font-text text-[13px] rounded-md transition-all',
+              activeTab === tab
+                ? // ? 'bg-white dark:bg-neutral-600 text-contrast shadow-sm'
+                  'bg-highlight text-white dark:text-white'
+                : 'text-secondary hover:text-contrast',
+            )}
           >
-            Recordings Folder
-          </label>
-          <p className="text-sm track-20 text-secondary mb-2">
-            Where your recordings will be saved
-          </p>
-          <div className="flex gap-2">
-            <input
-              id="recordingsFolder"
-              type="text"
-              value={recordingsFolder}
-              readOnly
-              placeholder="Select a folder"
-              className="flex-1 h-8 text-md rounded bg-three border-none text-contrast focus:outline-none"
-            />
-            <Button onClick={handleSelectFolder}>Browse</Button>
-          </div>
-        </div>
+            {tab}
+          </button>
+        ))}
       </div>
     </div>
   )

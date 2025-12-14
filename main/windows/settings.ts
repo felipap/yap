@@ -11,13 +11,15 @@ export function createSettingsWindow(): BrowserWindow {
 
   const settingsWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 500,
-    height: 400,
+    height: 600,
     minWidth: 500,
-    minHeight: 400,
+    minHeight: 600,
     maxWidth: 500,
-    maxHeight: 500,
+    maxHeight: 600,
     center: true,
     resizable: true,
+    alwaysOnTop: true,
+    fullscreenable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
