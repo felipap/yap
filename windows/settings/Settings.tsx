@@ -106,10 +106,10 @@ export function Settings() {
   }, [])
 
   return (
-    <div className="min-h-screen select-none dark:bg-[#2B2C2C] bg-[#FFF] py-5 px-[16px]  dark:antialiased">
+    <div className="min-h-screen select-none dark:bg-[#2B2C2C] bg-[#FFF] py-5 px-[16px]">
       <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-lg">
+      <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-2xl">
         {activeTab === 'General Settings' && (
           <GeneralSettings
             recordingsFolder={recordingsFolder}
@@ -126,7 +126,7 @@ export function Settings() {
         )}
       </div>
 
-      <footer className="mt-2">
+      <footer className="mt-3">
         <MacOsButton onClick={() => {}}>Save</MacOsButton>
       </footer>
     </div>
