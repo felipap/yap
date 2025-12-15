@@ -15,10 +15,6 @@ export default function Page() {
     setSelectedLogId(next.id)
   }
 
-  useEffect(() => {
-    console.log('useEffect')
-  }, [])
-
   let main
   if (log) {
     main = (
@@ -26,7 +22,9 @@ export default function Page() {
         <DetailPage
           key={log.id}
           log={log}
-          onBack={() => setSelectedLogId(null)}
+          unselect={() => {
+            setSelectedLogId(null)
+          }}
         />
       </PlaybackPreferencesProvider>
     )
@@ -41,7 +39,7 @@ export default function Page() {
           <Sidebar
             selectedLog={log ?? null}
             onSelect={handleSelectLog}
-            onClose={() => setSelectedLogId(null)}
+            unselect={() => setSelectedLogId(null)}
           />
         </div>
 

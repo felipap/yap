@@ -88,6 +88,8 @@ export function useSidebarShortcuts({
         if (selectedLog && onUnselect) {
           e.preventDefault()
           onUnselect()
+          // Blur whatever is focused
+          ;(document.activeElement as HTMLElement | null)?.blur()
         }
         return
       }

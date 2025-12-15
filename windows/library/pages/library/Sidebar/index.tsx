@@ -9,10 +9,10 @@ import { useSidebarShortcuts } from './useSidebarShortcuts'
 interface Props {
   selectedLog: SidebarLog | null
   onSelect: (file: SidebarLog) => void
-  onClose: () => void
+  unselect: () => void
 }
 
-export function Sidebar({ selectedLog, onSelect, onClose }: Props) {
+export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
   const { displayLogs, loading } = useIndexedLogData()
   const { filteredLogs, filterText, setFilterText } = useLogFilter(displayLogs)
 
@@ -25,7 +25,7 @@ export function Sidebar({ selectedLog, onSelect, onClose }: Props) {
     displayLogs: filteredLogs,
     onSelect,
     selectedLog: selectedSidebarItem,
-    onUnselect: onClose,
+    onUnselect: unselect,
   })
 
   const parentRef = useRef<HTMLDivElement>(null)

@@ -1,4 +1,5 @@
 import { MdFolder } from 'react-icons/md'
+import { IS_DEV } from '../../../..'
 import { EnrichedLog } from '../../../../../../shared-types'
 import { openFileLocation } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
@@ -6,14 +7,13 @@ import { JsonViewer } from '../../../../../shared/ui/JsonViewer'
 import { ConvertButton } from './ConvertButton'
 import { DeleteButton } from './DeleteButton'
 import { MoveToDefaultFolderButton } from './MoveToDefaultFolderButton'
-import { IS_DEV } from '../../../..'
 
 interface Props {
   log: EnrichedLog
-  onBack: () => void
+  unselect: () => void
 }
 
-export function Toolbar({ log, onBack }: Props) {
+export function Toolbar({ log, unselect }: Props) {
   const isWebm = log?.name?.toLowerCase().endsWith('.webm') || false
   const isMov = log?.name?.toLowerCase().endsWith('.mov') || false
   const inDefaultFolder = log?.isInDefaultFolder ?? true
@@ -36,7 +36,7 @@ export function Toolbar({ log, onBack }: Props) {
         </Button>
         {(isWebm || isMov) && <ConvertButton logId={log.id} />}
         {!inDefaultFolder && <MoveToDefaultFolderButton logId={log.id} />}
-        <DeleteButton logId={log.id} onDeleted={onBack} />
+        <DeleteButton logId={log.id} onDeleted={unselect} />
       </div>
       {IS_DEV && <JsonViewer log={log} />}
     </div>

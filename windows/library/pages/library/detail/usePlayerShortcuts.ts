@@ -1,13 +1,12 @@
-import { useEffect, useCallback } from 'react'
-import { PlayerRef } from './Player'
+import { useCallback, useEffect } from 'react'
 import { usePlaybackPreferences } from '../../../../shared/PlaybackPreferencesProvider'
+import { PlayerRef } from './Player'
 
 interface Args {
   playerRef: React.RefObject<PlayerRef>
-  onBack: () => void
 }
 
-export function usePlayerShortcuts({ playerRef, onBack }: Args) {
+export function usePlayerShortcuts({ playerRef }: Args) {
   const { toggleMute, playbackSpeed, setPlaybackSpeed } =
     usePlaybackPreferences()
 
@@ -99,13 +98,6 @@ export function usePlayerShortcuts({ playerRef, onBack }: Args) {
         event.preventDefault()
         decreasePlaybackSpeed()
       }
-
-      // Handle Escape key to unselect video
-      if (event.key === 'Escape') {
-        console.log('escape pressed => onBack')
-        event.preventDefault()
-        onBack()
-      }
     }
 
     // Add event listener to document
@@ -121,6 +113,5 @@ export function usePlayerShortcuts({ playerRef, onBack }: Args) {
     cyclePlaybackSpeed,
     increasePlaybackSpeed,
     decreasePlaybackSpeed,
-    onBack,
   ])
 }

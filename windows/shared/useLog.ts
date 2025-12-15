@@ -47,11 +47,13 @@ export function useLog(logId: string | null) {
 
   const load = async () => {
     if (!logId) {
+      setLog(undefined)
       return
     }
     setLoading(true)
     try {
       const fresh = await getLog(logId)
+      console.log('fresh', fresh)
       setLog(fresh)
     } catch (error) {
       console.error('Failed to load log:', error)

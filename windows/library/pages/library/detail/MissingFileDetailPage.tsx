@@ -7,10 +7,10 @@ import { EnrichedLog } from '../../../types'
 
 interface Props {
   log: EnrichedLog
-  onBack: () => void
+  unselect: () => void
 }
 
-export function MissingFileDetailPage({ log, onBack }: Props) {
+export function MissingFileDetailPage({ log, unselect }: Props) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleOpenLocation = async () => {
@@ -32,7 +32,7 @@ export function MissingFileDetailPage({ log, onBack }: Props) {
     setIsDeleting(true)
     try {
       await untrackLog(log.id)
-      onBack()
+      unselect()
     } catch (error) {
       console.error('Failed to remove from library:', error)
       alert('Failed to remove from library')

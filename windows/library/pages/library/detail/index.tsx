@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { onViewLogEntry } from '../../../../shared/ipc'
 import { withBoundary } from '../../../../shared/withBoundary'
@@ -10,14 +10,13 @@ import { TitleInput } from './TitleInput'
 import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
-import { PlaybackPreferencesProvider } from '../../../../shared/PlaybackPreferencesProvider'
 
 interface Props {
   log: EnrichedLog
-  onBack: () => void
+  unselect: () => void
 }
 
-export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
+export const DetailPage = withBoundary(function ({ log, unselect }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
 
   // Notify backend when viewing this log entry
@@ -25,11 +24,11 @@ export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
     onViewLogEntry(log.id)
   }, [log.id])
 
-  usePlayerShortcuts({ playerRef, onBack })
+  usePlayerShortcuts({ playerRef })
 
   const isMissing = !log.fileExists
   if (isMissing) {
-    return <MissingFileDetailPage log={log} onBack={onBack} />
+    return <MissingFileDetailPage log={log} unselect={unselect} />
   }
 
   return (
@@ -67,7 +66,7 @@ export const DetailPage = withBoundary(function ({ log, onBack }: Props) {
         </div>
 
         <div className="px-1 w-full">
-          <Toolbar log={log} onBack={onBack} />
+          <Toolbar log={log} unselect={unselect} />
         </div>
       </div>
     </div>
