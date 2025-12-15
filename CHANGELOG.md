@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.38](https://github.com/felipap/yap/compare/v0.9.37...v0.9.38) (2025-12-15)
+
+
+### Features
+
+* **player:** add Escape key shortcut to go back from detail view ([58c32e3](https://github.com/felipap/yap/commit/58c32e3db4f1d93f09514e580a4b57373875202e))
+* **settings:** refactor settings window with macOS-native UI ([f8f9284](https://github.com/felipap/yap/commit/f8f92846b52b9adf30add1111bb8c36273903a8f))
+
 ### [0.9.37](https://github.com/felipap/yap/compare/v0.9.36...v0.9.37) (2025-12-09)
 
 ### [0.9.36](https://github.com/felipap/yap/compare/v0.9.35...v0.9.36) (2025-12-01)
