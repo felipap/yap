@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.40](https://github.com/felipap/yap/compare/v0.9.39...v0.9.40) (2026-02-19)
+
+
+### Features
+
+* add menu item to export transcripts to text file ([4fc0633](https://github.com/felipap/yap/commit/4fc063393c3463ec36c6e553430a62955bc43983))
+
+
+### Bug Fixes
+
+* pin @google/genai to 1.40.0 to avoid ESM-only p-retry dependency ([31090cb](https://github.com/felipap/yap/commit/31090cb38d0c1b4d3097902ef84bb5ffe8b4228c))
+
 ### [0.9.39](https://github.com/felipap/yap/compare/v0.9.38...v0.9.39) (2025-12-15)
 
 ### [0.9.38](https://github.com/felipap/yap/compare/v0.9.37...v0.9.38) (2025-12-15)
