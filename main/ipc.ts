@@ -90,7 +90,6 @@ export function setupIpcHandlers() {
 
       debug(`Found ${Object.keys(storedLogs).length} logs in store`)
 
-      const start = Date.now()
       const enrichedLogs = Object.values(storedLogs).map((log) => {
         const createdDate = new Date(log.timestamp)
 
@@ -105,8 +104,6 @@ export function setupIpcHandlers() {
           isAudioOnly: log.isAudioOnly,
         }
       })
-      const end = Date.now()
-      console.log(`Time taken: ${end - start}ms`)
 
       const sortedEnrichedLogs = enrichedLogs.sort(
         (a, b) => b.created.getTime() - a.created.getTime(),
@@ -748,9 +745,7 @@ export function setupIpcHandlers() {
 
   // Set up state change listener
   store.onDidAnyChange((state) => {
-    // Ensure we only send serializable data
-    const serializableState = JSON.parse(JSON.stringify(state))
-    libraryWindow?.webContents.send('state-changed', serializableState)
+    libraryWindow?.webContents.send('state-changed', state)
   })
 
   // Broadcast log changes to all renderer windows

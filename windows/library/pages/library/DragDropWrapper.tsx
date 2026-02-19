@@ -112,8 +112,6 @@ export function DragDropWrapper({ children, onImportComplete }: Props) {
         }
       }
 
-      console.log('results', results)
-
       const summary = getImportSummary(results)
       if (summary) {
         window.alert(summary)
@@ -198,10 +196,7 @@ function useDragDropMedia(
       ) as ElectronFile[]
 
       if (mediaFiles.length > 0) {
-        console.log('Media files dropped', mediaFiles)
         await onDrop(mediaFiles)
-      } else {
-        console.log('No media files dropped')
       }
     }
 

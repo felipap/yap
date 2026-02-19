@@ -121,10 +121,7 @@ export class VideoConverter {
 
       ffmpeg.stdout.on('data', (data) => {
         const output = data.toString()
-        console.log('[FFMPEG STDOUT RAW]:', JSON.stringify(output))
 
-        // Parse progress (time processed) from -progress output
-        // Try multiple possible formats
         let timeMatch = output.match(/out_time_us=(\d+)/)
         if (!timeMatch) {
           timeMatch = output.match(/out_time_ms=(\d+)/)
@@ -133,34 +130,23 @@ export class VideoConverter {
           timeMatch = output.match(/out_time=(\d+)/)
         }
 
-        if (timeMatch) {
-          console.log('[MATCH FOUND]:', timeMatch[0], 'duration:', duration)
-          if (duration > 0) {
-            // Determine the unit based on which pattern matched
-            let timeProcessed: number
-            if (output.includes('out_time_us=')) {
-              timeProcessed = parseInt(timeMatch[1]) / 1000000 // microseconds to seconds
-            } else if (output.includes('out_time_ms=')) {
-              timeProcessed = parseInt(timeMatch[1]) / 1000000 // still microseconds, just different name
-            } else {
-              timeProcessed = parseInt(timeMatch[1]) / 1000000 // assume microseconds
-            }
-
-            const progress = Math.min(
-              Math.round((timeProcessed / duration) * 100),
-              100,
-            )
-            console.log(
-              `[PROGRESS] ${progress}% (${timeProcessed.toFixed(1)}s / ${duration}s)`,
-            )
-            // Only report progress if it has increased
-            if (onProgress && progress > lastReportedProgress) {
-              lastReportedProgress = progress
-              console.log(`[REPORTING PROGRESS] ${progress}%`)
-              onProgress(progress)
-            }
+        if (timeMatch && duration > 0) {
+          let timeProcessed: number
+          if (output.includes('out_time_us=')) {
+            timeProcessed = parseInt(timeMatch[1]) / 1000000
+          } else if (output.includes('out_time_ms=')) {
+            timeProcessed = parseInt(timeMatch[1]) / 1000000
           } else {
-            console.log('[PROGRESS WAITING] Duration not yet detected')
+            timeProcessed = parseInt(timeMatch[1]) / 1000000
+          }
+
+          const progress = Math.min(
+            Math.round((timeProcessed / duration) * 100),
+            100,
+          )
+          if (onProgress && progress > lastReportedProgress) {
+            lastReportedProgress = progress
+            onProgress(progress)
           }
         }
       })
@@ -169,12 +155,6 @@ export class VideoConverter {
         const output = data.toString()
         errorOutput += output
 
-        // Only log stderr lines that contain Duration or time= to avoid spam
-        if (output.includes('Duration:') || output.includes('time=')) {
-          console.log('[FFMPEG STDERR]:', output.trim())
-        }
-
-        // Parse duration from stderr (ffmpeg outputs metadata here)
         if (duration === 0) {
           const durationMatch = output.match(
             /Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})/,
@@ -184,16 +164,12 @@ export class VideoConverter {
             const minutes = parseInt(durationMatch[2])
             const seconds = parseInt(durationMatch[3])
             duration = hours * 3600 + minutes * 60 + seconds
-            console.log(`[DURATION DETECTED] ${duration} seconds`)
-            // Report 0% progress once we have duration
             if (onProgress) {
-              console.log('[REPORTING] 0% progress')
               onProgress(0)
             }
           }
         }
 
-        // Also parse time from stderr as backup (format: time=00:01:23.45)
         const timeMatch = output.match(/time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/)
         if (timeMatch && duration > 0) {
           const hours = parseInt(timeMatch[1])
@@ -204,10 +180,8 @@ export class VideoConverter {
             Math.round((timeProcessed / duration) * 100),
             100,
           )
-          // Only report progress if it has increased
           if (onProgress && progress > lastReportedProgress) {
             lastReportedProgress = progress
-            console.log(`[REPORTING PROGRESS FROM STDERR] ${progress}%`)
             onProgress(progress)
           }
         }

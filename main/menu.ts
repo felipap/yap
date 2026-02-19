@@ -68,16 +68,9 @@ export function setupMenu() {
           label: 'Close',
           accelerator: 'CommandOrControl+W',
           click: () => {
-            console.log('Menu close handler called')
             const window = getLibraryWindow()
             if (window && !window.isDestroyed()) {
-              console.log('Calling window.close()')
-              // Call window.close() instead of window.hide() to trigger the
-              // 'close' event, which allows the close handler in library.ts to
-              // show a confirmation dialog when a recording is in progress
               window.close()
-            } else {
-              console.log('Window not available or destroyed')
             }
           },
         },

@@ -85,7 +85,7 @@ export async function generateThumbnail(
 
   const ffmpegPath = await findFFmpegPath()
   if (!ffmpegPath) {
-    console.log('ffmpeg not available')
+    debug('ffmpeg not available')
     return null
   }
 
@@ -109,7 +109,7 @@ export async function generateThumbnail(
       }
     }
 
-    console.log('All thumbnail generation methods failed for:', videoPath)
+    debug('All thumbnail generation methods failed for:', videoPath)
     return null
   } finally {
     activeGenerations--

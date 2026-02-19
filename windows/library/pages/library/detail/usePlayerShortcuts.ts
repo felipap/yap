@@ -60,14 +60,12 @@ export function usePlayerShortcuts({ playerRef }: Args) {
 
       // Prevent default behavior for space key to avoid page scrolling
       if (event.code === 'Space') {
-        console.log('space pressed => togglePlayPause')
         event.preventDefault()
         togglePlayPause()
       }
 
       // Handle 'm' key for mute/unmute
       if (event.key.toLowerCase() === 'm') {
-        console.log('m pressed => toggleMute')
         event.preventDefault()
         toggleMute()
       }
@@ -75,11 +73,9 @@ export function usePlayerShortcuts({ playerRef }: Args) {
       // Handle 's' key for cycling playback speed
       if (event.key.toLowerCase() === 's') {
         if (event.shiftKey) {
-          console.log('shift+s pressed => decreasePlaybackSpeed')
           event.preventDefault()
           decreasePlaybackSpeed()
         } else {
-          console.log('s pressed => cyclePlaybackSpeed')
           event.preventDefault()
           cyclePlaybackSpeed()
         }
@@ -87,14 +83,12 @@ export function usePlayerShortcuts({ playerRef }: Args) {
 
       // Handle '>' key for increasing playback speed
       if (event.key === '>') {
-        console.log('> pressed => increasePlaybackSpeed')
         event.preventDefault()
         increasePlaybackSpeed()
       }
 
       // Handle '<' key for decreasing playback speed
       if (event.key === '<') {
-        console.log('< pressed => decreasePlaybackSpeed')
         event.preventDefault()
         decreasePlaybackSpeed()
       }

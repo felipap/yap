@@ -1,5 +1,6 @@
 import { BrowserWindow, app, dialog } from 'electron'
 import { join } from 'path'
+import { debug } from '../lib/logger'
 import { cancelStreamingRecording, isRecordingActive } from '../recording'
 import { store } from '../store'
 import { findIconPath } from './utils'
@@ -48,7 +49,6 @@ export function createLibraryWindow(): BrowserWindow {
   }
 
   libraryWindow = new BrowserWindow(windowOptions)
-  console.log('did set library window')
 
   if (iconPath) {
     app.dock?.setIcon(iconPath)
@@ -57,13 +57,8 @@ export function createLibraryWindow(): BrowserWindow {
 
   // Hide instead of destroy - prevent window from ever being destroyed
   libraryWindow.on('close', async (event) => {
-    console.log('close called')
-
-    // Save window bounds before hiding
     const bounds = libraryWindow!.getBounds()
     store.set('windowBounds', bounds)
-
-    console.log('currentStreamingRecording', isRecordingActive())
 
     if (!app.isQuitting) {
       // Check if recording is active
@@ -120,8 +115,7 @@ export function createLibraryWindow(): BrowserWindow {
       'library',
       'index.html',
     )
-    console.log('__dirname:', __dirname)
-    console.log('Renderer path:', rendererPath)
+    debug('Renderer path:', rendererPath)
     libraryWindow.loadFile(rendererPath)
   }
 

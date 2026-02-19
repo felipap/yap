@@ -2,6 +2,7 @@ import { appendFile, mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { Log } from '../../shared-types'
 import { moveToTrash } from '../lib/filesystem'
+import { debug } from '../lib/logger'
 import { getVideoDuration } from '../lib/transcription'
 import { appendLog, generateLogId, setLog } from '../store'
 import { getActiveRecordingsDir } from '../store/default-folder'
@@ -92,7 +93,6 @@ export async function appendRecordingChunk(chunk: ArrayBuffer): Promise<void> {
 }
 
 export async function finalizeStreamingRecording(): Promise<string> {
-  console.log('finalizeStreamingRecording')
 
   if (!currentStreamingRecording) {
     throw new Error('No streaming recording in progress')
@@ -111,9 +111,7 @@ export async function finalizeStreamingRecording(): Promise<string> {
   }
 
   if (duration && duration < 5) {
-    console.log(
-      `Recording too short (${duration}s), moving to trash: ${filepath}`,
-    )
+    debug(`Recording too short (${duration}s), moving to trash: ${filepath}`)
     await moveToTrash(filepath)
     currentStreamingRecording = null
     throw new Error('Recording too short (less than 5 seconds)')

@@ -25,7 +25,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onStateChange: (callback: (state: any) => void) => {
     const listener = (_event: any, state: any) => {
-      console.log('state-changed', state)
       callback(state)
     }
     ipcRenderer.on('state-changed', listener)

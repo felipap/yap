@@ -137,33 +137,28 @@ function notifyLogChange(logId: string): void {
   }
 }
 
-// Log management functions
+// Log management functions using dot-notation paths to avoid
+// reading/writing the entire logs collection on every operation.
+
 export function getLog(logId: string): Log | null {
-  const logs = store.get('logs') || {}
-  return logs[logId] || null
+  const log = store.get(`logs.${logId}` as keyof State) as Log | undefined
+  return log || null
 }
 
 export function appendLog(log: Log): Log {
-  const logs = store.get('logs') || {}
-  logs[log.id] = log
-  store.set('logs', logs)
+  store.set(`logs.${log.id}` as keyof State, log)
   notifyLogChange(log.id)
   return log
 }
 
 export function setLog(log: Log): void {
-  const logs = store.get('logs') || {}
-  logs[log.id] = log
-  store.set('logs', logs)
+  store.set(`logs.${log.id}` as keyof State, log)
   notifyLogChange(log.id)
 }
 
 export function updateLog(logId: string, updates: Partial<Log>): void {
-  const logs = store.get('logs') || {}
-  const existing = logs[logId]
+  const existing = store.get(`logs.${logId}` as keyof State) as Log | undefined
 
-  // Only update if the log exists and has all required fields
-  // This prevents creating incomplete log entries that violate the schema
   if (
     !existing ||
     !existing.id ||
@@ -177,8 +172,7 @@ export function updateLog(logId: string, updates: Partial<Log>): void {
     return
   }
 
-  logs[logId] = { ...existing, ...updates }
-  store.set('logs', logs)
+  store.set(`logs.${logId}` as keyof State, { ...existing, ...updates })
   notifyLogChange(logId)
 }
 

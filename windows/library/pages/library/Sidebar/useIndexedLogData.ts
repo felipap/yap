@@ -80,7 +80,6 @@ export function useLogData() {
   const loadLogs = async () => {
     try {
       setLoading(true)
-      console.log('calling getSidebarLogs')
       const files = await getSidebarLogs()
       setLogs(files)
     } catch (error) {

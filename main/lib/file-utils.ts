@@ -1,4 +1,5 @@
 import { open } from 'fs/promises'
+import { debug } from './logger'
 
 // Checks if a file is actually readable (not just a cloud placeholder). This is
 // especially important for cloud storage paths that may appear to exist but
@@ -6,7 +7,6 @@ import { open } from 'fs/promises'
 export async function isFileActuallyReadable(
   filePath: string,
 ): Promise<boolean> {
-  // Check for cloud storage paths
   const isCloudPath =
     filePath.includes('/CloudStorage/') ||
     filePath.includes('/Google Drive/') ||
@@ -14,7 +14,7 @@ export async function isFileActuallyReadable(
     filePath.includes('/OneDrive/')
 
   if (isCloudPath) {
-    console.log('Detected cloud storage path, performing read test:', filePath)
+    debug('Detected cloud storage path, performing read test:', filePath)
   }
 
   const fileHandleRef: { current: Awaited<ReturnType<typeof open>> | null } = {
@@ -36,7 +36,7 @@ export async function isFileActuallyReadable(
         )
 
         if (bytesRead === 0) {
-          console.log('File exists but has no content:', filePath)
+          debug('File exists but has no content:', filePath)
           return false
         }
 
@@ -52,7 +52,7 @@ export async function isFileActuallyReadable(
     // Add a 2-second timeout for the read operation
     const timeoutPromise = new Promise<boolean>((resolve) => {
       setTimeout(async () => {
-        console.log('File read test timed out after 2s:', filePath)
+        debug('File read test timed out after 2s:', filePath)
         // Ensure file handle is closed if timeout occurs
         if (fileHandleRef.current) {
           try {
@@ -77,7 +77,7 @@ export async function isFileActuallyReadable(
       }
       fileHandleRef.current = null
     }
-    console.log('File read test failed:', filePath, error)
+    debug('File read test failed:', filePath, error)
     return false
   }
 }

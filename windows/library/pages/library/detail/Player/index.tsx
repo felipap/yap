@@ -82,7 +82,6 @@ export const Player = withBoundary(
             }
           },
           seekTo: (time: number) => {
-            console.log('seekTo', time)
             if (videoRef.current) {
               videoRef.current.currentTime = time
             }

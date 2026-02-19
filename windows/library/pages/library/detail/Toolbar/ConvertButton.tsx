@@ -31,13 +31,7 @@ export function ConvertButton({ logId, disabled }: Props) {
 
   useEffect(() => {
     const handleProgress = (updatedLogId: string, updatedProgress: number) => {
-      console.log(
-        `[ConvertButton] Received progress: logId=${updatedLogId}, progress=${updatedProgress}%`,
-      )
       if (updatedLogId === logId) {
-        console.log(
-          `[ConvertButton] Updating progress for ${logId}: ${updatedProgress}%`,
-        )
         setProgress(updatedProgress)
         // Reset state when conversion completes
         if (updatedProgress >= 100) {

@@ -11,6 +11,7 @@ import type {
 import { getTempDir } from './config'
 import { findFFmpegPath, getFFmpegEnv, isFFmpegAvailable } from './ffmpeg'
 import { isFileActuallyReadable } from './file-utils'
+import { debug } from './logger'
 
 export async function extractAudioFromVideo(
   videoPath: string,
@@ -38,7 +39,7 @@ export async function extractAudioFromVideo(
   // Check if audio already exists
   try {
     await access(audioPath)
-    console.log(`Using cached audio file: ${audioPath}`)
+    debug(`Using cached audio file: ${audioPath}`)
     return audioPath
   } catch {
     // Audio doesn't exist, extract it
@@ -52,7 +53,7 @@ export async function extractAudioFromVideo(
     )
   }
 
-  console.log(`Extracting audio from video: ${videoPath}`)
+  debug(`Extracting audio from video: ${videoPath}`)
 
   // Get video duration for validation
   let videoDuration: number | null = null
@@ -142,7 +143,7 @@ export async function extractAudioFromVideo(
     )
   }
 
-  console.log(
+  debug(
     `Audio extracted successfully: ${audioPath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`,
   )
 
@@ -319,7 +320,7 @@ async function transcribeAudioChunk(
     throw new Error(`Audio chunk ${chunkIndex} is empty`)
   }
 
-  console.log(
+  debug(
     `Transcribing chunk ${chunkIndex + 1}/${totalChunks}, size: ${fileSizeMB.toFixed(2)}MB, start time: ${chunkStartTime.toFixed(1)}s`,
   )
 
