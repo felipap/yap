@@ -125,6 +125,19 @@ export function generateLogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
 }
 
+type LogChangeListener = (logId: string) => void
+const logChangeListeners: LogChangeListener[] = []
+
+export function onLogChange(listener: LogChangeListener): void {
+  logChangeListeners.push(listener)
+}
+
+function notifyLogChange(logId: string): void {
+  for (const listener of logChangeListeners) {
+    listener(logId)
+  }
+}
+
 // Log management functions
 export function getLog(logId: string): Log | null {
   const logs = store.get('logs') || {}
@@ -135,6 +148,7 @@ export function appendLog(log: Log): Log {
   const logs = store.get('logs') || {}
   logs[log.id] = log
   store.set('logs', logs)
+  notifyLogChange(log.id)
   return log
 }
 
@@ -142,6 +156,7 @@ export function setLog(log: Log): void {
   const logs = store.get('logs') || {}
   logs[log.id] = log
   store.set('logs', logs)
+  notifyLogChange(log.id)
 }
 
 export function updateLog(logId: string, updates: Partial<Log>): void {
@@ -165,12 +180,14 @@ export function updateLog(logId: string, updates: Partial<Log>): void {
 
   logs[logId] = { ...existing, ...updates }
   store.set('logs', logs)
+  notifyLogChange(logId)
 }
 
 export function deleteLog(logId: string): void {
   const logs = store.get('logs') || {}
   delete logs[logId]
   store.set('logs', logs)
+  notifyLogChange(logId)
 }
 
 export function getAllLogs(): Record<string, Log> {

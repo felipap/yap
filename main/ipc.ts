@@ -30,6 +30,7 @@ import {
   getGeminiApiKey,
   getLog,
   getOpenaiApiKey,
+  onLogChange,
   setGeminiApiKey,
   setLog,
   setOpenaiApiKey,
@@ -751,44 +752,15 @@ export function setupIpcHandlers() {
     libraryWindow?.webContents.send('state-changed', serializableState)
   })
 
-  // Broadcast electron-store log changes to all renderer windows
-  store.onDidChange(
-    'logs',
-    (newLogs: Record<string, any> = {}, oldLogs: Record<string, any> = {}) => {
-      console.log('logs changed')
-
-      try {
-        const changedIds = new Set<string>()
-        for (const id of Object.keys(newLogs || {})) {
-          const before = oldLogs ? oldLogs[id] : undefined
-          const after = newLogs[id]
-          if (!before || JSON.stringify(before) !== JSON.stringify(after)) {
-            changedIds.add(id)
-          }
-        }
-        // Also include ids that were removed if needed in future
-        // for now, we only emit updates for added/modified logs as requested
-
-        if (changedIds.size === 0) {
-          return
-        }
-
-        BrowserWindow.getAllWindows().forEach((window) => {
-          if (window.isDestroyed()) {
-            return
-          }
-
-          changedIds.forEach((id) => {
-            console.log('sending log-updated', id)
-
-            window.webContents.send('log-updated', id)
-          })
-        })
-      } catch (error) {
-        console.error('Error broadcasting log-updated:', error)
+  // Broadcast log changes to all renderer windows
+  onLogChange((logId) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (window.isDestroyed()) {
+        return
       }
-    },
-  )
+      window.webContents.send('log-updated', logId)
+    })
+  })
 }
 
 function tryCatchIpcMain(handler: (...args: any[]) => Promise<any>) {
