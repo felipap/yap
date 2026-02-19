@@ -23,6 +23,7 @@ export function setupMenu() {
       submenu: [
         {
           label: 'Export Transcripts...',
+          accelerator: 'CommandOrControl+E',
           click: async () => {
             const window = getLibraryWindow()
             if (window && !window.isDestroyed()) {

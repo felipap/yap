@@ -1,6 +1,6 @@
 import { generateSummary } from './ai/summarize-transcript'
 import { transcribeVideo } from './lib/transcription'
-import { getLog, store, updateLog } from './store'
+import { getGeminiApiKey, getLog, store, updateLog } from './store'
 import { libraryWindow } from './windows'
 import * as ephemeral from './store/ephemeral'
 
@@ -56,7 +56,7 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
       })
 
       // Try to kick-off summary generation
-      const geminiApiKey = store.get('geminiApiKey') || null
+      const geminiApiKey = getGeminiApiKey() || null
       if (geminiApiKey) {
         triggerGenerateSummary(logId, geminiApiKey)
       }

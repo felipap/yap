@@ -1,8 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
-import { store } from '../store'
-
-const GEMINI_API_KEY = store.get('geminiApiKey') || null
+import { getGeminiApiKey } from '../store'
 
 const Schema = z.object({
   day: z.number().min(1).max(31),
@@ -18,11 +16,12 @@ export type Result = z.infer<typeof Schema>
 export async function extractDateFromTitle(
   title: string,
 ): Promise<Result | { error: string }> {
-  if (!GEMINI_API_KEY) {
+  const geminiApiKey = getGeminiApiKey()
+  if (!geminiApiKey) {
     return { error: 'Gemini API key is not set' }
   }
 
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey })
 
   const prompt = `Extract date and time from this video title: "${title}"
 

@@ -101,6 +101,17 @@ export const store = new Store<State>({
 
 console.debug('Store intialized from file:', store.path)
 
+import { decryptSecret, encryptSecret } from './safe-storage'
+export { decryptSecret, encryptSecret } from './safe-storage'
+
+export function getGeminiApiKey(): string {
+  return decryptSecret(store.get('geminiApiKey') || '')
+}
+
+export function setGeminiApiKey(apiKey: string): void {
+  store.set('geminiApiKey', encryptSecret(apiKey))
+}
+
 // Helper function to generate a unique ID for a log
 export function generateLogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)

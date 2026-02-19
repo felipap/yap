@@ -70,7 +70,7 @@ function formatLogEntry(log: Log): string {
 export async function exportTranscripts(window: BrowserWindow): Promise<void> {
   const monthsResult = await dialog.showMessageBox(window, {
     type: 'question',
-    buttons: ['Cancel', '1 Month', '3 Months', '6 Months', '12 Months', 'All'],
+    buttons: ['Cancel', '1 month', '3 months', '6 months', '12 months', 'All'],
     defaultId: 3,
     cancelId: 0,
     title: 'Export Transcripts',

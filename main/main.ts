@@ -24,7 +24,7 @@ if (app.isPackaged) {
 
 app.setAboutPanelOptions({
   applicationName: `Yap ${app.isPackaged ? '' : '(dev)'}`,
-  copyright: 'Copyright © 2025 Yap Camera',
+  copyright: 'Copyright © 2026 Yap Camera',
   version: app.getVersion(),
   // authors: ['Felipe Aragão <faragaop@gmail.com>'],
   credits: 'Felipe Aragão @feliparagao',

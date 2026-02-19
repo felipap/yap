@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { VisibilityIcon, VisibilityOffIcon } from '../../shared/icons'
 import { MacOsButton, Subtitle, Title } from '../../shared/ui/macos-native'
 
 interface Props {
@@ -17,6 +19,8 @@ export function GeneralSettings({
   apiKey,
   onApiKeyChange,
 }: Props) {
+  const [showApiKey, setShowApiKey] = useState(false)
+
   const handleSelectFolder = async () => {
     const selectedFolder = await window.electronAPI.openFolderPicker()
     if (selectedFolder) {
@@ -58,15 +62,22 @@ export function GeneralSettings({
       <div>
         <Title htmlFor="apiKey">Gemini API Key</Title>
         <Subtitle>Used for AI transcription features</Subtitle>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             id="apiKey"
-            type="password"
+            type={showApiKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => onApiKeyChange(e.target.value)}
             placeholder="Enter your API key"
             className="native-input text-[12px] flex-1 h-8 bg-three border-none text-contrast focus:outline-none"
           />
+          <button
+            type="button"
+            onClick={() => setShowApiKey(!showApiKey)}
+            className="text-secondary hover:text-contrast transition-colors"
+          >
+            {showApiKey ? <VisibilityOffIcon size={18} /> : <VisibilityIcon size={18} />}
+          </button>
         </div>
       </div>
     </div>

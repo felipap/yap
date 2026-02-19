@@ -27,7 +27,9 @@ import {
   deleteLog,
   generateLogId,
   getAllLogs,
+  getGeminiApiKey,
   getLog,
+  setGeminiApiKey,
   setLog,
   store,
   updateLog,
@@ -310,11 +312,11 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'triggerGenerateSummary',
     tryCatchIpcMain(async (_, logId: string) => {
-      const geminiApiKey = store.get('geminiApiKey') || null
-      if (!geminiApiKey) {
+      const apiKey = getGeminiApiKey()
+      if (!apiKey) {
         throw new Error('Gemini API key is not set')
       }
-      triggerGenerateSummary(logId, geminiApiKey)
+      triggerGenerateSummary(logId, apiKey)
       return true
     }),
   )
@@ -486,14 +488,14 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'getGeminiApiKey',
     tryCatchIpcMain(async () => {
-      return store.get('geminiApiKey') || ''
+      return getGeminiApiKey()
     }),
   )
 
   ipcMain.handle(
     'setGeminiApiKey',
     tryCatchIpcMain(async (_, apiKey: string) => {
-      store.set('geminiApiKey', apiKey)
+      setGeminiApiKey(apiKey)
       return true
     }),
   )

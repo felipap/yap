@@ -172,6 +172,10 @@ If you encounter permission issues on macOS:
 sudo tccutil reset All com.felipap.yap
 ```
 
+### Keychain Access Prompt
+
+When running the app in development, macOS may show a **"wants to use your confidential information"** dialog. This is because API keys are encrypted using the OS keychain via Electron's `safeStorage`. During development the app binary changes on every rebuild, so macOS treats it as a new app each time. Click **"Always Allow"** to dismiss it. This only happens once in production builds where the app is code-signed.
+
 ### Development Tools
 
 - Use React DevTools for frontend debugging
