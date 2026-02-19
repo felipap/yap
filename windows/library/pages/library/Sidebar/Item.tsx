@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { MdLinkOff, MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { formatDate, formatDateOrRelative } from './formatters'
@@ -88,37 +88,38 @@ function ItemImage({
   data: SidebarItem
   isMissing: boolean
 }) {
+  const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
+
+  const showImage =
+    !!data.thumbnailPath && !isMissing && !errored
+
   return (
     <>
-      {data.thumbnailPath && !isMissing ? (
+      {showImage && (
         <img
-          src={data.thumbnailPath}
+          src={data.thumbnailPath!}
           alt={(data.title || formatDate(data.created) || data.name) as string}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Hide the broken image and show fallback
-            e.currentTarget.style.display = 'none'
-            const fallback = e.currentTarget.nextElementSibling as HTMLElement
-            if (fallback) {
-              fallback.style.display = 'flex'
-            }
-          }}
+          className={twMerge(
+            'absolute inset-0 w-full h-full object-cover',
+            !loaded && 'invisible',
+          )}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
         />
-      ) : null}
+      )}
 
-      {/* Fallback when no thumbnail or thumbnail fails to load */}
-      <div
-        className="w-full h-full flex items-center justify-center"
-        style={{ display: data.thumbnailPath && !isMissing ? 'none' : 'flex' }}
-      >
-        {isMissing ? (
-          <MdLinkOff size={24} className="text-gray-400" />
-        ) : data.isAudioOnly ? (
-          <MdMic size={24} className="text-gray-400" />
-        ) : (
-          <MdMovie size={24} className="text-gray-400" />
-        )}
-      </div>
+      {(!showImage || !loaded) && (
+        <div className="w-full h-full flex items-center justify-center">
+          {isMissing ? (
+            <MdLinkOff size={24} className="text-gray-400" />
+          ) : data.isAudioOnly ? (
+            <MdMic size={24} className="text-gray-400" />
+          ) : (
+            <MdMovie size={24} className="text-gray-400" />
+          )}
+        </div>
+      )}
 
       {data.duration && !isMissing && (
         <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">
