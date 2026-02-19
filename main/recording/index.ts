@@ -1,10 +1,9 @@
-import { createHash } from 'crypto'
 import { appendFile, mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { Log } from '../../shared-types'
 import { moveToTrash } from '../lib/filesystem'
 import { getVideoDuration } from '../lib/transcription'
-import { appendLog, setLog } from '../store'
+import { appendLog, generateLogId, setLog } from '../store'
 import { getActiveRecordingsDir } from '../store/default-folder'
 import { libraryWindow } from '../windows'
 
@@ -22,7 +21,6 @@ interface StreamingRecordingConfig {
 interface StreamingRecording {
   filepath: string
   filename: string
-  chunks: Buffer[]
   config: StreamingRecordingConfig
 }
 
@@ -78,7 +76,6 @@ export async function startStreamingRecording(
   currentStreamingRecording = {
     filepath,
     filename,
-    chunks: [],
     config,
   }
 
@@ -91,9 +88,6 @@ export async function appendRecordingChunk(chunk: ArrayBuffer): Promise<void> {
   }
 
   const buffer = Buffer.from(chunk)
-  currentStreamingRecording.chunks.push(buffer)
-
-  // Append chunk to file immediately
   await appendFile(currentStreamingRecording.filepath, buffer)
 }
 
@@ -151,9 +145,6 @@ export async function finalizeStreamingRecording(): Promise<string> {
   return filepath
 }
 
-function generateLogId(filePath: string): string {
-  return createHash('sha256').update(filePath).digest('hex').substring(0, 16)
-}
 
 export function isRecordingActive(): boolean {
   return currentStreamingRecording !== null
