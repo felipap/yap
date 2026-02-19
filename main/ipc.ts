@@ -817,8 +817,6 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
   const isInDefaultFolder = fileDir.toLowerCase() === defaultDir.toLowerCase()
 
   try {
-    // Try to get file stats
-    await access(log.path)
     const stats = await stat(log.path)
 
     return {
