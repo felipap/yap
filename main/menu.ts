@@ -1,5 +1,6 @@
 import { app, Menu } from 'electron'
 import { getLibraryWindow } from './windows/library'
+import { exportTranscripts } from './export-transcripts'
 
 export function setupMenu() {
   const template: Electron.MenuItemConstructorOptions[] = [
@@ -15,6 +16,20 @@ export function setupMenu() {
         { role: 'unhide' },
         { type: 'separator' },
         { role: 'quit' },
+      ],
+    },
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Export Transcripts...',
+          click: async () => {
+            const window = getLibraryWindow()
+            if (window && !window.isDestroyed()) {
+              await exportTranscripts(window)
+            }
+          },
+        },
       ],
     },
     {
