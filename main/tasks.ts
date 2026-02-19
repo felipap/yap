@@ -1,9 +1,14 @@
 import { cleanTranscript } from './ai/clean-transcript'
 import { generateSummary } from './ai/summarize-transcript'
 import { transcribeVideo } from './lib/transcription'
-import { getGeminiApiKey, getLog, store, updateLog } from './store'
-import { libraryWindow } from './windows'
+import { getGeminiApiKey, getLog, store } from './store'
 import * as ephemeral from './store/ephemeral'
+import {
+  getTranscriptionData,
+  setTranscriptionData,
+  setSummaryData,
+} from './store/transcripts'
+import { libraryWindow } from './windows'
 
 export async function triggerTranscribe(logId: string, openaiApiKey: string) {
   setTimeout(async () => {
@@ -42,7 +47,7 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
           status: 'error' as const,
           error: error instanceof Error ? error.message : 'Unknown error',
         }
-        updateLog(logId, { transcription: errorState })
+        await setTranscriptionData(logId, errorState)
 
         throw error
       }
@@ -59,11 +64,9 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
         }
       }
 
-      updateLog(logId, {
-        transcription: {
-          status: 'completed',
-          result,
-        },
+      await setTranscriptionData(logId, {
+        status: 'completed',
+        result,
       })
       if (geminiApiKey) {
         triggerGenerateSummary(logId, geminiApiKey)
@@ -97,19 +100,17 @@ export async function triggerGenerateSummary(
         )
       }
 
-      const transcript = log.transcription?.result?.text
-      if (!transcript) {
+      const transcription = await getTranscriptionData(logId)
+      if (!transcription?.result?.text) {
         throw new Error('Transcript not found')
       }
 
-      const result = await generateSummary(transcript, geminiApiKey)
-      // Only update if summary is not empty (don't set summary field for
-      // "nothing to transcribe")
+      const result = await generateSummary(transcription.result.text, geminiApiKey)
       if (!result.success) {
         return result
       }
 
-      updateLog(logId, { summary: result.summary })
+      await setSummaryData(logId, result.summary)
       return result
     } catch (error) {
       console.error('asyncGenerateVideoSummary threw', error)

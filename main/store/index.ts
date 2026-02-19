@@ -4,6 +4,7 @@ import { createHash } from 'crypto'
 import { app } from 'electron'
 import Store, { Schema } from 'electron-store'
 import { Log, State } from '../../shared-types'
+import { deleteSidecarData } from './transcripts'
 
 export type { State } from '../../shared-types'
 
@@ -61,8 +62,6 @@ const schema: Schema<State> = {
           path: { type: 'string' },
           timestamp: { type: 'string' },
           title: { type: 'string' },
-          transcription: { type: 'object' },
-          summary: { type: 'string' },
           lastPosition: { type: 'number' },
           lastPositionTimestamp: { type: 'string' },
           // Cached video duration in seconds. Optional because it depends on a
@@ -188,6 +187,10 @@ export function deleteLog(logId: string): void {
   delete logs[logId]
   store.set('logs', logs)
   notifyLogChange(logId)
+
+  deleteSidecarData(logId).catch((err) =>
+    console.warn(`Failed to delete sidecar data for ${logId}:`, err),
+  )
 }
 
 export function getAllLogs(): Record<string, Log> {

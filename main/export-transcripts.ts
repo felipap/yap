@@ -1,23 +1,19 @@
 import { BrowserWindow, dialog } from 'electron'
 import { writeFile } from 'fs/promises'
-import { Log } from '../shared-types'
+import { Log, TranscriptionState } from '../shared-types'
 import { getAllLogs } from './store'
+import { getTranscriptionData } from './store/transcripts'
 
 function formatDatePretty(date: Date): string {
   const day = date.getDate()
   const suffix = getOrdinalSuffix(day)
-
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'long',
-    year: 'numeric',
+  const month = date.toLocaleString('en-US', { month: 'long' })
+  const year = date.getFullYear()
+  const time = date.toLocaleString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-  }
-
-  const formatted = date.toLocaleString('en-US', options)
-  const [monthYear, time] = formatted.split(' at ')
-  const [month, year] = monthYear.split(', ')
+  })
 
   return `${month} ${day}${suffix}, ${year} ${time}`
 }
@@ -48,7 +44,7 @@ function formatTranscriptText(text: string): string {
   return paragraphs.join('\n\n')
 }
 
-function formatLogEntry(log: Log): string {
+function formatLogEntry(log: Log, transcription: TranscriptionState | null): string {
   const date = new Date(log.timestamp)
   const dateStr = formatDatePretty(date)
 
@@ -58,7 +54,7 @@ function formatLogEntry(log: Log): string {
     parts.push(log.title)
   }
 
-  const transcriptText = log.transcription?.result?.text
+  const transcriptText = transcription?.result?.text
   if (transcriptText) {
     parts.push('')
     parts.push(formatTranscriptText(transcriptText))
@@ -98,24 +94,27 @@ export async function exportTranscripts(window: BrowserWindow): Promise<void> {
   }
 
   const allLogs = getAllLogs()
-  let logsWithTranscripts = Object.values(allLogs).filter((log) => {
-    const hasTranscript = log.transcription?.result?.text
-    if (!hasTranscript) {
-      return false
-    }
+  let candidateLogs = Object.values(allLogs)
 
-    if (cutoffDate) {
+  if (cutoffDate) {
+    candidateLogs = candidateLogs.filter((log) => {
       const logDate = new Date(log.timestamp)
       return logDate >= cutoffDate
-    }
+    })
+  }
 
-    return true
-  })
+  const logsWithTranscripts: { log: Log; transcription: TranscriptionState }[] = []
+  for (const log of candidateLogs) {
+    const transcription = await getTranscriptionData(log.id)
+    if (transcription?.result?.text) {
+      logsWithTranscripts.push({ log, transcription })
+    }
+  }
 
   logsWithTranscripts.sort((a, b) => {
-    const dateA = new Date(a.timestamp)
-    const dateB = new Date(b.timestamp)
-    return dateB.getTime() - dateA.getTime()
+    const dateA = new Date(a.log.timestamp)
+    const dateB = new Date(b.log.timestamp)
+    return dateA.getTime() - dateB.getTime()
   })
 
   if (logsWithTranscripts.length === 0) {
@@ -139,7 +138,9 @@ export async function exportTranscripts(window: BrowserWindow): Promise<void> {
   }
 
   const separator = '='.repeat(80) + '\n' + '='.repeat(80)
-  const entries = logsWithTranscripts.map(formatLogEntry)
+  const entries = logsWithTranscripts.map(({ log, transcription }) =>
+    formatLogEntry(log, transcription),
+  )
   const content = entries.join('\n\n' + separator + '\n\n')
 
   await writeFile(saveResult.filePath, content, 'utf-8')

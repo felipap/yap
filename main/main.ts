@@ -5,6 +5,7 @@ import { app } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
+import { migrateTranscriptsFromStore } from './store/transcripts'
 import { setupMenu } from './menu'
 // import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
@@ -47,6 +48,8 @@ async function onInit() {
   isInitialized = true
 
   setupProtocolHandlers()
+
+  await migrateTranscriptsFromStore()
 
   setupIpcHandlers()
 

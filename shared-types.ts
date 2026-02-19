@@ -16,8 +16,6 @@ export interface Log {
   path: string
   timestamp: string // ISO 8601 string
   title?: string
-  transcription?: TranscriptionState
-  summary?: string
   lastPosition?: number
   lastPositionTimestamp?: string
   duration?: number // Cached video duration in seconds

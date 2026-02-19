@@ -39,6 +39,11 @@ import {
 } from './store'
 import { getActiveRecordingsDir } from './store/default-folder'
 import * as ephemeral from './store/ephemeral'
+import {
+  copySidecarData,
+  getSummaryData,
+  getTranscriptionData,
+} from './store/transcripts'
 import { triggerGenerateSummary, triggerTranscribe } from './tasks'
 import { libraryWindow, onChangeTopLevelPage, settingsWindow } from './windows'
 
@@ -206,18 +211,11 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'getTranscription',
     tryCatchIpcMain(async (_, logId: string) => {
-      const log = getLog(logId)
-      if (!log || !log.transcription) {
+      const data = await getTranscriptionData(logId)
+      if (!data || data.status !== 'completed' || !data.result) {
         return null
       }
-      // Return the TranscriptionResult, not the TranscriptionState
-      if (
-        log.transcription.status !== 'completed' ||
-        !log.transcription.result
-      ) {
-        return null
-      }
-      return log.transcription.result
+      return data.result
     }),
   )
 
@@ -232,11 +230,11 @@ export function setupIpcHandlers() {
         }
       }
 
-      const log = getLog(logId)
-      if (log?.transcription) {
+      const data = await getTranscriptionData(logId)
+      if (data) {
         return {
           status: 'completed',
-          result: log.transcription,
+          result: data,
         }
       }
 
@@ -267,8 +265,9 @@ export function setupIpcHandlers() {
       }
 
       // Auto-trigger transcription if not present or idle
+      const transcription = await getTranscriptionData(logId)
       const needsTranscription =
-        (!log.transcription || log.transcription.status === 'idle') &&
+        (!transcription || transcription.status === 'idle') &&
         log.path &&
         !ephemeral.isTranscriptionActive(logId)
 
@@ -621,10 +620,12 @@ export function setupIpcHandlers() {
         path: outputPath,
         timestamp: timestamp,
         title: originalLog?.title,
-        transcription: originalLog?.transcription,
-        summary: originalLog?.summary,
       }
       setLog(newLog)
+
+      if (originalLog) {
+        await copySidecarData(logId, id)
+      }
 
       debug(`Converted video to MP4: ${outputPath}`)
 
@@ -788,42 +789,28 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
   // Compare normalized paths (handle case sensitivity on macOS)
   const isInDefaultFolder = fileDir.toLowerCase() === defaultDir.toLowerCase()
 
-  try {
-    const stats = await stat(log.path)
+  const transcriptionData = await getTranscriptionData(log.id)
+  const summary = await getSummaryData(log.id)
 
-    return {
-      id: log.id,
-      name: log.name,
-      title: log.title,
-      path: log.path,
-      // size: 0,
-      created: createdDate,
-      // modified: createdDate,
-      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
-      duration: log.duration,
-      summary: log.summary,
-      transcription: log.transcription?.result || undefined,
-      isAudioOnly: log.isAudioOnly,
-      fileExists: true,
-      isInDefaultFolder,
-    }
-  } catch (error) {
-    // File doesn't exist, return with missing file indicator
-    return {
-      id: log.id,
-      name: log.name,
-      title: log.title,
-      path: log.path,
-      // size: 0,
-      created: createdDate,
-      // modified: createdDate, // Fallback to created date
-      thumbnailPath: `log-thumbnail://${log.id}.jpg`,
-      duration: log.duration,
-      summary: log.summary,
-      transcription: log.transcription?.result || undefined,
-      isAudioOnly: log.isAudioOnly,
-      fileExists: false,
-      isInDefaultFolder,
-    }
+  let fileExistsOnDisk = true
+  try {
+    await stat(log.path)
+  } catch {
+    fileExistsOnDisk = false
+  }
+
+  return {
+    id: log.id,
+    name: log.name,
+    title: log.title,
+    path: log.path,
+    created: createdDate,
+    thumbnailPath: `log-thumbnail://${log.id}.jpg`,
+    duration: log.duration,
+    summary: summary || undefined,
+    transcription: transcriptionData?.result || undefined,
+    isAudioOnly: log.isAudioOnly,
+    fileExists: fileExistsOnDisk,
+    isInDefaultFolder,
   }
 }
