@@ -112,6 +112,14 @@ export function setGeminiApiKey(apiKey: string): void {
   store.set('geminiApiKey', encryptSecret(apiKey))
 }
 
+export function getOpenaiApiKey(): string {
+  return decryptSecret(store.get('openaiApiKey') || '')
+}
+
+export function setOpenaiApiKey(apiKey: string): void {
+  store.set('openaiApiKey', encryptSecret(apiKey))
+}
+
 // Helper function to generate a unique ID for a log
 export function generateLogId(filePath: string): string {
   return createHash('sha256').update(filePath).digest('hex').substring(0, 16)

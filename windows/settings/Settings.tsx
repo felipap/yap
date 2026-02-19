@@ -9,6 +9,7 @@ const TABS = ['General Settings']
 export function Settings() {
   const [activeTab, setActiveTab] = useState('General Settings')
   const [apiKey, setApiKey] = useState('')
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
   const [recordingsFolder, setRecordingsFolder] = useState('')
   const [userContext, setUserContext] = useState('')
   const isInitialLoad = useRef(true)
@@ -18,6 +19,9 @@ export function Settings() {
       try {
         const key = await window.electronAPI.getGeminiApiKey()
         setApiKey(key)
+
+        const oaiKey = await window.electronAPI.getOpenaiApiKey()
+        setOpenaiApiKey(oaiKey)
 
         const folder = await window.electronAPI.getRecordingsFolder()
         setRecordingsFolder(folder)
@@ -71,6 +75,25 @@ export function Settings() {
     }
   }, [apiKey])
 
+  // Autosave OpenAI API key
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await window.electronAPI.setOpenaiApiKey(openaiApiKey)
+      } catch (error) {
+        console.error('Failed to autosave OpenAI API key:', error)
+      }
+    }, 500)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [openaiApiKey])
+
   // Autosave recordings folder
   useEffect(() => {
     if (isInitialLoad.current) {
@@ -118,6 +141,8 @@ export function Settings() {
             onUserContextChange={setUserContext}
             apiKey={apiKey}
             onApiKeyChange={setApiKey}
+            openaiApiKey={openaiApiKey}
+            onOpenaiApiKeyChange={setOpenaiApiKey}
           />
         )}
 

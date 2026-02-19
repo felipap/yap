@@ -29,8 +29,10 @@ import {
   getAllLogs,
   getGeminiApiKey,
   getLog,
+  getOpenaiApiKey,
   setGeminiApiKey,
   setLog,
+  setOpenaiApiKey,
   store,
   updateLog,
 } from './store'
@@ -191,7 +193,7 @@ export function setupIpcHandlers() {
         throw new Error(`Log with ID ${logId} not found`)
       }
 
-      const openaiApiKey = store.get('openaiApiKey') || null
+      const openaiApiKey = getOpenaiApiKey()
       if (!openaiApiKey) {
         throw new Error('OpenAI API key is not set')
       }
@@ -271,7 +273,7 @@ export function setupIpcHandlers() {
 
       if (needsTranscription) {
         // Try to trigger transcription
-        const openaiApiKey = store.get('openaiApiKey') || null
+        const openaiApiKey = getOpenaiApiKey()
         if (openaiApiKey) {
           triggerTranscribe(logId, openaiApiKey)
         } else {
@@ -496,6 +498,21 @@ export function setupIpcHandlers() {
     'setGeminiApiKey',
     tryCatchIpcMain(async (_, apiKey: string) => {
       setGeminiApiKey(apiKey)
+      return true
+    }),
+  )
+
+  ipcMain.handle(
+    'getOpenaiApiKey',
+    tryCatchIpcMain(async () => {
+      return getOpenaiApiKey()
+    }),
+  )
+
+  ipcMain.handle(
+    'setOpenaiApiKey',
+    tryCatchIpcMain(async (_, apiKey: string) => {
+      setOpenaiApiKey(apiKey)
       return true
     }),
   )

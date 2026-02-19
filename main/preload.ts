@@ -170,6 +170,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('setGeminiApiKey', apiKey)
   },
 
+  getOpenaiApiKey: (): Promise<string> => {
+    return ipcRenderer.invoke('getOpenaiApiKey')
+  },
+
+  setOpenaiApiKey: (apiKey: string): Promise<boolean> => {
+    return ipcRenderer.invoke('setOpenaiApiKey', apiKey)
+  },
+
   getUserContext: (): Promise<string> => {
     return ipcRenderer.invoke('getUserContext')
   },
