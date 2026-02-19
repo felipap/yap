@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react'
 import { MdLinkOff, MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { formatDate, formatDateOrRelative } from './formatters'
@@ -6,16 +7,19 @@ import { SidebarItem } from './useIndexedLogData'
 interface Props {
   data: SidebarItem
   selected: boolean
-  onClick: () => void
+  onSelect: (item: SidebarItem) => void
 }
 
-export function Item({ data, selected, onClick }: Props) {
-  // const isMissing = !data.fileExists
+export const Item = memo(function Item({ data, selected, onSelect }: Props) {
   const isMissing = false
+
+  const handleClick = useCallback(() => {
+    onSelect(data)
+  }, [onSelect, data])
 
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={twMerge(
         `w-full text-left pl-2 py-1.5 transition-colors select-none`,
         'hover:bg-one hover:dark:bg-one rounded-md',
@@ -61,7 +65,7 @@ export function Item({ data, selected, onClick }: Props) {
       </div>
     </button>
   )
-}
+})
 
 const formatDuration = (duration: number) => {
   const hours = Math.floor(duration / 3600)

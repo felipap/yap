@@ -73,9 +73,7 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
                   <Item
                     data={log}
                     selected={selectedLog?.id === log.id}
-                    onClick={() => {
-                      onSelect(log)
-                    }}
+                    onSelect={onSelect}
                   />
                 </div>
               )
