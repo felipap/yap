@@ -119,38 +119,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Event listeners for real-time updates
   onLogUpdated: (callback: (logId: string) => void) => {
-    ipcRenderer.on('log-updated', (_, logId) => callback(logId))
-  },
-
-  removeLogUpdatedListener: () => {
-    ipcRenderer.removeAllListeners('log-updated')
+    const listener = (_event: any, logId: string) => callback(logId)
+    ipcRenderer.on('log-updated', listener)
+    return () => {
+      ipcRenderer.removeListener('log-updated', listener)
+    }
   },
 
   onSummaryGenerated: (callback: (logId: string, summary: string) => void) => {
-    ipcRenderer.on('summary-generated', (_, logId, summary) =>
-      callback(logId, summary),
-    )
-  },
-
-  removeSummaryGeneratedListener: (
-    callback: (logId: string, summary: string) => void,
-  ) => {
-    ipcRenderer.removeAllListeners('summary-generated')
+    const listener = (_event: any, logId: string, summary: string) =>
+      callback(logId, summary)
+    ipcRenderer.on('summary-generated', listener)
+    return () => {
+      ipcRenderer.removeListener('summary-generated', listener)
+    }
   },
 
   // Transcription progress events
   onTranscriptionProgressUpdated: (
     callback: (logId: string, progress: number) => void,
   ) => {
-    ipcRenderer.on('transcription-progress-updated', (_, logId, progress) =>
-      callback(logId, progress),
-    )
-  },
-
-  removeTranscriptionProgressListener: (
-    callback: (logId: string, progress: number) => void,
-  ) => {
-    ipcRenderer.removeAllListeners('transcription-progress-updated')
+    const listener = (_event: any, logId: string, progress: number) =>
+      callback(logId, progress)
+    ipcRenderer.on('transcription-progress-updated', listener)
+    return () => {
+      ipcRenderer.removeListener('transcription-progress-updated', listener)
+    }
   },
 
   // Settings functions
@@ -220,13 +214,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onConversionProgress: (
     callback: (logId: string, progress: number) => void,
   ) => {
-    ipcRenderer.on('conversion-progress', (_, logId, progress) =>
-      callback(logId, progress),
-    )
-  },
-
-  removeConversionProgressListener: () => {
-    ipcRenderer.removeAllListeners('conversion-progress')
+    const listener = (_event: any, logId: string, progress: number) =>
+      callback(logId, progress)
+    ipcRenderer.on('conversion-progress', listener)
+    return () => {
+      ipcRenderer.removeListener('conversion-progress', listener)
+    }
   },
 
   // Move to default folder

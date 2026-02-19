@@ -49,14 +49,11 @@ export function ConvertButton({ logId, disabled }: Props) {
       }
     }
 
-    if (window.electronAPI.onConversionProgress) {
+    const unsubscribe =
       window.electronAPI.onConversionProgress(handleProgress)
-    }
 
     return () => {
-      if (window.electronAPI.removeConversionProgressListener) {
-        window.electronAPI.removeConversionProgressListener()
-      }
+      unsubscribe()
     }
   }, [logId])
 

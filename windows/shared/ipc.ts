@@ -163,22 +163,12 @@ export async function setLogTitle(
 }
 
 // General log events
-export function onLogUpdated(callback: (logId: string) => void) {
-  if (window.electronAPI.onLogUpdated) {
-    window.electronAPI.onLogUpdated(callback)
-  }
+export function onLogUpdated(callback: (logId: string) => void): () => void {
+  return window.electronAPI.onLogUpdated(callback)
 }
 
-export function onStateChange(callback: (state: State) => void) {
-  if (window.electronAPI.onStateChange) {
-    window.electronAPI.onStateChange(callback)
-  }
-}
-
-export function removeLogUpdatedListener() {
-  if (window.electronAPI.removeLogUpdatedListener) {
-    window.electronAPI.removeLogUpdatedListener()
-  }
+export function onStateChange(callback: (state: State) => void): () => void {
+  return window.electronAPI.onStateChange(callback)
 }
 
 // Settings functions

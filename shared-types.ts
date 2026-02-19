@@ -151,19 +151,12 @@ export type SharedIpcMethods = {
   onViewLogEntry: (logId: string) => Promise<void>
   onSummaryGenerated: (
     callback: (logId: string, summary: string) => void,
-  ) => void
-  removeSummaryGeneratedListener: (
-    callback: (logId: string, summary: string) => void,
-  ) => void
+  ) => () => void
   onTranscriptionProgressUpdated: (
     callback: (logId: string, progress: number) => void,
-  ) => void
-  removeTranscriptionProgressListener: (
-    callback: (logId: string, progress: number) => void,
-  ) => void
+  ) => () => void
   onStateChange: (callback: (state: any) => void) => () => void
-  onLogUpdated: (callback: (logId: string) => void) => void
-  removeLogUpdatedListener: () => void
+  onLogUpdated: (callback: (logId: string) => void) => () => void
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
   hideSettingsWindow: () => Promise<void>
   getGeminiApiKey: () => Promise<string>
@@ -186,8 +179,7 @@ export type SharedIpcMethods = {
   }>
   onConversionProgress: (
     callback: (logId: string, progress: number) => void,
-  ) => void
-  removeConversionProgressListener: () => void
+  ) => () => void
   moveToDefaultFolder: (logId: string) => Promise<{
     success: boolean
     message: string

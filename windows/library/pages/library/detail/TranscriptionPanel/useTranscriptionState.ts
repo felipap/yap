@@ -117,16 +117,11 @@ export function useTranscriptionState({ logId }: Args): Return {
     }
 
     // Listen for progress updates from the main process
-    if (window.electronAPI.onTranscriptionProgressUpdated) {
+    const unsubscribe =
       window.electronAPI.onTranscriptionProgressUpdated(handleProgressUpdate)
-    }
 
     return () => {
-      if (window.electronAPI.removeTranscriptionProgressListener) {
-        window.electronAPI.removeTranscriptionProgressListener(
-          handleProgressUpdate,
-        )
-      }
+      unsubscribe()
     }
   }, [logId])
 

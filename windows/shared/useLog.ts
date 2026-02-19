@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EnrichedLog } from '../library/types'
-import { getLog, onLogUpdated, removeLogUpdatedListener } from './ipc'
+import { getLog, onLogUpdated } from './ipc'
 
 // export function useBackendState() {
 //   const [loading, setLoading] = useState(true)
@@ -76,11 +76,11 @@ export function useLog(logId: string | null) {
         void load()
       }
     }
-    onLogUpdated(handleGeneralLogEvent)
+    const unsubscribe = onLogUpdated(handleGeneralLogEvent)
 
     return () => {
       clearInterval(intervalId)
-      removeLogUpdatedListener()
+      unsubscribe()
     }
   }, [logId])
 
