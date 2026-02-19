@@ -1,3 +1,4 @@
+import { cleanTranscript } from './ai/clean-transcript'
 import { generateSummary } from './ai/summarize-transcript'
 import { transcribeVideo } from './lib/transcription'
 import { getGeminiApiKey, getLog, store, updateLog } from './store'
@@ -48,15 +49,22 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
 
       ephemeral.removeTranscription(logId)
 
+      // Clean up filler words with Gemini if key is available
+      const geminiApiKey = getGeminiApiKey() || null
+      if (geminiApiKey) {
+        try {
+          result = await cleanTranscript(result, geminiApiKey)
+        } catch (error) {
+          console.warn('Transcript cleaning failed, using raw transcription:', error)
+        }
+      }
+
       updateLog(logId, {
         transcription: {
           status: 'completed',
           result,
         },
       })
-
-      // Try to kick-off summary generation
-      const geminiApiKey = getGeminiApiKey() || null
       if (geminiApiKey) {
         triggerGenerateSummary(logId, geminiApiKey)
       }
