@@ -1,5 +1,5 @@
 import { memo, useCallback, useState } from 'react'
-import { MdLinkOff, MdMic, MdMovie } from 'react-icons/md'
+import { MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { formatDate, formatDateOrRelative } from './formatters'
 import { SidebarItem } from './useIndexedLogData'
@@ -11,8 +11,6 @@ interface Props {
 }
 
 export const Item = memo(function Item({ data, selected, onSelect }: Props) {
-  const isMissing = false
-
   const handleClick = useCallback(() => {
     onSelect(data)
   }, [onSelect, data])
@@ -27,13 +25,11 @@ export const Item = memo(function Item({ data, selected, onSelect }: Props) {
         selected
           ? 'bg-blue-500! dark:bg-[#2A2A2A]! hover:dark:bg-[#1F1F1F]! text-white'
           : 'text-contrast',
-        // isMissing && 'opacity-60',
       )}
     >
       <div className="flex items-center gap-2.5">
-        {/* Thumbnail */}
-        <div className="relative x2 w-[70px] h-12 bg-gray-900 rounded overflow-hidden flex-shrink-0">
-          <ItemImage data={data} isMissing={isMissing} />
+        <div className="relative x2 w-[70px] h-12 bg-gray-900 rounded overflow-hidden shrink-0">
+          <ItemImage data={data} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -45,14 +41,6 @@ export const Item = memo(function Item({ data, selected, onSelect }: Props) {
                   #{data.dayIndex}
                 </span>
               )}
-              {/* {IS_DEV && !data.transcription && (
-                <span
-                  className="text-[10px] px-1 py-0.5 rounded bg-yellow-500/20 text-yellow-500 dark:text-yellow-400"
-                  title="No transcription"
-                >
-                  No transcript
-                </span>
-              )} */}
             </div>
             {data.title && (
               <div className="text-xs opacity-50 truncate flex items-center gap-1">
@@ -82,18 +70,11 @@ const formatDuration = (duration: number) => {
   }
 }
 
-function ItemImage({
-  data,
-  isMissing,
-}: {
-  data: SidebarItem
-  isMissing: boolean
-}) {
+function ItemImage({ data }: { data: SidebarItem }) {
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
 
-  const showImage =
-    !!data.thumbnailPath && !isMissing && !errored
+  const showImage = !!data.thumbnailPath && !errored
 
   return (
     <>
@@ -112,9 +93,7 @@ function ItemImage({
 
       {(!showImage || !loaded) && (
         <div className="w-full h-full flex items-center justify-center">
-          {isMissing ? (
-            <MdLinkOff size={24} className="text-gray-400" />
-          ) : data.isAudioOnly ? (
+          {data.isAudioOnly ? (
             <MdMic size={24} className="text-gray-400" />
           ) : (
             <MdMovie size={24} className="text-gray-400" />
@@ -122,7 +101,7 @@ function ItemImage({
         </div>
       )}
 
-      {data.duration && !isMissing && (
+      {data.duration && (
         <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">
           {formatDuration(data.duration)}
         </div>

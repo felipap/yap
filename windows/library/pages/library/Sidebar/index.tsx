@@ -14,7 +14,50 @@ interface Props {
 
 export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
   const { displayLogs, loading } = useIndexedLogData()
-  const { filteredLogs, filterText, setFilterText } = useLogFilter(displayLogs)
+  const {
+    filteredLogs: filteredLogs_,
+    filterText,
+    setFilterText,
+  } = useLogFilter(displayLogs)
+  const filteredLogs = filteredLogs_.filter((v) => {
+    // return true
+    console.log('v.created.getTime()', v.created.getTime())
+    console.log(
+      "new Date('2025-11-26').getTime()",
+      new Date('2025-11-26').getTime(),
+    )
+    const isOldVideo = v.created.getTime() < new Date('2025-11-28').getTime()
+    if (!isOldVideo) {
+      return false
+    }
+    if (
+      [
+        'new song',
+        'a riff',
+        'hospital with Vini',
+        'happy to be in ny',
+        'Nov 19, 2025',
+        'Nov 24, 2025',
+        'part 2',
+        'Nov 18, 2025',
+      ].includes(v.displayTitle)
+    ) {
+      return false
+    }
+    if (v.displayTitle === 'a riff') {
+      return false
+    }
+    if (v.displayTitle === 'Nov 19, 2025') {
+      return false
+    }
+    if (v.dayIndex === 3 && v.displayTitle === 'Nov 24, 2025') {
+      return false
+    }
+    if (v.dayIndex === 2 && v.displayTitle === 'Nov 27, 2025') {
+      return false
+    }
+    return true
+  })
 
   const selectedSidebarItem = useMemo(
     () => displayLogs.find((v) => v.id === selectedLog?.id),
