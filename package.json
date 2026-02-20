@@ -30,7 +30,6 @@
     "printWidth": 80,
     "semi": false
   },
-  "packageManager": "pnpm@8.15.4",
   "devDependencies": {
     "@google/generative-ai": "^0.24.1",
     "@tailwindcss/forms": "^0.5.10",

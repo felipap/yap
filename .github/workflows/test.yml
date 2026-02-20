@@ -19,23 +19,20 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run Lint
-        run: pnpm run lint
+        run: npm run lint
 
       - name: Run TypeScript check for backend
-        run: pnpm run ts-check-backend
+        run: npm run ts-check-backend
 
       - name: Run TypeScript check for windows
-        run: pnpm run ts-check-windows
+        run: npm run ts-check-windows
 
       - name: Rebuild native dependencies
-        run: pnpm rebuild
+        run: npm rebuild
 
       - name: Build Electron app
-        run: pnpm run build
+        run: npm run build

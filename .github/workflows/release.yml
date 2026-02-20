@@ -27,11 +27,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Import code signing certificate
         uses: apple-actions/import-codesign-certs@v1
@@ -48,10 +45,10 @@ jobs:
         run: xcode-select --install || true
 
       - name: Build Electron app
-        run: pnpm run build
+        run: npm run build
 
       - name: Package Electron app
-        run: pnpm run pack
+        run: npm run pack
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
