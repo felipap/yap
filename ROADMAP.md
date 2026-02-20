@@ -7,6 +7,7 @@
 
 ## Later
 
+- [ ] Write blog post.
 - [ ] Launch on Hackernews.
 - [ ] Launch on Bookface.
 

@@ -37,8 +37,7 @@ export function TopNav({ currentTab }: Props) {
             }}
             className={twMerge(
               'dark:border-white/10 pr-2',
-              currentTab === 'library' && 'text-red-500 bg-white',
-              // 'hover:text-red-500 dark:hover:text-red-400',
+              'hover:text-red-500 dark:hover:text-red-400',
               currentTab === 'record' &&
                 'text-red-500 dark:text-red-400 bg-red-400/10',
             )}

@@ -66,13 +66,13 @@ export function Toolbar({ log, unselect }: Props) {
         {debugMode && (
           <Button onClick={() => openTranscriptionFile(log.id)}>
             <MdTextSnippet size={16} />
-            <span>Open Transcription in Finder</span>
+            <span>Reveal Transcription in Finder</span>
           </Button>
         )}
         {debugMode && (
           <Button onClick={() => openSummaryFile(log.id)}>
             <MdTextSnippet size={16} />
-            <span>Open Summary in Finder</span>
+            <span>Reveal Summary in Finder</span>
           </Button>
         )}
       </div>
