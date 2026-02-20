@@ -20,6 +20,7 @@ export interface Log {
   lastPositionTimestamp?: string
   duration?: number // Cached video duration in seconds
   isAudioOnly?: boolean
+  thumbnailUpdatedAt?: string // ISO 8601 - bumped on shuffle to bust browser cache
 }
 
 export interface UserProfile {
@@ -55,6 +56,7 @@ export interface State {
   wasLastFocused?: boolean
   recordingsFolder?: string
   userContext?: string
+  debugMode?: boolean
 }
 
 //
@@ -186,6 +188,9 @@ export type SharedIpcMethods = {
     newPath?: string
   }>
   onChangeTopLevelPage: (page: 'library' | 'record') => Promise<void>
+  shuffleThumbnail: (logId: string) => Promise<boolean>
+  getDebugMode: () => Promise<boolean>
+  onDebugModeChanged: (callback: (enabled: boolean) => void) => () => void
 }
 
 export type ExposedElectronAPI = SharedIpcMethods & {

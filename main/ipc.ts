@@ -11,6 +11,7 @@ import { EnrichedLog, Log, State } from '../shared-types'
 import { extractDateFromTitle } from './ai/date-from-title'
 import { fileExists, moveToTrash } from './lib/filesystem'
 import { debug } from './lib/logger'
+import { shuffleThumbnail } from './lib/thumbnails'
 import { getVideoDuration } from './lib/transcription'
 import {
   extractVideoMetadata,
@@ -92,6 +93,7 @@ export function setupIpcHandlers() {
 
       const enrichedLogs = Object.values(storedLogs).map((log) => {
         const createdDate = new Date(log.timestamp)
+        const thumbQuery = log.thumbnailUpdatedAt ? `?v=${log.thumbnailUpdatedAt}` : ''
 
         return {
           id: log.id,
@@ -99,7 +101,7 @@ export function setupIpcHandlers() {
           title: log.title,
           path: log.path,
           created: createdDate,
-          thumbnailPath: `log-thumbnail://${log.id}.jpg`,
+          thumbnailPath: `log-thumbnail://${log.id}.jpg${thumbQuery}`,
           duration: log.duration,
           isAudioOnly: log.isAudioOnly,
         }
@@ -743,6 +745,30 @@ export function setupIpcHandlers() {
     }),
   )
 
+  ipcMain.handle(
+    'getDebugMode',
+    tryCatchIpcMain(async () => {
+      return store.get('debugMode') || false
+    }),
+  )
+
+  ipcMain.handle(
+    'shuffleThumbnail',
+    tryCatchIpcMain(async (_, logId: string) => {
+      const log = getLog(logId)
+      if (!log) {
+        throw new Error(`Log with ID ${logId} not found`)
+      }
+
+      const duration = log.duration || (await getVideoDuration(log.path)) || 10
+      const result = await shuffleThumbnail(log.path, duration)
+      if (result) {
+        updateLog(logId, { thumbnailUpdatedAt: new Date().toISOString() })
+      }
+      return !!result
+    }),
+  )
+
   // Set up state change listener
   store.onDidAnyChange((state) => {
     libraryWindow?.webContents.send('state-changed', state)
@@ -794,13 +820,15 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
     fileExistsOnDisk = false
   }
 
+  const thumbQuery = log.thumbnailUpdatedAt ? `?v=${log.thumbnailUpdatedAt}` : ''
+
   return {
     id: log.id,
     name: log.name,
     title: log.title,
     path: log.path,
     created: createdDate,
-    thumbnailPath: `log-thumbnail://${log.id}.jpg`,
+    thumbnailPath: `log-thumbnail://${log.id}.jpg${thumbQuery}`,
     duration: log.duration,
     summary: summary || undefined,
     transcription: transcriptionData?.result || undefined,

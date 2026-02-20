@@ -244,6 +244,7 @@ export function setupProtocolHandlers() {
       // Remove the protocol and get the log ID
       const logId = request.url
         .replace('log-thumbnail://', '')
+        .replace(/\?.*$/, '')
         .replace('/', '')
         .replace('.jpg', '')
 
