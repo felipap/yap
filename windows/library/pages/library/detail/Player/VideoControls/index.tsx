@@ -119,6 +119,48 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
     }
   }, [videoRef, isDraggingSeek])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      const video = videoRef.current
+      if (!video) {
+        return
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        video.currentTime = Math.max(0, video.currentTime - 10)
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        video.currentTime = Math.min(
+          video.duration || 0,
+          video.currentTime + 10,
+        )
+      } else if (e.key === ' ') {
+        e.preventDefault()
+        if (video.paused) {
+          video.play()
+        } else {
+          video.pause()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [videoRef])
+
   // Auto-hide controls
   useEffect(() => {
     const video = videoRef.current
