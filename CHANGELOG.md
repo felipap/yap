@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.1](https://github.com/felipap/yap/compare/v0.9.40...v0.10.1) (2026-02-20)
+
+
+### Features
+
+* add debug mode toggle and debug-only toolbar actions ([68076fd](https://github.com/felipap/yap/commit/68076fd5d77aed9133498d93e02aaa8d7e004fb3))
+
+
+### Bug Fixes
+
+* persist window bounds on move/resize and misc UI polish ([5cc1c25](https://github.com/felipap/yap/commit/5cc1c25d1851c1f5f9cd1b9a640317210baa33fa))
+
 ### [0.9.40](https://github.com/felipap/yap/compare/v0.9.39...v0.9.40) (2026-02-19)
 
 
