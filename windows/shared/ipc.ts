@@ -240,3 +240,25 @@ export async function onChangeTopLevelPage(
 ): Promise<void> {
   return window.electronAPI.onChangeTopLevelPage(page)
 }
+
+export async function getDebugMode(): Promise<boolean> {
+  return window.electronAPI.getDebugMode()
+}
+
+export async function openTranscriptionFile(logId: string): Promise<void> {
+  return window.electronAPI.openTranscriptionFile(logId)
+}
+
+export async function openSummaryFile(logId: string): Promise<void> {
+  return window.electronAPI.openSummaryFile(logId)
+}
+
+export async function shuffleThumbnail(logId: string): Promise<boolean> {
+  return window.electronAPI.shuffleThumbnail(logId)
+}
+
+export function onDebugModeChanged(
+  callback: (enabled: boolean) => void,
+): () => void {
+  return window.electronAPI.onDebugModeChanged(callback)
+}

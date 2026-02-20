@@ -44,6 +44,8 @@ import {
   copySidecarData,
   getSummaryData,
   getTranscriptionData,
+  getSummaryFilePath,
+  getTranscriptionFilePath,
 } from './store/transcripts'
 import { triggerGenerateSummary, triggerTranscribe } from './tasks'
 import { libraryWindow, onChangeTopLevelPage, settingsWindow } from './windows'
@@ -749,6 +751,22 @@ export function setupIpcHandlers() {
     'getDebugMode',
     tryCatchIpcMain(async () => {
       return store.get('debugMode') || false
+    }),
+  )
+
+  ipcMain.handle(
+    'openTranscriptionFile',
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = getTranscriptionFilePath(logId)
+      await shell.showItemInFolder(filePath)
+    }),
+  )
+
+  ipcMain.handle(
+    'openSummaryFile',
+    tryCatchIpcMain(async (_, logId: string) => {
+      const filePath = getSummaryFilePath(logId)
+      await shell.showItemInFolder(filePath)
     }),
   )
 

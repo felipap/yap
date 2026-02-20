@@ -15,6 +15,14 @@ function transcriptionPath(logId: string): string {
   return join(transcriptionsDir(), `${logId}.json`)
 }
 
+export function getTranscriptionFilePath(logId: string): string {
+  return transcriptionPath(logId)
+}
+
+export function getSummaryFilePath(logId: string): string {
+  return summaryPath(logId)
+}
+
 function summaryPath(logId: string): string {
   return join(summariesDir(), `${logId}.txt`)
 }

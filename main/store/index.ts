@@ -84,6 +84,10 @@ const schema: Schema<State> = {
   userContext: {
     type: 'string',
   },
+  debugMode: {
+    type: 'boolean',
+    default: false,
+  },
 }
 
 app.setName('yap-camera')

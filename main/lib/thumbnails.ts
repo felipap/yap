@@ -127,3 +127,43 @@ export function getThumbnailPath(videoPath: string): string {
     .substring(0, 16)
   return join(CACHE_DIR, `${videoHash}.jpg`)
 }
+
+export async function shuffleThumbnail(
+  videoPath: string,
+  duration: number,
+): Promise<string | null> {
+  await mkdir(CACHE_DIR, { recursive: true })
+
+  const thumbnailPath = getThumbnailPath(videoPath)
+
+  // Delete existing cached thumbnail
+  const { unlink } = await import('fs/promises')
+  try {
+    await unlink(thumbnailPath)
+  } catch {
+    // File may not exist
+  }
+
+  const ffmpegPath = await findFFmpegPath()
+  if (!ffmpegPath) {
+    debug('ffmpeg not available')
+    return null
+  }
+
+  const randomSeconds = Math.floor(Math.random() * Math.max(1, duration))
+  const hours = Math.floor(randomSeconds / 3600)
+  const minutes = Math.floor((randomSeconds % 3600) / 60)
+  const seconds = randomSeconds % 60
+  const timestamp = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+
+  const ffmpegEnv = getFFmpegEnv()
+  const cmd = `"${ffmpegPath}" -ss ${timestamp} -i "${videoPath}" -vframes 1 -vf "scale=320:-1" -q:v 2 "${thumbnailPath}"`
+
+  try {
+    await execAsync(cmd, { env: ffmpegEnv })
+    return thumbnailPath
+  } catch {
+    debug(`Shuffle thumbnail failed at ${timestamp}, falling back to regenerate`)
+    return generateThumbnail(videoPath)
+  }
+}

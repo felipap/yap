@@ -237,6 +237,31 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('onChangeTopLevelPage', page)
   },
 
+  // Debug mode
+  getDebugMode: (): Promise<boolean> => {
+    return ipcRenderer.invoke('getDebugMode')
+  },
+
+  openTranscriptionFile: (logId: string): Promise<void> => {
+    return ipcRenderer.invoke('openTranscriptionFile', logId)
+  },
+
+  openSummaryFile: (logId: string): Promise<void> => {
+    return ipcRenderer.invoke('openSummaryFile', logId)
+  },
+
+  shuffleThumbnail: (logId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('shuffleThumbnail', logId)
+  },
+
+  onDebugModeChanged: (callback: (enabled: boolean) => void) => {
+    const listener = (_event: any, enabled: boolean) => callback(enabled)
+    ipcRenderer.on('debug-mode-changed', listener)
+    return () => {
+      ipcRenderer.removeListener('debug-mode-changed', listener)
+    }
+  },
+
   //
   //
   //

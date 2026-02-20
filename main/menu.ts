@@ -1,6 +1,7 @@
-import { app, Menu } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import { getLibraryWindow } from './windows/library'
 import { exportTranscripts } from './export-transcripts'
+import { store } from './store'
 
 export function setupMenu() {
   const template: Electron.MenuItemConstructorOptions[] = [
@@ -33,31 +34,45 @@ export function setupMenu() {
         },
       ],
     },
-    {
-      label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
-        { type: 'separator' },
-      ],
-    },
+    // {
+    //   label: 'Edit',
+    //   submenu: [
+    //     { role: 'undo' },
+    //     { role: 'redo' },
+    //     { type: 'separator' },
+    //     { role: 'cut' },
+    //     { role: 'copy' },
+    //     { role: 'paste' },
+    //     { role: 'selectAll' },
+    //     { type: 'separator' },
+    //   ],
+    // },
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
+        // { role: 'reload' },
         { role: 'forceReload' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
+        // { type: 'separator' },
+        // { role: 'togglefullscreen' },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        {
+          label: 'Debug Mode',
+          type: 'checkbox',
+          checked: store.get('debugMode') || false,
+          click: (menuItem) => {
+            store.set('debugMode', menuItem.checked)
+            BrowserWindow.getAllWindows().forEach((win) => {
+              if (!win.isDestroyed()) {
+                win.webContents.send('debug-mode-changed', menuItem.checked)
+              }
+            })
+          },
+        },
       ],
     },
     {
