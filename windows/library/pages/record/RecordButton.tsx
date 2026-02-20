@@ -1,5 +1,5 @@
-import { Button } from '../../shared/ui/Button'
-import { SolidSquare } from '../../shared/icons'
+import { Button } from '../../../shared/ui/Button'
+import { SolidSquare } from '../../../shared/icons'
 
 interface Props {
   isRecording: boolean
@@ -7,11 +7,11 @@ interface Props {
   onStopRecording: () => void
 }
 
-export const RecordButton = ({
+export function RecordButton({
   isRecording,
   onStartRecording,
   onStopRecording,
-}: Props) => {
+}: Props) {
   if (isRecording) {
     return (
       <Button variant="stop" onClick={onStopRecording}>

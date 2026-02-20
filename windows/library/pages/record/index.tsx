@@ -9,7 +9,7 @@ import {
   setSelectedMicrophoneId as saveSelectedMicrophoneId,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
-import { RecordButton } from '../../components/RecordButton'
+import { RecordButton } from './RecordButton'
 import { RecordingMode } from '../../types'
 import { DeviceSelector } from './DeviceSelector'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
