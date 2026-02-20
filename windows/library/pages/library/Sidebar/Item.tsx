@@ -23,6 +23,7 @@ export const Item = memo(function Item({ data, selected, onSelect }: Props) {
       className={twMerge(
         `w-full text-left pl-2 py-1.5 transition-colors select-none`,
         'hover:bg-one hover:dark:bg-one rounded-md',
+        'focus-visible:outline-black dark:focus-visible:outline-white',
         selected
           ? 'bg-blue-500! dark:bg-[#2A2A2A]! hover:dark:bg-[#1F1F1F]! text-white'
           : 'text-contrast',
