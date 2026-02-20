@@ -9,7 +9,6 @@
 
 - [ ] Launch on Hackernews.
 - [ ] Launch on Bookface.
--
 
 ## Done
 
