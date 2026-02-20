@@ -12,11 +12,13 @@ export const IS_DEV = true // true // import.meta.env.DEV
 function MainWindowErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary
-      fallbackRender={(props) => (
+      fallbackRender={(props) => {
+        const error = props.error instanceof Error ? props.error : new Error(String(props.error))
+        return (
         <div className="p-4 pt-10 bg-red-50 border border-red-200 rounded-lg flex flex-col gap-2">
-          Main window error: {props.error.message}
+          Main window error: {error.message}
           <pre className="text-[12px] bg-red-50 border border-red-200 rounded-lg p-2 overflow-auto max-h-[200px] font-mono text-red-600">
-            {props.error.stack}
+            {error.stack}
           </pre>
           <button
             onClick={() => {
@@ -27,7 +29,8 @@ function MainWindowErrorBoundary({ children }: { children: React.ReactNode }) {
             Reload
           </button>
         </div>
-      )}
+        )
+      }}
       onError={(error) => {
         console.error('ErrorBoundary caught an error:', error)
       }}

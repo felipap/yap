@@ -37,14 +37,14 @@ export function TopNav({ currentTab }: Props) {
             }}
             className={twMerge(
               'dark:border-white/10 pr-2',
-              currentTab === 'library' &&
-                'hover:text-red-500 dark:hover:text-red-400',
+              currentTab === 'library' && 'text-red-500 bg-white',
+              // 'hover:text-red-500 dark:hover:text-red-400',
               currentTab === 'record' &&
                 'text-red-500 dark:text-red-400 bg-red-400/10',
             )}
           >
             Record
-            <RecordIcon className="w-4 h-4 ml-0.5 mt-[1px]" />
+            <RecordIcon className="w-4 h-4 ml-0.5 mt-px" />
           </TabButton>
         </div>
       </div>

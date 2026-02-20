@@ -145,13 +145,6 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
           video.duration || 0,
           video.currentTime + 10,
         )
-      } else if (e.key === ' ') {
-        e.preventDefault()
-        if (video.paused) {
-          video.play()
-        } else {
-          video.pause()
-        }
       }
     }
 

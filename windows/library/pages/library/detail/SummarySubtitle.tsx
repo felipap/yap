@@ -124,7 +124,7 @@ export function SummarySubtitle({ log }: Props) {
         className={twMerge(
           'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
           isNothingToTranscribe && 'italic',
-          !isExpanded && 'line-clamp-5',
+          !isExpanded && 'line-clamp-4',
           !isExpanded && isTruncated && 'cursor-pointer  transition-opacity',
         )}
       >

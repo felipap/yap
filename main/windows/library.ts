@@ -26,7 +26,7 @@ export function createLibraryWindow(): BrowserWindow {
     y: windowBounds.y,
     minWidth: 800,
     minHeight: 500,
-    center: true,
+    // center: true,
     maxWidth: 800,
     maxHeight: 1000,
     // Only show window in development if it was last focused
@@ -54,6 +54,19 @@ export function createLibraryWindow(): BrowserWindow {
     app.dock?.setIcon(iconPath)
     libraryWindow.setIcon(iconPath)
   }
+
+  let saveBoundsTimer: ReturnType<typeof setTimeout> | null = null
+  const saveBoundsDebounced = () => {
+    if (saveBoundsTimer) {
+      clearTimeout(saveBoundsTimer)
+    }
+    saveBoundsTimer = setTimeout(() => {
+      store.set('windowBounds', libraryWindow.getBounds())
+    }, 300)
+  }
+
+  libraryWindow.on('move', saveBoundsDebounced)
+  libraryWindow.on('resize', saveBoundsDebounced)
 
   // Hide instead of destroy - prevent window from ever being destroyed
   libraryWindow.on('close', async (event) => {
