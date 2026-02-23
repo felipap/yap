@@ -95,9 +95,9 @@ export function useLogFilter(displayLogs: SidebarItem[]) {
       return displayLogs
     }
 
-    const searchTerm = filterText.toLowerCase()
+    const words = filterText.toLowerCase().split(/\s+/).filter(Boolean)
     return displayLogs.filter((log) => {
-      return log.searchableText.includes(searchTerm)
+      return words.every((word) => log.searchableText.includes(word))
     })
   }, [displayLogs, filterText])
 
