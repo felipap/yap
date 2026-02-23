@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { getMainWindow } from './windows'
+import { getLibraryWindow } from './windows'
 
 export function setupAutoUpdater(): void {
   // Only check for updates in production
@@ -24,7 +24,7 @@ export function setupAutoUpdater(): void {
 
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version)
-    const mainWindow = getMainWindow()
+    const mainWindow = getLibraryWindow()
     if (mainWindow) {
       mainWindow.webContents.send('update-available', info)
     }
@@ -45,7 +45,7 @@ export function setupAutoUpdater(): void {
       logMessage + ` (${progressObj.transferred}/${progressObj.total})`
     console.log(logMessage)
 
-    const mainWindow = getMainWindow()
+    const mainWindow = getLibraryWindow()
     if (mainWindow) {
       mainWindow.webContents.send('download-progress', progressObj)
     }
@@ -54,7 +54,7 @@ export function setupAutoUpdater(): void {
   autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded:', info.version)
 
-    const mainWindow = getMainWindow()
+    const mainWindow = getLibraryWindow()
     if (mainWindow) {
       mainWindow.webContents.send('update-downloaded', info)
     }
