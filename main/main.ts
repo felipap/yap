@@ -24,8 +24,8 @@ if (app.isPackaged) {
 }
 
 app.setAboutPanelOptions({
-  applicationName: `Yap ${app.isPackaged ? '' : '(dev)'}`,
-  copyright: 'Copyright © 2026 Yap Camera',
+  applicationName: `Yap Camera ${app.isPackaged ? '' : '(dev)'}`,
+  copyright: 'Copyright © 2026 Portalform',
   version: app.getVersion(),
   // authors: ['Felipe Aragão <faragaop@gmail.com>'],
   credits: 'Felipe Aragão @feliparagao',

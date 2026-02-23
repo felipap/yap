@@ -26,7 +26,7 @@ export function createLibraryWindow(): BrowserWindow {
     y: windowBounds.y,
     minWidth: 800,
     minHeight: 500,
-    // center: true,
+    center: app.isPackaged,
     maxWidth: 800,
     maxHeight: 1000,
     // Only show window in development if it was last focused
