@@ -1,9 +1,10 @@
 # Roadmap
 
-- [ ] Make a female version of the icon.
-- [ ] Feature to skip silent parts.
+- [ ] Feat: skip silent parts.
 - [ ] Keep recording if the window closes
 - [ ] "are you sure you want to close?" dialog.
+- [ ] Output mp4 straight away instead of having to convert.
+- [ ] Fix asking for keychain access all the time.
 
 ## Later
 
