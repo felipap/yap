@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { MacOsButton } from '../shared/ui/macos-native'
-import { AISettings } from './ai'
 import { GeneralSettings } from './general'
+import { TranscriptsSettings } from './transcripts'
 
-const TABS = ['General Settings']
+const TABS = ['general', 'transcripts']
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState('General Settings')
+  const [activeTab, setActiveTab] = useState('general')
   const [apiKey, setApiKey] = useState('')
   const [openaiApiKey, setOpenaiApiKey] = useState('')
   const [recordingsFolder, setRecordingsFolder] = useState('')
@@ -133,21 +133,22 @@ export function Settings() {
       <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-2xl">
-        {activeTab === 'General Settings' && (
+        {activeTab === 'general' && (
           <GeneralSettings
             recordingsFolder={recordingsFolder}
             onRecordingsFolderChange={setRecordingsFolder}
             userContext={userContext}
             onUserContextChange={setUserContext}
+          />
+        )}
+
+        {activeTab === 'transcripts' && (
+          <TranscriptsSettings
             apiKey={apiKey}
             onApiKeyChange={setApiKey}
             openaiApiKey={openaiApiKey}
             onOpenaiApiKeyChange={setOpenaiApiKey}
           />
-        )}
-
-        {activeTab === 'Logs' && (
-          <AISettings apiKey={apiKey} onApiKeyChange={setApiKey} />
         )}
       </div>
 
@@ -173,14 +174,14 @@ export function Tabs({ tabs, activeTab, onTabChange }: Props) {
             key={tab}
             onClick={() => onTabChange(tab)}
             className={twMerge(
-              'w-[120px] p-0 h-[24px] text-sm font-medium antialiased font-text text-[13px] rounded-md transition-all',
+              'px-4 h-[24px] text-sm font-medium antialiased font-text text-[13px] rounded-md transition-all',
               activeTab === tab
                 ? // ? 'bg-white dark:bg-neutral-600 text-contrast shadow-sm'
                   'bg-highlight text-white dark:text-white'
                 : 'text-secondary hover:text-contrast',
             )}
           >
-            {tab}
+            {tab === 'general' ? 'General' : 'Transcripts'}
           </button>
         ))}
       </div>
