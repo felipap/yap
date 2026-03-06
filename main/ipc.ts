@@ -593,6 +593,15 @@ export function setupIpcHandlers() {
       }
       const filePath = log.path
 
+      if (filePath.toLowerCase().endsWith('.mp4')) {
+        return {
+          success: true,
+          message: 'File is already MP4',
+          newLogId: logId,
+          outputPath: filePath,
+        }
+      }
+
       if (
         !filePath.toLowerCase().endsWith('.webm') &&
         !filePath.toLowerCase().endsWith('.mov')

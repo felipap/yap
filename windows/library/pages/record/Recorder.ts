@@ -50,21 +50,23 @@ export class Recorder {
       const options: MediaRecorderOptions = {}
 
       if (isAudioOnly) {
-        // For audio-only, use audio/webm with opus codec
         options.mimeType = 'audio/webm;codecs=opus'
-        options.audioBitsPerSecond = 128000 // 128 kbps for good quality audio
+        options.audioBitsPerSecond = 128000
 
-        // Fallback to plain audio/webm if opus is not supported
         if (!MediaRecorder.isTypeSupported(options.mimeType)) {
           options.mimeType = 'audio/webm'
         }
       } else {
-        // For video recording
-        options.mimeType = 'video/webm;codecs=vp9'
         options.videoBitsPerSecond = 5000000
 
-        // Fallback to VP8 if VP9 is not supported
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        const mp4MimeType = 'video/mp4;codecs=avc1.42E01E,opus'
+        if (MediaRecorder.isTypeSupported(mp4MimeType)) {
+          options.mimeType = mp4MimeType
+        } else if (
+          MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ) {
+          options.mimeType = 'video/webm;codecs=vp9'
+        } else {
           options.mimeType = 'video/webm;codecs=vp8'
         }
       }

@@ -27,7 +27,6 @@ interface StreamingRecording {
 
 let currentStreamingRecording: StreamingRecording | null = null
 
-// Helper function to generate a filename in the format "Log YYYY-MM-DD at H.MM.SS AM/PM.webm"
 function generateRecordingFilename(config: StreamingRecordingConfig): string {
   const now = new Date()
   const year = now.getFullYear()
@@ -37,11 +36,9 @@ function generateRecordingFilename(config: StreamingRecordingConfig): string {
   const minutes = String(now.getMinutes()).padStart(2, '0')
   const seconds = String(now.getSeconds()).padStart(2, '0')
 
-  // Convert to 12-hour format
   const hour12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
   const ampm = hours >= 12 ? 'PM' : 'AM'
 
-  // Add recording type to filename
   const typePrefix =
     config.type === 'camera'
       ? 'Camera'
@@ -51,8 +48,8 @@ function generateRecordingFilename(config: StreamingRecordingConfig): string {
           ? 'Audio'
           : 'Both'
 
-  // Use .webm extension for all recordings (audio and video both use webm)
-  return `${typePrefix} Log ${year}-${month}-${day} at ${hour12}.${minutes}.${seconds} ${ampm}.webm`
+  const ext = config.mimeType?.startsWith('video/mp4') ? 'mp4' : 'webm'
+  return `${typePrefix} Log ${year}-${month}-${day} at ${hour12}.${minutes}.${seconds} ${ampm}.${ext}`
 }
 
 // Streaming recording functions
