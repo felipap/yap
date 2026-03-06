@@ -5,6 +5,8 @@ import { cancelStreamingRecording, isRecordingActive } from '../recording'
 import { store } from '../store'
 import { findIconPath } from './utils'
 
+const DEFAULT_WINDOW_BOUNDS = { width: 800, height: 500 }
+
 export let libraryWindow: BrowserWindow
 
 export function createLibraryWindow(): BrowserWindow {
@@ -13,7 +15,7 @@ export function createLibraryWindow(): BrowserWindow {
     return libraryWindow
   }
 
-  const windowBounds = store.get('windowBounds', { width: 800, height: 500 })
+  const windowBounds = store.get('windowBounds', DEFAULT_WINDOW_BOUNDS)
 
   // Check if window was last focused (only relevant in development)
   const wasLastFocused = store.get('wasLastFocused', false)
@@ -24,11 +26,11 @@ export function createLibraryWindow(): BrowserWindow {
     height: windowBounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    minWidth: 800,
-    minHeight: 500,
+    minWidth: DEFAULT_WINDOW_BOUNDS.width,
+    minHeight: DEFAULT_WINDOW_BOUNDS.height,
     center: app.isPackaged,
-    maxWidth: 800,
-    maxHeight: 1000,
+    maxWidth: DEFAULT_WINDOW_BOUNDS.width,
+    maxHeight: DEFAULT_WINDOW_BOUNDS.height,
     // Only show window in development if it was last focused
     show: shouldShow,
     webPreferences: {

@@ -336,7 +336,7 @@ export default function Page() {
   }, [recorder])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-one">
+    <div className="flex flex-col h-full overflow-hidden bg-one/50">
       <div className="flex-1 flex flex-col items-center justify-center px-3 pb-4 gap-4 min-h-0">
         {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">

@@ -25,7 +25,7 @@ export function RecordButton({
 
   return (
     <Button
-      className="w-full px-6 h-16 sm:px-8 sm:h-20 bg-red-500 hover:bg-red-600 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transition-all hover:shadow-xl hover:scale-102"
+      className="w-full px-6 h-16 sm:px-8 sm:h-20 bg-red-500 hover:bg-red-600 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transition-all hover:shadow-xl hover:scale-101"
       onClick={onStartRecording}
     >
       <div className="flex items-center w-full justify-center gap-3">
