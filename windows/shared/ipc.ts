@@ -241,6 +241,13 @@ export async function onChangeTopLevelPage(
   return window.electronAPI.onChangeTopLevelPage(page)
 }
 
+export async function requestSwitchToLibrary(): Promise<{
+  allowed: boolean
+  wasRecording: boolean
+}> {
+  return window.electronAPI.requestSwitchToLibrary()
+}
+
 export async function getDebugMode(): Promise<boolean> {
   return window.electronAPI.getDebugMode()
 }

@@ -22,6 +22,7 @@ import { VideoConverter } from './lib/videoConverter'
 import {
   appendRecordingChunk,
   finalizeStreamingRecording,
+  isRecordingActive,
   startStreamingRecording,
 } from './recording'
 import {
@@ -169,6 +170,33 @@ export function setupIpcHandlers() {
     'finalizeStreamingRecording',
     tryCatchIpcMain(async () => {
       return await finalizeStreamingRecording()
+    }),
+  )
+
+  ipcMain.handle(
+    'requestSwitchToLibrary',
+    tryCatchIpcMain(async () => {
+      if (!isRecordingActive()) {
+        return { allowed: true, wasRecording: false }
+      }
+
+      const response = await dialog.showMessageBox(libraryWindow, {
+        type: 'warning',
+        buttons: ['Cancel', 'Quit Recording'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Recording in Progress',
+        message: 'A recording is currently in progress.',
+        detail:
+          'Switching to the library will stop and save your recording. Are you sure you want to continue?',
+      })
+
+      if (response.response === 1) {
+        libraryWindow?.webContents.send('stop-recording-requested')
+        return { allowed: true, wasRecording: true }
+      }
+
+      return { allowed: false, wasRecording: true }
     }),
   )
 

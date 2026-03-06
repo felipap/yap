@@ -277,6 +277,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   finalizeStreamingRecording: (): Promise<string> => {
     return ipcRenderer.invoke('finalizeStreamingRecording')
   },
+  requestSwitchToLibrary: (): Promise<{
+    allowed: boolean
+    wasRecording: boolean
+  }> => {
+    return ipcRenderer.invoke('requestSwitchToLibrary')
+  },
 } satisfies ExposedElectronAPI)
 
 declare global {

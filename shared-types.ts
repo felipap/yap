@@ -188,6 +188,10 @@ export type SharedIpcMethods = {
     newPath?: string
   }>
   onChangeTopLevelPage: (page: 'library' | 'record') => Promise<void>
+  requestSwitchToLibrary: () => Promise<{
+    allowed: boolean
+    wasRecording: boolean
+  }>
   openTranscriptionFile: (logId: string) => Promise<void>
   openSummaryFile: (logId: string) => Promise<void>
   shuffleThumbnail: (logId: string) => Promise<boolean>

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { useRouter } from '../Router'
 import { LibraryIcon, RecordIcon } from '../icons'
-import { openSettingsWindow } from '../ipc'
+import { openSettingsWindow, requestSwitchToLibrary } from '../ipc'
 
 interface Props {
   currentTab: 'library' | 'record'
@@ -18,8 +18,14 @@ export function TopNav({ currentTab }: Props) {
         <div className="flex items-center gap-3 pl-20 justify-between w-full">
           <TabButton
             active={currentTab === 'library'}
-            onClick={() => {
-              router.navigate({ name: 'library' })
+            onClick={async () => {
+              const result = await requestSwitchToLibrary()
+              if (!result.allowed) {
+                return
+              }
+              if (!result.wasRecording) {
+                router.navigate({ name: 'library' })
+              }
             }}
             className={twMerge(
               'border hover:text-contrast',
@@ -84,10 +90,16 @@ function useTabShortcuts() {
   const router = useRouter()
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.metaKey && e.key === 'L') {
         e.preventDefault()
-        router.navigate({ name: 'library' })
+        const result = await requestSwitchToLibrary()
+        if (!result.allowed) {
+          return
+        }
+        if (!result.wasRecording) {
+          router.navigate({ name: 'library' })
+        }
       } else if (e.metaKey && e.key === 'R') {
         e.preventDefault()
         router.navigate({ name: 'record' })

@@ -102,8 +102,6 @@ export const store = new Store<State>({
 
 console.debug('Store intialized from file:', store.path)
 
-import { decryptSecret, encryptSecret } from './safe-storage'
-export { decryptSecret, encryptSecret } from './safe-storage'
 export {
   appendLog,
   deleteLog,
@@ -116,17 +114,17 @@ export {
 } from './logs'
 
 export function getGeminiApiKey(): string {
-  return decryptSecret(store.get('geminiApiKey') || '')
+  return store.get('geminiApiKey') || ''
 }
 
 export function setGeminiApiKey(apiKey: string): void {
-  store.set('geminiApiKey', encryptSecret(apiKey))
+  store.set('geminiApiKey', apiKey)
 }
 
 export function getOpenaiApiKey(): string {
-  return decryptSecret(store.get('openaiApiKey') || '')
+  return store.get('openaiApiKey') || ''
 }
 
 export function setOpenaiApiKey(apiKey: string): void {
-  store.set('openaiApiKey', encryptSecret(apiKey))
+  store.set('openaiApiKey', apiKey)
 }
