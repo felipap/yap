@@ -49,6 +49,7 @@ import {
   getTranscriptionFilePath,
 } from './store/transcripts'
 import { triggerGenerateSummary, triggerTranscribe } from './tasks'
+import { updateCameraMenuState, updateMicrophoneMenuState } from './menu'
 import { libraryWindow, onChangeTopLevelPage, settingsWindow } from './windows'
 
 // Helper function to detect if a file is audio-only
@@ -218,6 +219,39 @@ export function setupIpcHandlers() {
     tryCatchIpcMain(async (_, key: string, value: any) => {
       store.set(key, value)
     }),
+  )
+
+  ipcMain.handle(
+    'updateCameraMenuState',
+    tryCatchIpcMain(
+      async (
+        _,
+        state: {
+          cameras?: Array<{ id: string; label: string }>
+          selectedCameraId?: string
+          automaticCameraSelection?: boolean
+          enableScreenFlash?: boolean
+        },
+      ) => {
+        updateCameraMenuState(state)
+      },
+    ),
+  )
+
+  ipcMain.handle(
+    'updateMicrophoneMenuState',
+    tryCatchIpcMain(
+      async (
+        _,
+        state: {
+          microphones?: Array<{ id: string; label: string }>
+          selectedMicrophoneId?: string
+          automaticMicrophoneSelection?: boolean
+        },
+      ) => {
+        updateMicrophoneMenuState(state)
+      },
+    ),
   )
 
   ipcMain.handle(

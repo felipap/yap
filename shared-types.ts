@@ -33,7 +33,11 @@ export interface UserProfile {
 
 export interface State {
   selectedCameraId: string
+  selectedMicrophoneId?: string
   recordingMode: 'camera' | 'screen' | 'both' | 'audio'
+  cameraAutoSelect?: boolean
+  microphoneAutoSelect?: boolean
+  enableScreenFlash?: boolean
   globalVideoMute: boolean
   globalPlaybackSpeed: number
   openaiApiKey?: string
@@ -192,6 +196,17 @@ export type SharedIpcMethods = {
     allowed: boolean
     wasRecording: boolean
   }>
+  updateCameraMenuState: (state: {
+    cameras?: Array<{ id: string; label: string }>
+    selectedCameraId?: string
+    automaticCameraSelection?: boolean
+    enableScreenFlash?: boolean
+  }) => Promise<void>
+  updateMicrophoneMenuState: (state: {
+    microphones?: Array<{ id: string; label: string }>
+    selectedMicrophoneId?: string
+    automaticMicrophoneSelection?: boolean
+  }) => Promise<void>
   openTranscriptionFile: (logId: string) => Promise<void>
   openSummaryFile: (logId: string) => Promise<void>
   shuffleThumbnail: (logId: string) => Promise<boolean>

@@ -248,6 +248,23 @@ export async function requestSwitchToLibrary(): Promise<{
   return window.electronAPI.requestSwitchToLibrary()
 }
 
+export async function updateCameraMenuState(state: {
+  cameras?: Array<{ id: string; label: string }>
+  selectedCameraId?: string
+  automaticCameraSelection?: boolean
+  enableScreenFlash?: boolean
+}): Promise<void> {
+  return window.electronAPI.updateCameraMenuState(state)
+}
+
+export async function updateMicrophoneMenuState(state: {
+  microphones?: Array<{ id: string; label: string }>
+  selectedMicrophoneId?: string
+  automaticMicrophoneSelection?: boolean
+}): Promise<void> {
+  return window.electronAPI.updateMicrophoneMenuState(state)
+}
+
 export async function getDebugMode(): Promise<boolean> {
   return window.electronAPI.getDebugMode()
 }

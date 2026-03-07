@@ -11,10 +11,26 @@ const schema: Schema<State> = {
     type: 'string',
     default: '',
   },
+  selectedMicrophoneId: {
+    type: 'string',
+    default: '',
+  },
   recordingMode: {
     type: 'string',
     enum: ['camera', 'screen', 'both', 'audio'],
     default: 'camera',
+  },
+  cameraAutoSelect: {
+    type: 'boolean',
+    default: true,
+  },
+  microphoneAutoSelect: {
+    type: 'boolean',
+    default: true,
+  },
+  enableScreenFlash: {
+    type: 'boolean',
+    default: true,
   },
   globalVideoMute: {
     type: 'boolean',

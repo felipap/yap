@@ -283,6 +283,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }> => {
     return ipcRenderer.invoke('requestSwitchToLibrary')
   },
+  updateCameraMenuState: (state: {
+    cameras?: Array<{ id: string; label: string }>
+    selectedCameraId?: string
+    automaticCameraSelection?: boolean
+    enableScreenFlash?: boolean
+  }): Promise<void> => {
+    return ipcRenderer.invoke('updateCameraMenuState', state)
+  },
+  updateMicrophoneMenuState: (state: {
+    microphones?: Array<{ id: string; label: string }>
+    selectedMicrophoneId?: string
+    automaticMicrophoneSelection?: boolean
+  }): Promise<void> => {
+    return ipcRenderer.invoke('updateMicrophoneMenuState', state)
+  },
 } satisfies ExposedElectronAPI)
 
 declare global {
