@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.3](https://github.com/felipap/yap/compare/v0.10.2...v0.10.3) (2026-03-07)
+
+
+### Features
+
+* add Camera and Microphone menus with device selection ([74548e4](https://github.com/felipap/yap/commit/74548e41095df4defc3c6286b9fe15ba5ee5668e))
+* enable Edit menu ([10fddf0](https://github.com/felipap/yap/commit/10fddf01b86e1cbb6287146b5572be0c0789cf4e))
+* support multi-word search in sidebar filter ([e1e08d3](https://github.com/felipap/yap/commit/e1e08d3680f2f8f40ae00a4876139702c4d7c3bd))
+
+
+### Bug Fixes
+
+* update about panel and center library window in production ([e0faf88](https://github.com/felipap/yap/commit/e0faf88fecc3c295e642def9d937792eda0b88fb))
+
 ### [0.10.2](https://github.com/felipap/yap/compare/v0.10.1...v0.10.2) (2026-02-20)
 
 ### [0.10.1](https://github.com/felipap/yap/compare/v0.9.40...v0.10.1) (2026-02-20)
