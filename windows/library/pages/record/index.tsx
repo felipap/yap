@@ -29,7 +29,8 @@ export default function Page() {
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState<string>('')
   const [cameraAutoSelect, setCameraAutoSelect] = useState<boolean>(true)
-  const [microphoneAutoSelect, setMicrophoneAutoSelect] = useState<boolean>(true)
+  const [microphoneAutoSelect, setMicrophoneAutoSelect] =
+    useState<boolean>(true)
   const [enableScreenFlash, setEnableScreenFlash] = useState<boolean>(true)
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
   const [screenPreviewStream, setScreenPreviewStream] =
@@ -85,15 +86,13 @@ export default function Page() {
       const savedCameraId = await getSelectedCameraId()
       const savedMicrophoneId = await getSelectedMicrophoneId()
       const savedMode = await getRecordingMode()
-      const savedCameraAutoSelect = await getStoredValue<boolean>(
-        'cameraAutoSelect',
-      )
+      const savedCameraAutoSelect =
+        await getStoredValue<boolean>('cameraAutoSelect')
       const savedMicrophoneAutoSelect = await getStoredValue<boolean>(
         'microphoneAutoSelect',
       )
-      const savedEnableScreenFlash = await getStoredValue<boolean>(
-        'enableScreenFlash',
-      )
+      const savedEnableScreenFlash =
+        await getStoredValue<boolean>('enableScreenFlash')
 
       if (savedCameraId) {
         setSelectedCameraId(savedCameraId)
@@ -428,7 +427,8 @@ export default function Page() {
       microphones: microphones.map((microphone) => ({
         id: microphone.deviceId,
         label:
-          microphone.label || `Microphone ${microphone.deviceId.slice(0, 8)}...`,
+          microphone.label ||
+          `Microphone ${microphone.deviceId.slice(0, 8)}...`,
       })),
       selectedMicrophoneId,
       automaticMicrophoneSelection: microphoneAutoSelect,
@@ -504,8 +504,8 @@ export default function Page() {
   }, [recorder])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-one/50">
-      <div className="flex-1 flex flex-col items-center justify-center px-3 pb-4 gap-4 min-h-0">
+    <div className="flex flex-col h-full overflow-hidden bg-one/40">
+      <div className="flex-1 flex flex-col items-center justify-center pb-4 gap-4 min-h-0">
         {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">
           <div className="relative w-full h-full">
@@ -535,7 +535,7 @@ export default function Page() {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col gap-4 w-full shrink-0 z-10">
+        <div className="flex flex-col gap-4 w-full shrink-0 z-10 px-4">
           {/* Recording Mode Selection */}
           <RecordingModeSelector
             recordingMode={recordingMode}
@@ -547,7 +547,8 @@ export default function Page() {
           />
 
           {/* Device Selection */}
-          {!isRecording && (
+          {/* {!isRecording && ( */}
+          {false && (
             <DeviceSelector
               cameras={cameras}
               microphones={microphones}
