@@ -1,6 +1,6 @@
 <img src="assets/original.png" width="70" alt="Yap" />
 
-**[Yap](https://yap.camera)** is a desktop app for recording and viewing your video logs. It's a fast way to capture your day-to-day thoughts and experiences.
+A desktop app for recording and viewing your video logs. Yap is a fast way to capture your day-to-day thoughts and experiences.
 
 ## Download
 
@@ -8,7 +8,8 @@ Download for macOS, Windows, and Linux from the [releases page](https://github.c
 
 ## Sharing with AI
 
-Yap lets you transcribe your videos and
+Yap lets you transcribe and summarize your videos. Trascription requires an
+OpenAI API key, and summarization requires a Gemini API key.
 
 ## Privacy
 
