@@ -53,7 +53,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: 'Yap ${{ github.ref_name }}'
+          name: 'Yap Camera ${{ github.ref_name }}'
           files: |
             dist-electron/**/*.dmg
             dist-electron/**/*.zip
@@ -61,5 +61,16 @@ jobs:
             dist-electron/latest-mac.yml
           draft: false
           generate_release_notes: true
-          # prerelease: false
-          # body_path: CHANGELOG.md
+          body: |
+            ## Download
+
+            | Platform | Download |
+            |----------|----------|
+            | **macOS** (Apple Silicon - M1/M2/M3/M4) | [Yap-${{ github.ref_name }}-arm64.dmg](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Yap-${{ github.ref_name }}-arm64.dmg) |
+            | **macOS** (Intel) | [Yap-${{ github.ref_name }}-x64.dmg](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Yap-${{ github.ref_name }}-x64.dmg) |
+            | **Windows** | [Yap-${{ github.ref_name }}.exe](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Yap-${{ github.ref_name }}.exe) |
+            | **Linux** | [Yap-${{ github.ref_name }}.AppImage](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Yap-${{ github.ref_name }}.AppImage) |
+
+            > **Not sure which Mac you have?** Click  → About This Mac. If it says "Apple M1/M2/M3/M4", download the Apple Silicon version.
+
+            ---

@@ -4,13 +4,7 @@
 
 ## Download
 
-Available for macOS, Windows, and Linux.
-
-<p align="center">
-  <a href="https://github.com/felipap/yap/releases/latest">
-    <img src="https://img.shields.io/github/v/release/felipap/yap?style=for-the-badge&label=Download%20Latest&color=blueviolet" alt="Download Latest Release">
-  </a>
-</p>
+Download for macOS, Windows, and Linux from the [releases page](https://github.com/felipap/yap/releases/latest).
 
 ## Sharing with AI
 

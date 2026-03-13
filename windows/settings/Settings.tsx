@@ -117,6 +117,25 @@ export function Settings() {
     }
   }, [recordingsFolder])
 
+  // Autosave Sentry enabled
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await window.electronAPI.setSentryEnabled(sentryEnabled)
+      } catch (error) {
+        console.error('Failed to autosave Sentry setting:', error)
+      }
+    }, 500)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [sentryEnabled])
+
   // When cmd+, is pressed, hide the settings window
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -143,6 +162,8 @@ export function Settings() {
             onRecordingsFolderChange={setRecordingsFolder}
             userContext={userContext}
             onUserContextChange={setUserContext}
+            sentryEnabled={sentryEnabled}
+            onSentryEnabledChange={setSentryEnabled}
           />
         )}
 
