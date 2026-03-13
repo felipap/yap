@@ -826,6 +826,21 @@ export function setupIpcHandlers() {
   )
 
   ipcMain.handle(
+    'getSentryEnabled',
+    tryCatchIpcMain(async () => {
+      return store.get('sentryEnabled') !== false
+    }),
+  )
+
+  ipcMain.handle(
+    'setSentryEnabled',
+    tryCatchIpcMain(async (_, enabled: boolean) => {
+      store.set('sentryEnabled', enabled)
+      return true
+    }),
+  )
+
+  ipcMain.handle(
     'openTranscriptionFile',
     tryCatchIpcMain(async (_, logId: string) => {
       const filePath = getTranscriptionFilePath(logId)

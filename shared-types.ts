@@ -61,6 +61,7 @@ export interface State {
   recordingsFolder?: string
   userContext?: string
   debugMode?: boolean
+  sentryEnabled?: boolean
 }
 
 //
@@ -212,6 +213,8 @@ export type SharedIpcMethods = {
   shuffleThumbnail: (logId: string) => Promise<boolean>
   getDebugMode: () => Promise<boolean>
   onDebugModeChanged: (callback: (enabled: boolean) => void) => () => void
+  getSentryEnabled: () => Promise<boolean>
+  setSentryEnabled: (enabled: boolean) => Promise<boolean>
 }
 
 export type ExposedElectronAPI = SharedIpcMethods & {

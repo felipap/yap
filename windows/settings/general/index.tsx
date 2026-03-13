@@ -5,6 +5,8 @@ interface Props {
   onRecordingsFolderChange: (folder: string) => void
   userContext: string
   onUserContextChange: (context: string) => void
+  sentryEnabled: boolean
+  onSentryEnabledChange: (enabled: boolean) => void
 }
 
 export function GeneralSettings({
@@ -12,6 +14,8 @@ export function GeneralSettings({
   onRecordingsFolderChange,
   userContext,
   onUserContextChange,
+  sentryEnabled,
+  onSentryEnabledChange,
 }: Props) {
   const handleSelectFolder = async () => {
     const selectedFolder = await window.electronAPI.openFolderPicker()
@@ -49,6 +53,24 @@ export function GeneralSettings({
           />
           <MacOsButton onClick={handleSelectFolder}>Browse</MacOsButton>
         </div>
+      </div>
+
+      <div>
+        <Title>Error Reporting</Title>
+        <Subtitle>
+          Help improve Yap by sending anonymous crash reports (requires restart)
+        </Subtitle>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={sentryEnabled}
+            onChange={(e) => onSentryEnabledChange(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-highlight focus:ring-highlight cursor-pointer"
+          />
+          <span className="text-sm text-contrast">
+            Send anonymous error reports
+          </span>
+        </label>
       </div>
     </div>
   )

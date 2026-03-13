@@ -262,6 +262,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  // Sentry error reporting
+  getSentryEnabled: (): Promise<boolean> => {
+    return ipcRenderer.invoke('getSentryEnabled')
+  },
+
+  setSentryEnabled: (enabled: boolean): Promise<boolean> => {
+    return ipcRenderer.invoke('setSentryEnabled', enabled)
+  },
+
   //
   //
   //

@@ -12,6 +12,7 @@ export function Settings() {
   const [openaiApiKey, setOpenaiApiKey] = useState('')
   const [recordingsFolder, setRecordingsFolder] = useState('')
   const [userContext, setUserContext] = useState('')
+  const [sentryEnabled, setSentryEnabled] = useState(true)
   const isInitialLoad = useRef(true)
 
   useEffect(() => {
@@ -28,6 +29,9 @@ export function Settings() {
 
         const context = await window.electronAPI.getUserContext()
         setUserContext(context)
+
+        const sentry = await window.electronAPI.getSentryEnabled()
+        setSentryEnabled(sentry)
       } catch (error) {
         console.error('Failed to load settings:', error)
       } finally {

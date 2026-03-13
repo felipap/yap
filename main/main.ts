@@ -5,6 +5,7 @@ import { app } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
+import { store } from './store'
 import { migrateTranscriptsFromStore } from './store/transcripts'
 import { setupMenu } from './menu'
 // import { createTray } from './tray'
@@ -15,7 +16,7 @@ import {
   libraryWindow,
 } from './windows'
 
-if (app.isPackaged) {
+if (app.isPackaged && store.get('sentryEnabled') !== false) {
   SentryInit({
     dsn: 'https://df66516e528e1e116926f9631fca55f3@o175888.ingest.us.sentry.io/4509567206555648',
     release: app.getVersion(),

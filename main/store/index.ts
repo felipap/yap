@@ -104,6 +104,10 @@ const schema: Schema<State> = {
     type: 'boolean',
     default: false,
   },
+  sentryEnabled: {
+    type: 'boolean',
+    default: true,
+  },
 }
 
 app.setName('yap-camera')
