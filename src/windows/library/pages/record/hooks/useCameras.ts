@@ -5,7 +5,7 @@ import {
   setSelectedCameraId as saveSelectedCameraId,
   setStoredValue,
   updateCameraMenuState,
-} from '../../../shared/ipc'
+} from '../../../../shared/ipc'
 
 export function useCameras() {
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])

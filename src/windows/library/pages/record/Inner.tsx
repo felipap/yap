@@ -2,19 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getRecordingMode,
   getScreenSources,
-  getSelectedCameraId,
-  getSelectedMicrophoneId,
-  getStoredValue,
   setRecordingMode as saveRecordingMode,
-  setSelectedCameraId as saveSelectedCameraId,
-  setSelectedMicrophoneId as saveSelectedMicrophoneId,
-  setStoredValue,
-  updateCameraMenuState,
-  updateMicrophoneMenuState,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
 import { RecordingMode } from '../../types'
 import { DeviceSelector } from './DeviceSelector'
+import { useCameras } from './hooks/useCameras'
+import { useMicrophones } from './hooks/useMicrophones'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
 import { RecordButton } from './RecordButton'
 import { Recorder } from './Recorder'
@@ -28,14 +22,17 @@ interface Props {
 export function RecordInner({ close }: Props) {
   const router = useRouter()
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
-  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
-  const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([])
-  const [selectedCameraId, setSelectedCameraId] = useState<string>('')
-  const [selectedMicrophoneId, setSelectedMicrophoneId] = useState<string>('')
-  const [cameraAutoSelect, setCameraAutoSelect] = useState<boolean>(true)
-  const [microphoneAutoSelect, setMicrophoneAutoSelect] =
-    useState<boolean>(true)
-  const [enableScreenFlash, setEnableScreenFlash] = useState<boolean>(true)
+  const {
+    cameras,
+    selectedCameraId,
+    setSelectedCameraId,
+    enableScreenFlash,
+  } = useCameras()
+  const {
+    microphones,
+    selectedMicrophoneId,
+    setSelectedMicrophoneId,
+  } = useMicrophones()
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
   const [screenPreviewStream, setScreenPreviewStream] =
     useState<MediaStream | null>(null)
@@ -87,95 +84,14 @@ export function RecordInner({ close }: Props) {
 
   const loadSettings = useCallback(async () => {
     try {
-      const savedCameraId = await getSelectedCameraId()
-      const savedMicrophoneId = await getSelectedMicrophoneId()
       const savedMode = await getRecordingMode()
-      const savedCameraAutoSelect =
-        await getStoredValue<boolean>('cameraAutoSelect')
-      const savedMicrophoneAutoSelect = await getStoredValue<boolean>(
-        'microphoneAutoSelect',
-      )
-      const savedEnableScreenFlash =
-        await getStoredValue<boolean>('enableScreenFlash')
-
-      if (savedCameraId) {
-        setSelectedCameraId(savedCameraId)
-      }
-      if (savedMicrophoneId) {
-        setSelectedMicrophoneId(savedMicrophoneId)
-      }
       if (savedMode) {
         setRecordingMode(savedMode)
-      }
-      if (savedCameraAutoSelect !== undefined) {
-        setCameraAutoSelect(savedCameraAutoSelect)
-      }
-      if (savedMicrophoneAutoSelect !== undefined) {
-        setMicrophoneAutoSelect(savedMicrophoneAutoSelect)
-      }
-      if (savedEnableScreenFlash !== undefined) {
-        setEnableScreenFlash(savedEnableScreenFlash)
       }
     } catch (error) {
       console.error('Failed to load settings:', error)
     }
   }, [])
-
-  const loadCameras = useCallback(async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const videoDevices = devices.filter(
-        (device) => device.kind === 'videoinput',
-      )
-      setCameras(videoDevices)
-      setSelectedCameraId((previousCameraId) => {
-        if (videoDevices.length === 0) {
-          return ''
-        }
-
-        const hasPreviousCamera = videoDevices.some(
-          (device) => device.deviceId === previousCameraId,
-        )
-        if (!previousCameraId || !hasPreviousCamera || cameraAutoSelect) {
-          return videoDevices[0].deviceId
-        }
-
-        return previousCameraId
-      })
-    } catch (error) {
-      console.error('Failed to load cameras:', error)
-    }
-  }, [cameraAutoSelect])
-
-  const loadMicrophones = useCallback(async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const audioDevices = devices.filter(
-        (device) => device.kind === 'audioinput',
-      )
-      setMicrophones(audioDevices)
-      setSelectedMicrophoneId((previousMicrophoneId) => {
-        if (audioDevices.length === 0) {
-          return ''
-        }
-
-        const hasPreviousMicrophone = audioDevices.some(
-          (device) => device.deviceId === previousMicrophoneId,
-        )
-        if (
-          !previousMicrophoneId ||
-          !hasPreviousMicrophone ||
-          microphoneAutoSelect
-        ) {
-          return audioDevices[0].deviceId
-        }
-
-        return previousMicrophoneId
-      })
-    } catch (error) {
-      console.error('Failed to load microphones:', error)
-    }
-  }, [microphoneAutoSelect])
 
   const startCameraPreview = async (cameraId: string) => {
     try {
@@ -263,21 +179,9 @@ export function RecordInner({ close }: Props) {
   }
 
   useEffect(() => {
-    loadCameras()
-    loadMicrophones()
     loadSettings()
 
-    const handleDeviceChange = () => {
-      loadCameras()
-      loadMicrophones()
-    }
-    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
-
     return () => {
-      navigator.mediaDevices.removeEventListener(
-        'devicechange',
-        handleDeviceChange,
-      )
       stopCameraPreview()
       stopScreenPreview()
       // Cleanup if component unmounts while recording
@@ -286,7 +190,7 @@ export function RecordInner({ close }: Props) {
         recorderRef.current.stop().catch(console.error)
       }
     }
-  }, [loadCameras, loadMicrophones, loadSettings])
+  }, [loadSettings])
 
   useEffect(() => {
     if (!isRecording) {
@@ -322,122 +226,6 @@ export function RecordInner({ close }: Props) {
       }
     }
   }, [isRecording, recorder, recordingMode])
-
-  // Save settings when they change
-  useEffect(() => {
-    if (selectedCameraId) {
-      saveSelectedCameraId(selectedCameraId)
-    }
-  }, [selectedCameraId])
-
-  useEffect(() => {
-    if (selectedMicrophoneId) {
-      saveSelectedMicrophoneId(selectedMicrophoneId)
-    }
-  }, [selectedMicrophoneId])
-
-  useEffect(() => {
-    setStoredValue('cameraAutoSelect', cameraAutoSelect).catch(console.error)
-  }, [cameraAutoSelect])
-
-  useEffect(() => {
-    setStoredValue('microphoneAutoSelect', microphoneAutoSelect).catch(
-      console.error,
-    )
-  }, [microphoneAutoSelect])
-
-  useEffect(() => {
-    setStoredValue('enableScreenFlash', enableScreenFlash).catch(console.error)
-  }, [enableScreenFlash])
-
-  useEffect(() => {
-    const removeCameraSelectionListener = window.electronAPI.onIpcEvent?.(
-      'camera-menu-selected',
-      (cameraId: string) => {
-        setSelectedCameraId(cameraId)
-      },
-    )
-    const removeAutoSelectionListener = window.electronAPI.onIpcEvent?.(
-      'camera-menu-auto-selection-changed',
-      (enabled: boolean) => {
-        setCameraAutoSelect(enabled)
-      },
-    )
-    const removeMicrophoneSelectionListener = window.electronAPI.onIpcEvent?.(
-      'microphone-menu-selected',
-      (microphoneId: string) => {
-        setSelectedMicrophoneId(microphoneId)
-      },
-    )
-    const removeMicrophoneAutoSelectionListener =
-      window.electronAPI.onIpcEvent?.(
-        'microphone-menu-auto-selection-changed',
-        (enabled: boolean) => {
-          setMicrophoneAutoSelect(enabled)
-        },
-      )
-    const removeScreenFlashListener = window.electronAPI.onIpcEvent?.(
-      'camera-menu-screen-flash-changed',
-      (payload: { enabled: boolean }) => {
-        setEnableScreenFlash(payload.enabled)
-      },
-    )
-
-    return () => {
-      if (removeCameraSelectionListener) {
-        removeCameraSelectionListener()
-      }
-      if (removeAutoSelectionListener) {
-        removeAutoSelectionListener()
-      }
-      if (removeMicrophoneSelectionListener) {
-        removeMicrophoneSelectionListener()
-      }
-      if (removeMicrophoneAutoSelectionListener) {
-        removeMicrophoneAutoSelectionListener()
-      }
-      if (removeScreenFlashListener) {
-        removeScreenFlashListener()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (cameraAutoSelect && cameras.length > 0) {
-      setSelectedCameraId(cameras[0].deviceId)
-    }
-  }, [cameraAutoSelect, cameras])
-
-  useEffect(() => {
-    if (microphoneAutoSelect && microphones.length > 0) {
-      setSelectedMicrophoneId(microphones[0].deviceId)
-    }
-  }, [microphoneAutoSelect, microphones])
-
-  useEffect(() => {
-    updateCameraMenuState({
-      cameras: cameras.map((camera) => ({
-        id: camera.deviceId,
-        label: camera.label || `Camera ${camera.deviceId.slice(0, 8)}...`,
-      })),
-      selectedCameraId,
-      automaticCameraSelection: cameraAutoSelect,
-      enableScreenFlash,
-    }).catch(console.error)
-  }, [cameras, selectedCameraId, cameraAutoSelect, enableScreenFlash])
-
-  useEffect(() => {
-    updateMicrophoneMenuState({
-      microphones: microphones.map((microphone) => ({
-        id: microphone.deviceId,
-        label:
-          microphone.label ||
-          `Microphone ${microphone.deviceId.slice(0, 8)}...`,
-      })),
-      selectedMicrophoneId,
-      automaticMicrophoneSelection: microphoneAutoSelect,
-    }).catch(console.error)
-  }, [microphones, selectedMicrophoneId, microphoneAutoSelect])
 
   const handleStartRecording = async () => {
     try {
