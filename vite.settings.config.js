@@ -8,7 +8,7 @@ export default defineConfig({
     // }),
     react(),
   ],
-  root: 'windows/settings',
+  root: 'src/windows/settings',
   base: './',
   server: {
     port: 4001,
@@ -27,7 +27,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: '../../dist/windows/settings',
+    outDir: '../../../dist/windows/settings',
     emptyOutDir: true,
     rollupOptions: {
       external: [],

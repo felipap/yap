@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  root: 'windows/camera',
+  root: 'src/windows/camera',
   base: './',
   server: {
     port: 4002,
@@ -22,7 +22,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: '../../dist/windows/camera',
+    outDir: '../../../dist/windows/camera',
     emptyOutDir: true,
     rollupOptions: {
       external: [],

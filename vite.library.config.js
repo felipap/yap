@@ -8,7 +8,7 @@ export default defineConfig({
     // }),
     react(),
   ],
-  root: 'windows/library',
+  root: 'src/windows/library',
   base: './',
   server: {
     port: 4000,
@@ -27,7 +27,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: '../../dist/windows/library',
+    outDir: '../../../dist/windows/library',
     emptyOutDir: true,
     rollupOptions: {
       external: [],

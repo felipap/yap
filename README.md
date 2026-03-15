@@ -1,6 +1,7 @@
 <img src="assets/original.png" width="70" alt="Yap" />
 
-A desktop app for recording and viewing your video logs. Yap is a fast way to capture your day-to-day thoughts and experiences.
+Yap is a desktop app for recording and viewing your video logs. It's the fastest
+way to capture your day-to-day and revisit it later.
 
 ## Download
 
