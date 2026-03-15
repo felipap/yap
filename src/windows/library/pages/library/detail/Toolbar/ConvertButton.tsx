@@ -1,0 +1,110 @@
+import { useEffect, useState } from 'react'
+import { MdRefresh, MdVideocam } from 'react-icons/md'
+import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
+import { Button } from '../../../../../shared/ui/Button'
+
+interface Props {
+  logId: string
+  disabled?: boolean
+}
+
+export function ConvertButton({ logId, disabled }: Props) {
+  const [isConverting, setIsConverting] = useState(false)
+  const [progress, setProgress] = useState(0)
+
+  // Check and restore conversion state on mount
+  useEffect(() => {
+    const checkConversionState = async () => {
+      try {
+        const state = await getConversionState(logId)
+        if (state.isActive) {
+          setIsConverting(true)
+          setProgress(state.progress ?? 0)
+        }
+      } catch (error) {
+        console.error('Failed to get conversion state:', error)
+      }
+    }
+
+    checkConversionState()
+  }, [logId])
+
+  useEffect(() => {
+    const handleProgress = (updatedLogId: string, updatedProgress: number) => {
+      if (updatedLogId === logId) {
+        setProgress(updatedProgress)
+        // Reset state when conversion completes
+        if (updatedProgress >= 100) {
+          setTimeout(() => {
+            setIsConverting(false)
+            setProgress(0)
+          }, 500) // Small delay to show 100% before resetting
+        }
+      }
+    }
+
+    const unsubscribe =
+      window.electronAPI.onConversionProgress(handleProgress)
+
+    return () => {
+      unsubscribe()
+    }
+  }, [logId])
+
+  const handleConvertToMp4 = async () => {
+    if (!confirm(`Convert file to MP4? This may take a few minutes.`)) {
+      return
+    }
+
+    setIsConverting(true)
+    setProgress(0)
+
+    try {
+      const result = await convertToMp4(logId)
+      if ('error' in result) {
+        alert(result.error)
+        return
+      }
+      alert(result.message)
+    } catch (error) {
+      console.error('Failed to convert video:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to convert video'
+      alert(errorMessage)
+    } finally {
+      setIsConverting(false)
+      setProgress(0)
+    }
+  }
+
+  const getButtonText = () => {
+    if (isConverting) {
+      if (progress > 0) {
+        return (
+          <>
+            <MdRefresh size={16} className="animate-spin" />
+            <span>Converting {progress}%</span>
+          </>
+        )
+      }
+      return (
+        <>
+          <MdRefresh size={16} className="animate-spin" />
+          <span>Converting</span>
+        </>
+      )
+    }
+    return (
+      <>
+        <MdVideocam size={16} />
+        <span>Convert to MP4</span>
+      </>
+    )
+  }
+
+  return (
+    <Button onClick={handleConvertToMp4} disabled={disabled || isConverting}>
+      {getButtonText()}
+    </Button>
+  )
+}
