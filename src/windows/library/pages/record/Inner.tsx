@@ -110,7 +110,7 @@ export function RecordInner({ close }: Props) {
         )}
         {isSaving && (
           <div className="absolute right-6 text-[15px] text-contrast/60 animate-pulse">
-            Saving...
+            Saving
           </div>
         )}
         {!isRecording && !isSaving && (
