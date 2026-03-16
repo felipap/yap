@@ -60,7 +60,7 @@ export function Tooltip({
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="px-2 py-1 bg-contrast text-inverted text-xs rounded whitespace-nowrap z-50"
+            className="px-2 py-1 bg-black text-white text-xs rounded whitespace-nowrap z-50"
           >
             {content}
           </div>
