@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/felipap/yap/compare/v0.10.6...v1.1.0) (2026-03-16)
+
+
+### Features
+
+* misc settings ([b6e5d00](https://github.com/felipap/yap/commit/b6e5d00df0ae94563b38d772d06ba1f131dbf259))
+
+
+### Bug Fixes
+
+* improve audio/video sync in MP4 recordings ([586fbc5](https://github.com/felipap/yap/commit/586fbc558b2fe8ceaaca94dbd5631a483fd4a054))
+
 ### [0.10.6](https://github.com/felipap/yap/compare/v0.10.3...v0.10.6) (2026-03-16)
 
 

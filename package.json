@@ -1,6 +1,6 @@
 {
   "name": "yap-camera",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A seamless logging app with screen recording capabilities",
   "main": "dist/main/index.js",
   "scripts": {

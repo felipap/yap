@@ -3,6 +3,8 @@
 Yap is a desktop app for recording and viewing your video logs. It's the fastest
 way to capture your day-to-day and revisit it later.
 
+<img src="assets/readme.jpg" width="100%" alt="Yap" />
+
 ## Download
 
 Download for macOS, Windows, and Linux from the [releases page](https://github.com/felipap/yap/releases/latest).
