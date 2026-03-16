@@ -8,8 +8,6 @@ import { useRouter } from '~/shared/Router'
 import { VolumeMeter } from '~/shared/ui/VolumeMeter'
 import { RecordingMode } from '../../types'
 import { PillButton, RecordButton } from './buttons'
-import { DeviceSelector } from './DeviceSelector'
-import { useCameras } from './hooks/useCameras'
 import { useMicrophones } from './hooks/useMicrophones'
 import { usePreviewStreams } from './hooks/usePreviewStreams'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
@@ -23,10 +21,7 @@ interface Props {
 export function RecordInner({ close }: Props) {
   const router = useRouter()
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
-  const { cameras, selectedCameraId, setSelectedCameraId, enableScreenFlash } =
-    useCameras()
-  const { microphones, selectedMicrophoneId, setSelectedMicrophoneId } =
-    useMicrophones()
+  const { selectedMicrophoneId } = useMicrophones()
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -37,7 +32,7 @@ export function RecordInner({ close }: Props) {
 
   usePreviewStreams({
     recordingMode,
-    selectedCameraId,
+    selectedCameraId: null,
     isRecording,
     previewRef,
   })
@@ -119,11 +114,7 @@ export function RecordInner({ close }: Props) {
 
   const handleStartRecording = async () => {
     try {
-      const newRecorder = new Recorder(
-        recordingMode,
-        selectedCameraId,
-        selectedMicrophoneId,
-      )
+      const newRecorder = new Recorder(recordingMode, '', selectedMicrophoneId)
       setRecorder(newRecorder)
       await newRecorder.start()
       setIsRecording(true)
@@ -217,20 +208,6 @@ export function RecordInner({ close }: Props) {
               }}
               isRecording={isRecording}
             />
-
-            {/* Device Selection */}
-            {/* {!isRecording && ( */}
-            {false && (
-              <DeviceSelector
-                cameras={cameras}
-                microphones={microphones}
-                selectedCameraId={selectedCameraId}
-                selectedMicrophoneId={selectedMicrophoneId}
-                onCameraChange={setSelectedCameraId}
-                onMicrophoneChange={setSelectedMicrophoneId}
-                recordingMode={recordingMode}
-              />
-            )}
           </div>
         )}
       </div>
@@ -256,7 +233,7 @@ export function RecordInner({ close }: Props) {
           onTogglePause={handleTogglePause}
         />
         {isRecording && !isPaused && (
-          <div className="absolute right-6 text-[19px] font-medium text-contrast tabular-nums">
+          <div className="absolute right-8 text-[19px] font- text-contrast tabular-nums">
             {formatTime(recordingTime)}
           </div>
         )}
