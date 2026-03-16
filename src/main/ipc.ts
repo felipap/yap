@@ -108,6 +108,7 @@ export function setupIpcHandlers() {
           thumbnailPath: `log-thumbnail://${log.id}.jpg${thumbQuery}`,
           duration: log.duration,
           isAudioOnly: log.isAudioOnly,
+          isFavorited: log.isFavorited,
         }
       })
 
@@ -937,6 +938,7 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
     summary: summary || undefined,
     transcription: transcriptionData?.result || undefined,
     isAudioOnly: log.isAudioOnly,
+    isFavorited: log.isFavorited,
     fileExists: fileExistsOnDisk,
     isInDefaultFolder,
   }

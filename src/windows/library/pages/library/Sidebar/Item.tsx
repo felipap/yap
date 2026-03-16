@@ -1,5 +1,5 @@
 import { memo, useCallback, useState } from 'react'
-import { MdMic, MdMovie } from 'react-icons/md'
+import { MdFavorite, MdMic, MdMovie } from 'react-icons/md'
 import { twMerge } from 'tailwind-merge'
 import { formatDate, formatDateOrRelative } from './formatters'
 import { SidebarItem } from './useIndexedLogData'
@@ -105,6 +105,13 @@ function ItemImage({ data }: { data: SidebarItem }) {
         <div className="absolute bottom-0.5 right-0.5 bg-black/80 bg-opacity-80 text-white text-[11px] px-1 py-0.5 rounded">
           {formatDuration(data.duration)}
         </div>
+      )}
+
+      {data.isFavorited && (
+        <MdFavorite
+          size={14}
+          className="absolute top-0.5 right-0.5 text-red-500 drop-shadow-sm"
+        />
       )}
     </>
   )

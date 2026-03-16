@@ -81,6 +81,7 @@ const schema: Schema<State> = {
           // Cached video duration in seconds. Optional because it depends on a
           // heavy operation on the file, and we want the option to not do it.
           duration: { type: 'number' },
+          isFavorited: { type: 'boolean' },
         },
         required: ['id', 'name', 'path', 'timestamp'],
       },

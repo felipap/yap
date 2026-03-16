@@ -21,6 +21,7 @@ export interface Log {
   duration?: number // Cached video duration in seconds
   isAudioOnly?: boolean
   thumbnailUpdatedAt?: string // ISO 8601 - bumped on shuffle to bust browser cache
+  isFavorited?: boolean
 }
 
 export interface UserProfile {
@@ -102,6 +103,7 @@ export interface SidebarLog {
   thumbnailPath?: string // Computed as log-thumbnail://{id}.jpg
   duration?: number
   isAudioOnly?: boolean
+  isFavorited?: boolean
 }
 
 /**

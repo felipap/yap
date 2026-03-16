@@ -162,6 +162,13 @@ export async function setLogTitle(
   return window.electronAPI.updateLog(logId, { title })
 }
 
+export async function setLogFavorited(
+  logId: string,
+  isFavorited: boolean,
+): Promise<boolean> {
+  return window.electronAPI.updateLog(logId, { isFavorited })
+}
+
 // General log events
 export function onLogUpdated(callback: (logId: string) => void): () => void {
   return window.electronAPI.onLogUpdated(callback)
