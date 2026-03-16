@@ -1,6 +1,8 @@
-import { appendFile, mkdir, writeFile } from 'fs/promises'
+import { spawn } from 'child_process'
+import { appendFile, mkdir, rename, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { Log } from '../../shared-types'
+import { findFFmpegPath, getFFmpegEnv } from '../lib/ffmpeg'
 import { moveToTrash } from '../lib/filesystem'
 import { debug } from '../lib/logger'
 import { getVideoDuration } from '../lib/transcription'
@@ -89,14 +91,92 @@ export async function appendRecordingChunk(chunk: ArrayBuffer): Promise<void> {
   await appendFile(currentStreamingRecording.filepath, buffer)
 }
 
-export async function finalizeStreamingRecording(): Promise<string> {
+/**
+ * Remux a video file using ffmpeg to fix audio/video sync issues.
+ * This is necessary because MediaRecorder's timeslice mode can produce
+ * files with sync problems when chunks are concatenated.
+ */
+async function remuxVideoFile(inputPath: string): Promise<string> {
+  const ffmpegPath = await findFFmpegPath()
+  if (!ffmpegPath) {
+    debug('ffmpeg not available, skipping remux')
+    return inputPath
+  }
 
+  const tempPath = inputPath.replace(/\.(mp4|webm)$/, '.temp.$1')
+
+  return new Promise((resolve) => {
+    const ffmpeg = spawn(
+      ffmpegPath,
+      [
+        '-i',
+        inputPath,
+        '-c',
+        'copy', // Copy streams without re-encoding (fast)
+        '-movflags',
+        '+faststart', // Optimize for streaming/seeking
+        '-y', // Overwrite output
+        tempPath,
+      ],
+      { env: getFFmpegEnv() },
+    )
+
+    let errorOutput = ''
+
+    ffmpeg.stderr.on('data', (data) => {
+      errorOutput += data.toString()
+    })
+
+    ffmpeg.on('close', async (code) => {
+      if (code === 0) {
+        // Replace original with remuxed version
+        try {
+          await unlink(inputPath)
+          await rename(tempPath, inputPath)
+          debug('Successfully remuxed video file for sync fix')
+          resolve(inputPath)
+        } catch (error) {
+          debug('Error replacing original with remuxed file:', error)
+          // Try to clean up temp file
+          try {
+            await unlink(tempPath)
+          } catch {
+            // Ignore cleanup errors
+          }
+          resolve(inputPath)
+        }
+      } else {
+        debug('ffmpeg remux failed:', errorOutput)
+        // Try to clean up temp file
+        try {
+          await unlink(tempPath)
+        } catch {
+          // Ignore cleanup errors
+        }
+        resolve(inputPath)
+      }
+    })
+
+    ffmpeg.on('error', (error) => {
+      debug('Failed to start ffmpeg for remux:', error)
+      resolve(inputPath)
+    })
+  })
+}
+
+export async function finalizeStreamingRecording(): Promise<string> {
   if (!currentStreamingRecording) {
     throw new Error('No streaming recording in progress')
   }
 
-  const filepath = currentStreamingRecording.filepath
+  let filepath = currentStreamingRecording.filepath
   const filename = currentStreamingRecording.filename
+  const isAudioOnly = currentStreamingRecording.config.type === 'audio'
+
+  // Remux video files to fix audio/video sync issues caused by MediaRecorder timeslice mode
+  if (!isAudioOnly) {
+    filepath = await remuxVideoFile(filepath)
+  }
 
   // Check video duration and don't save if less than 5 seconds.
   let duration = null
@@ -121,7 +201,7 @@ export async function finalizeStreamingRecording(): Promise<string> {
     name: filename,
     path: filepath,
     timestamp: new Date().toISOString(),
-    isAudioOnly: currentStreamingRecording.config.type === 'audio',
+    isAudioOnly,
   })
 
   // Notify library window about the new log

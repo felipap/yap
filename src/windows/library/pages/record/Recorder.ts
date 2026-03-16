@@ -58,16 +58,21 @@ export class Recorder {
         }
       } else {
         options.videoBitsPerSecond = 5000000
+        options.audioBitsPerSecond = 128000
 
         const mp4MimeType = 'video/mp4;codecs=avc1.42E01E,opus'
         if (MediaRecorder.isTypeSupported(mp4MimeType)) {
           options.mimeType = mp4MimeType
         } else if (
-          MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+          MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
         ) {
-          options.mimeType = 'video/webm;codecs=vp9'
+          options.mimeType = 'video/webm;codecs=vp9,opus'
+        } else if (
+          MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+        ) {
+          options.mimeType = 'video/webm;codecs=vp8,opus'
         } else {
-          options.mimeType = 'video/webm;codecs=vp8'
+          options.mimeType = 'video/webm'
         }
       }
 
@@ -100,8 +105,9 @@ export class Recorder {
         }
       }
 
-      // Start recording - collect data every 100ms for smoother recording
-      this.mediaRecorder.start(100)
+      // Start recording - collect data every 1000ms
+      // Larger intervals reduce audio/video sync issues while still providing crash protection
+      this.mediaRecorder.start(1000)
     } catch (error) {
       console.error('Error starting screen recording:', error)
       throw error

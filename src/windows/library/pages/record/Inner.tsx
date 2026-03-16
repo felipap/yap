@@ -29,14 +29,21 @@ export function RecordInner({ close }: Props) {
     (recordingMode === 'camera' && hasCamera) ||
     (recordingMode === 'both' && hasCamera)
 
-  const { isRecording, isPaused, recordingTime, start, stop, togglePause } =
-    useRecording({
-      recordingMode,
-      cameraId: selectedCameraId,
-      microphoneId: selectedMicrophoneId,
-      previewRef,
-      onRecordingComplete: () => router.navigate({ name: 'library' }),
-    })
+  const {
+    isRecording,
+    isPaused,
+    isSaving,
+    recordingTime,
+    start,
+    stop,
+    togglePause,
+  } = useRecording({
+    recordingMode,
+    cameraId: selectedCameraId,
+    microphoneId: selectedMicrophoneId,
+    previewRef,
+    onRecordingComplete: () => router.navigate({ name: 'library' }),
+  })
 
   usePreviewStreams({
     recordingMode,
@@ -101,7 +108,12 @@ export function RecordInner({ close }: Props) {
             <PillButton onClick={stop}>Done</PillButton>
           </div>
         )}
-        {!isRecording && (
+        {isSaving && (
+          <div className="absolute right-6 text-[15px] text-contrast/60 animate-pulse">
+            Saving...
+          </div>
+        )}
+        {!isRecording && !isSaving && (
           <div className="absolute right-6">
             <PillButton onClick={close}>Library</PillButton>
           </div>

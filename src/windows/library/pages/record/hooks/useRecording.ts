@@ -3,7 +3,7 @@ import { RecordingMode } from '../../../types'
 import { Recorder } from '../Recorder'
 import { PreviewScreenRef } from '../PreviewScreen'
 
-type RecordingState = 'idle' | 'recording' | 'paused'
+type RecordingState = 'idle' | 'recording' | 'paused' | 'saving'
 
 interface Props {
   recordingMode: RecordingMode
@@ -24,8 +24,9 @@ export function useRecording({
   const [state, setState] = useState<RecordingState>('idle')
   const [recordingTime, setRecordingTime] = useState(0)
 
-  const isRecording = state !== 'idle'
+  const isRecording = state === 'recording' || state === 'paused'
   const isPaused = state === 'paused'
+  const isSaving = state === 'saving'
 
   const handleStopRecordingRef = useRef<(() => Promise<void>) | null>(null)
   const recorderRef = useRef<Recorder | null>(null)
@@ -151,6 +152,8 @@ export function useRecording({
       return
     }
 
+    setState('saving')
+
     try {
       await recorder.stop()
       setState('idle')
@@ -159,6 +162,8 @@ export function useRecording({
       onRecordingComplete()
     } catch (error) {
       console.error('Failed to stop recording:', error)
+      setState('idle')
+      setRecorder(null)
       alert('Failed to stop recording.')
     }
   }, [recorder, onRecordingComplete])
@@ -189,6 +194,7 @@ export function useRecording({
   return {
     isRecording,
     isPaused,
+    isSaving,
     recordingTime,
     start,
     stop,
