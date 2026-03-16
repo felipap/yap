@@ -125,6 +125,24 @@ export function useTranscriptionState({ logId }: Args): Return {
     }
   }, [logId])
 
+  // Listen for transcription errors
+  useEffect(() => {
+    const handleError = (errorLogId: string, error: string) => {
+      if (errorLogId === logId) {
+        setIsTranscribing(false)
+        setProgress(0)
+        setProgressLabel('')
+        setTranscriptionError(error)
+      }
+    }
+
+    const unsubscribe = window.electronAPI.onTranscriptionError(handleError)
+
+    return () => {
+      unsubscribe()
+    }
+  }, [logId])
+
   // Transcribe function
   const transcribe = async () => {
     setIsTranscribing(true)

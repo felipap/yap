@@ -43,11 +43,19 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
       } catch (error) {
         ephemeral.removeTranscription(logId)
 
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error'
         const errorState = {
           status: 'error' as const,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: errorMessage,
         }
         await setTranscriptionData(logId, errorState)
+
+        libraryWindow?.webContents.send(
+          'transcription-error',
+          logId,
+          errorMessage,
+        )
 
         throw error
       }

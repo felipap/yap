@@ -163,6 +163,9 @@ export type SharedIpcMethods = {
   onTranscriptionProgressUpdated: (
     callback: (logId: string, progress: number) => void,
   ) => () => void
+  onTranscriptionError: (
+    callback: (logId: string, error: string) => void,
+  ) => () => void
   onStateChange: (callback: (state: any) => void) => () => void
   onLogUpdated: (callback: (logId: string) => void) => () => void
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>

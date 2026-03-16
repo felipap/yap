@@ -146,6 +146,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  onTranscriptionError: (callback: (logId: string, error: string) => void) => {
+    const listener = (_event: any, logId: string, error: string) =>
+      callback(logId, error)
+    ipcRenderer.on('transcription-error', listener)
+    return () => {
+      ipcRenderer.removeListener('transcription-error', listener)
+    }
+  },
+
   // Settings functions
   openSettingsWindow: (): Promise<{ success: boolean; windowId: number }> => {
     return ipcRenderer.invoke('openSettingsWindow')
