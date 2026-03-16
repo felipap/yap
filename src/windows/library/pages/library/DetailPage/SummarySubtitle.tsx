@@ -50,11 +50,7 @@ export function SummarySubtitle({ log }: Props) {
 
   if (!summary) {
     if (!log.transcription) {
-      return (
-        <div className="text-[13px] text-contrast opacity-40">
-          —
-        </div>
-      )
+      return <div className="text-[13px] text-contrast opacity-40 ml-1">—</div>
     }
 
     if (hasEmptyTranscription) {

@@ -36,7 +36,7 @@ export default function Page() {
         className={twMerge(
           'flex flex-1 h-full w-screen',
           'bg-one',
-          'overflow-hidden gap-2 pl-2 pr-1.5 pb-2',
+          'overflow-hidden gap-2 pl-2 pb-2',
         )}
       >
         <div className="flex flex-col h-full overflow-hidden">

@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useMemo, useRef, useState } from 'react'
-import { useRouter } from '../../../../shared/Router'
+import { useRouter } from '~/shared/Router'
 import { SidebarLog } from '../../../types'
 import { FilterBox } from './FilterBox'
 import { Item } from './Item'

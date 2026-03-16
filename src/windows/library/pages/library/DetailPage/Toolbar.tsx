@@ -150,7 +150,7 @@ export function Toolbar({
   }
 
   return (
-    <div className="no-drag-region shadow-lg shadow-black/2 flex items-center bg-two divide-x rounded-full px-1">
+    <div className="no-drag-region flex items-center gap-0.5 shadow-black/2 shadow-lg bg-two border divide-x rounded-full px-1">
       <TooltipButton
         onClick={handleToggleFavorite}
         tooltip={isFavorited ? 'Unfavorite' : 'Favorite'}
@@ -226,7 +226,7 @@ function TooltipButton({
       <button
         onClick={onClick}
         disabled={disabled}
-        className="flex items-center justify-center w-8 h-8 rounded-full text-contrast/50 hover:text-contrast transition-colors disabled:opacity-50"
+        className="flex items-center justify-center w-7 h-7 rounded text-contrast/40 hover:text-contrast/70 transition-colors disabled:opacity-50"
       >
         {children}
       </button>

@@ -83,23 +83,11 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
         return
       }
 
-      // Scroll within the container only, not the entire page
-      const container = containerRef.current
-      const containerRect = container.getBoundingClientRect()
-      const elementRect = segmentElement.getBoundingClientRect()
-
-      // Calculate the position relative to the container
-      const elementTop =
-        elementRect.top - containerRect.top + container.scrollTop
-      const elementHeight = segmentElement.offsetHeight
-      const containerHeight = container.clientHeight
-
-      // Center the element in the container
-      const scrollPosition =
-        elementTop - containerHeight / 2 + elementHeight / 2
-
-      // Fast scrolling - set scrollTop directly for immediate scrolling
-      container.scrollTop = scrollPosition
+      // Scroll the segment into view smoothly
+      segmentElement.scrollIntoView({
+        behavior: 'auto',
+        block: 'center',
+      })
     }, [playerRef, transcription.segments])
 
     useImperativeHandle(ref, () => ({
@@ -118,36 +106,26 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
     }, [syncToVideo])
 
     return (
-      <div className="flex flex-col gap-3 p-1 pb-0">
-        <div
-          className="h-[300px] overflow-y-auto border-t dark:border-white/10"
-          ref={containerRef}
-        >
-          <div className="h-[5px]"></div>
-          {transcription.segments?.map(
-            (
-              segment: TranscriptionResult['segments'][number],
-              index: number,
-            ) => (
-              <div
-                key={index}
-                className={twMerge(
-                  'p-2 rounded cursor-pointer mb-1 transition-colors leading-[1.1]',
-                  activeSegmentIndex === index
-                    ? 'bg-black/5 dark:bg-white/5'
-                    : 'hover:bg-black/5 dark:hover:bg-white/5',
-                )}
-                onClick={() => handleSegmentClick(segment.start)}
-              >
-                <div className="text-xs text-secondary mb-1">
-                  {formatTime(segment.start)} - {formatTime(segment.end)}
-                </div>
-                <div className="text-sm text-contrast">{segment.text}</div>
+      <div ref={containerRef} className="flex flex-col">
+        {transcription.segments?.map(
+          (segment: TranscriptionResult['segments'][number], index: number) => (
+            <div
+              key={index}
+              className={twMerge(
+                'p-2 -mx-1 rounded cursor-pointer transition leading-[1.1]',
+                activeSegmentIndex === index
+                  ? 'bg-black/5 dark:bg-white/5'
+                  : 'hover:opacity-100 opacity-60 dark:hover:bg-white/5',
+              )}
+              onClick={() => handleSegmentClick(segment.start)}
+            >
+              <div className="text-xs text-secondary mb-1">
+                {formatTime(segment.start)} - {formatTime(segment.end)}
               </div>
-            ),
-          )}
-          <div className="h-[10px]"></div>
-        </div>
+              <div className="text-sm text-contrast">{segment.text}</div>
+            </div>
+          ),
+        )}
       </div>
     )
   },

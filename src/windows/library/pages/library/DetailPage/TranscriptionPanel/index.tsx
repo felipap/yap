@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-import { twMerge } from 'tailwind-merge'
-import { CopyIcon, RefreshIcon, VisibilityIcon } from '~/shared/icons'
+import { CopyIcon, RefreshIcon } from '~/shared/icons'
 import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../../types'
 import { PlayerRef } from '../Player'
@@ -29,7 +28,6 @@ export const TranscriptionPanel = withBoundary(function ({
   } = useTranscriptionState({ logId })
 
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
-  const [isTeleprompterVisible, setIsTeleprompterVisible] = useState(false)
   const teleprompterRef = useRef<{ syncToVideo: () => void }>(null)
 
   const handleCopyTranscript = async () => {
@@ -58,81 +56,52 @@ export const TranscriptionPanel = withBoundary(function ({
 
   if (!transcription) {
     return (
-      <div className="dark:border-white/5 p-3 justify-between items-center text-contrast border bg-two rounded-md flex gap-0">
-        <div className="text-md mr-1 font-smedium track-10 text-contrast">
-          Transcript
-        </div>
-        <div className="flex items-center gap-2">
-          <TranscribeButton
-            className="bg-one"
-            logId={logId}
-            useExternal
-            isTranscribing={isTranscribing}
-            progress={progress}
-            progressLabel={progressLabel}
-            hasTranscription={!!transcription}
-            onClick={transcribe}
-          />
-        </div>
+      <div className="flex justify-between items-center">
+        <div className="text-md font-medium text-contrast">Transcript</div>
+        <TranscribeButton
+          logId={logId}
+          useExternal
+          isTranscribing={isTranscribing}
+          progress={progress}
+          progressLabel={progressLabel}
+          hasTranscription={!!transcription}
+          onClick={transcribe}
+        />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-contrast px-1 bg-one rounded-md flex flex-col gap-0">
-        <header
-          className={twMerge(
-            'text-sm flex justify-start gap-2 h-[34px] items-center flex-row',
-            isTeleprompterVisible ? 'pt-1' : 'h-[40px]',
-          )}
-        >
-          <div className="text-lg mr-1 font-medium track-10 text-contrast">
-            Transcript
-          </div>
-          {!isTranscribing && isTeleprompterVisible && (
+    <div className="flex flex-col gap-3">
+      <header className="flex justify-between items-center">
+        <div className="text-md font-medium text-contrast">Transcript</div>
+        <div className="flex items-center gap-3 -mt-1 mr-1">
+          {!isTranscribing && (
             <button
               onClick={transcribe}
-              className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
+              className="text-xs text-contrast/40 hover:text-contrast/70 transition-colors flex items-center gap-1"
               title="Regenerate transcript"
             >
               <RefreshIcon className="w-3 h-3" />
               Redo
             </button>
           )}
-          <div className="flex-1"></div>
-          {!isTeleprompterVisible && (
-            <button
-              onClick={() => {
-                setIsTeleprompterVisible(true)
-              }}
-              className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-              title="Show teleprompter"
-            >
-              <VisibilityIcon className="w-3 h-3" />
-              Show
-            </button>
-          )}
-          {isTeleprompterVisible && (
-            <button
-              onClick={handleCopyTranscript}
-              className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-              title={copyStatus === 'copied' ? 'Copied!' : 'Copy transcript'}
-            >
-              <CopyIcon className="w-2.5 h-3" />
-              {copyStatus === 'copied' ? 'Copied' : 'Copy'}
-            </button>
-          )}
-        </header>
-        {isTeleprompterVisible && (
-          <Teleprompter
-            ref={teleprompterRef}
-            isVideo={!log.isAudioOnly}
-            transcription={transcription}
-            playerRef={playerRef}
-          />
-        )}
-      </div>
+          <button
+            onClick={handleCopyTranscript}
+            className="text-xs text-contrast/40 hover:text-contrast/70 transition-colors flex items-center gap-1"
+            title={copyStatus === 'copied' ? 'Copied!' : 'Copy transcript'}
+          >
+            <CopyIcon className="w-2.5 h-3" />
+            {copyStatus === 'copied' ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      </header>
+      <Teleprompter
+        ref={teleprompterRef}
+        isVideo={!log.isAudioOnly}
+        transcription={transcription}
+        playerRef={playerRef}
+      />
     </div>
   )
 })

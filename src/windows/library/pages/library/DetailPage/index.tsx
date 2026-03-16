@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { onViewLogEntry } from '~/shared/ipc'
 import { PlaybackPreferencesProvider } from '~/shared/PlaybackPreferencesProvider'
+import { Tooltip } from '~/shared/ui/Tooltip'
 import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../types'
 import { Toolbar } from './Toolbar'
@@ -33,6 +34,8 @@ export const DetailPage = withBoundary(function ({ log, unselect }: Props) {
 
 function DetailPageInner({ log, unselect }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     onViewLogEntry(log.id)
@@ -40,35 +43,58 @@ function DetailPageInner({ log, unselect }: Props) {
 
   usePlayerShortcuts({ playerRef })
 
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) {
+      return
+    }
+
+    const handleScroll = () => {
+      setShowScrollTop(container.scrollTop > 400)
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div
+      ref={scrollRef}
       className={twMerge(
-        'gap-7 overflow-x-hidden overflow-y-scroll w-full pb-8',
+        'gap-7 overflow-x-hidden overflow-y-scroll w-full pb-8 relative',
       )}
     >
-      <div className="h-(--nav-height) drag-region" />
-      <div className="w-full px-1">
-        <Player
-          ref={playerRef}
-          logId={log.id}
-          isVideo={!log.isAudioOnly}
-          src={`log-media://${log.id}`}
-          className={twMerge(
-            'w-full rounded-md',
-            log.isAudioOnly ? 'max-h-[100px]' : 'h-[350px]',
-          )}
-        />
+      <div className="sticky top-0 z-10 bg-one">
+        <div className="h-(--nav-height) drag-region" />
+        <div className="pl-2 pr-4 pb-3">
+          <Player
+            ref={playerRef}
+            logId={log.id}
+            isVideo={!log.isAudioOnly}
+            src={`log-media://${log.id}`}
+            className={twMerge(
+              'w-full rounded-md',
+              log.isAudioOnly ? 'max-h-[100px]' : 'h-[350px]',
+            )}
+          />
+        </div>
       </div>
-      <div className="flex flex-col items-center gap-8 justify-start mt-5">
-        <header className="px-0 flex flex-col gap-1 w-full">
-          <div className="flex items-start gap-2 pr-3 pt-2">
+      <main className="flex flex-col gap-5 mt-4 pl-2 pr-4">
+        <div className="bg-two rounded-lg p-4 pt-3 flex flex-col gap-2">
+          <div className="flex items-start gap-2 -ml-3">
             <TitleInput
               logId={log.id}
               isVideo={!log.isAudioOnly}
               title={log.title || ''}
               className="flex-1 min-w-0"
             />
-            <div className="-mt-2">
+            <div className="-mt-5 -mr-3">
               <Toolbar
                 logId={log.id}
                 isFavorited={log.isFavorited ?? false}
@@ -82,19 +108,41 @@ function DetailPageInner({ log, unselect }: Props) {
               />
             </div>
           </div>
-          <div className="px-1.5">
-            <SummarySubtitle log={log} />
-          </div>
-        </header>
-
-        <div className="px-1 flex flex-col gap-4 w-full">
-          <TranscriptionPanel log={log} logId={log.id} playerRef={playerRef} />
+          <SummarySubtitle log={log} />
         </div>
 
-        <div className="px-1 w-full">
+        <div className="bg-two rounded-lg p-3 relative">
+          <TranscriptionPanel log={log} logId={log.id} playerRef={playerRef} />
           <DebugToolbar log={log} unselect={unselect} />
         </div>
-      </div>
+      </main>
+      <ScrollToTopButton onClick={scrollToTop} visible={showScrollTop} />
+    </div>
+  )
+}
+
+function ScrollToTopButton({
+  onClick,
+  visible,
+}: {
+  onClick: () => void
+  visible: boolean
+}) {
+  return (
+    <div
+      className={twMerge(
+        'fixed bottom-6 right-8 transition-opacity duration-200',
+        visible ? 'opacity-100' : 'opacity-0 pointer-events-none',
+      )}
+    >
+      <Tooltip content="Scroll to top" placement="left">
+        <button
+          onClick={onClick}
+          className="w-8 h-8 text-white font-light bg-contrast rounded-full shadow-lg flex items-center justify-center text-xl transition-all duration-200"
+        >
+          ↑
+        </button>
+      </Tooltip>
     </div>
   )
 }

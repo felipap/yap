@@ -29,7 +29,7 @@ export function TitleInput({ logId, isVideo, title, className }: Props) {
     <textarea
       ref={textareaRef}
       className={twMerge(
-        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-3 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words w-full',
+        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words w-full',
         localTitle.length > 0
           ? ''
           : 'placeholder:text-contrast !opacity-40 focus:opacity-80',
