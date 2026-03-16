@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { RefreshIcon } from '~/shared/icons'
-import { triggerGenerateSummary } from '~/shared/ipc'
-import { EnrichedLog } from '../../../types'
+import { EnrichedLog } from '../../../../types'
+import { useSummary } from './useSummary'
 
 interface Props {
   log: EnrichedLog
@@ -11,16 +11,16 @@ interface Props {
 export function SummarySubtitle({ log }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isTruncated, setIsTruncated] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const textRef = useRef<HTMLDivElement>(null)
-  const summaryAtGenerateStart = useRef<string | null>(null)
 
-  const summary = log.summary || ''
-
-  const hasEmptyTranscription =
-    log.transcription &&
-    (!log.transcription.text || log.transcription.text.trim().length === 0)
+  const {
+    summary,
+    hasEmptyTranscription,
+    hasTranscription,
+    isGenerating,
+    error,
+    handleGenerateSummary,
+  } = useSummary(log)
 
   useEffect(() => {
     if (textRef.current) {
@@ -30,39 +30,8 @@ export function SummarySubtitle({ log }: Props) {
     }
   }, [summary])
 
-  useEffect(() => {
-    if (isGenerating && summary !== summaryAtGenerateStart.current) {
-      setIsGenerating(false)
-      summaryAtGenerateStart.current = null
-    }
-  }, [isGenerating, summary])
-
-  const handleGenerateSummary = async () => {
-    if (!log.transcription) {
-      setError('No transcription available to generate summary')
-      return
-    }
-
-    summaryAtGenerateStart.current = summary
-    setIsGenerating(true)
-    setError(null)
-
-    try {
-      await triggerGenerateSummary(log.id)
-      setTimeout(() => {
-        setIsGenerating(false)
-        summaryAtGenerateStart.current = null
-      }, 30000)
-    } catch (err) {
-      console.error('Summary generation failed:', err)
-      setError(err instanceof Error ? err.message : 'Summary generation failed')
-      setIsGenerating(false)
-      summaryAtGenerateStart.current = null
-    }
-  }
-
   if (!summary) {
-    if (!log.transcription) {
+    if (!hasTranscription) {
       return <div className="text-[13px] text-contrast opacity-40 ml-1">—</div>
     }
 
