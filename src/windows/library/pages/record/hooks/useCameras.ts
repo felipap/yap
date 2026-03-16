@@ -10,8 +10,9 @@ import {
 export function useCameras() {
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
-  const [cameraAutoSelect, setCameraAutoSelect] = useState<boolean>(true)
+  const [cameraAutoSelect, setCameraAutoSelect] = useState<boolean | null>(null)
   const [enableScreenFlash, setEnableScreenFlash] = useState<boolean>(true)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
   const loadSettings = useCallback(async () => {
     const savedCameraId = await getSelectedCameraId()
@@ -23,43 +24,59 @@ export function useCameras() {
     if (savedCameraId) {
       setSelectedCameraId(savedCameraId)
     }
-    if (savedCameraAutoSelect !== undefined) {
-      setCameraAutoSelect(savedCameraAutoSelect)
-    }
+    // Default to true if never set
+    setCameraAutoSelect(savedCameraAutoSelect ?? true)
     if (savedEnableScreenFlash !== undefined) {
       setEnableScreenFlash(savedEnableScreenFlash)
     }
+    setSettingsLoaded(true)
   }, [])
 
-  const loadCameras = useCallback(async () => {
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    const videoDevices = devices.filter(
-      (device) => device.kind === 'videoinput',
-    )
-    setCameras(videoDevices)
-    setSelectedCameraId((previousCameraId) => {
-      if (videoDevices.length === 0) {
-        return ''
-      }
-
-      const hasPreviousCamera = videoDevices.some(
-        (device) => device.deviceId === previousCameraId,
+  const loadCameras = useCallback(
+    async (savedCameraId?: string, autoSelect?: boolean) => {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter(
+        (device) => device.kind === 'videoinput',
       )
-      if (!previousCameraId || !hasPreviousCamera || cameraAutoSelect) {
-        return videoDevices[0].deviceId
+      setCameras(videoDevices)
+
+      if (videoDevices.length === 0) {
+        setSelectedCameraId('')
+        return
       }
 
-      return previousCameraId
-    })
-  }, [cameraAutoSelect])
+      // If we have a saved camera ID and it exists, use it (unless auto-select is on)
+      if (savedCameraId && !autoSelect) {
+        const hasSavedCamera = videoDevices.some(
+          (device) => device.deviceId === savedCameraId,
+        )
+        if (hasSavedCamera) {
+          setSelectedCameraId(savedCameraId)
+          return
+        }
+      }
 
-  // Load cameras and settings on mount
+      // Otherwise use first camera
+      setSelectedCameraId(videoDevices[0].deviceId)
+    },
+    [],
+  )
+
+  // Load settings first, then cameras
   useEffect(() => {
-    loadCameras()
     loadSettings()
+  }, [loadSettings])
+
+  // Load cameras after settings are loaded
+  useEffect(() => {
+    if (!settingsLoaded) {
+      return
+    }
+
+    loadCameras(selectedCameraId, cameraAutoSelect ?? true)
 
     const handleDeviceChange = () => {
-      loadCameras()
+      loadCameras(selectedCameraId, cameraAutoSelect ?? true)
     }
     navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
 
@@ -69,7 +86,7 @@ export function useCameras() {
         handleDeviceChange,
       )
     }
-  }, [loadCameras, loadSettings])
+  }, [settingsLoaded, loadCameras])
 
   // Save selected camera when it changes
   useEffect(() => {
@@ -80,7 +97,9 @@ export function useCameras() {
 
   // Save auto-select preference when it changes
   useEffect(() => {
-    setStoredValue('cameraAutoSelect', cameraAutoSelect).catch(console.error)
+    if (cameraAutoSelect !== null) {
+      setStoredValue('cameraAutoSelect', cameraAutoSelect).catch(console.error)
+    }
   }, [cameraAutoSelect])
 
   // Save screen flash preference when it changes
@@ -124,13 +143,16 @@ export function useCameras() {
 
   // Auto-select first camera when auto-select is enabled
   useEffect(() => {
-    if (cameraAutoSelect && cameras.length > 0) {
+    if (cameraAutoSelect === true && cameras.length > 0) {
       setSelectedCameraId(cameras[0].deviceId)
     }
   }, [cameraAutoSelect, cameras])
 
   // Update menu state when cameras or settings change
   useEffect(() => {
+    if (cameraAutoSelect === null) {
+      return
+    }
     updateCameraMenuState({
       cameras: cameras.map((camera) => ({
         id: camera.deviceId,
