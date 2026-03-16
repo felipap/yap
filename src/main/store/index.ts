@@ -133,18 +133,22 @@ export {
   updateLog,
 } from './logs'
 
+import { decryptSecret, encryptSecret } from './safe-storage'
+
 export function getGeminiApiKey(): string {
-  return store.get('geminiApiKey') || ''
+  const stored = store.get('geminiApiKey') || ''
+  return decryptSecret(stored)
 }
 
 export function setGeminiApiKey(apiKey: string): void {
-  store.set('geminiApiKey', apiKey)
+  store.set('geminiApiKey', encryptSecret(apiKey))
 }
 
 export function getOpenaiApiKey(): string {
-  return store.get('openaiApiKey') || ''
+  const stored = store.get('openaiApiKey') || ''
+  return decryptSecret(stored)
 }
 
 export function setOpenaiApiKey(apiKey: string): void {
-  store.set('openaiApiKey', apiKey)
+  store.set('openaiApiKey', encryptSecret(apiKey))
 }
