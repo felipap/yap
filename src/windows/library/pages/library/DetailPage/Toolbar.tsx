@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { MdOutlineDriveFileMove, MdRefresh, MdSyncAlt } from 'react-icons/md'
+import { twMerge } from 'tailwind-merge'
 import { FolderIcon, HeartIcon, TrashIcon } from '~/shared/icons'
 import {
   convertToMp4,
@@ -150,7 +151,12 @@ export function Toolbar({
   }
 
   return (
-    <div className="no-drag-region flex items-center gap-0.5 shadow-black/2 shadow-lg bg-two border divide-x rounded-full px-1">
+    <div
+      className={twMerge(
+        'no-drag-region flex items-center gap-0.5 rounded-full px-1',
+        // 'shadow-black/2 shadow-lg bg-two border divide-x'
+      )}
+    >
       <TooltipButton
         onClick={handleToggleFavorite}
         tooltip={isFavorited ? 'Unfavorite' : 'Favorite'}

@@ -89,7 +89,7 @@ function DetailPageInner({ log, unselect }: Props) {
         </div>
       </div>
       <main className="flex flex-col gap-5 mt-4 pl-2 pr-4">
-        <div className="bg-two rounded-lg p-4 pt-3 flex flex-col gap-2">
+        <div className="bg-two rounded-lg p-3 pt-3 flex flex-col gap-2">
           <div className="flex items-start gap-2 -ml-3">
             <TitleInput
               logId={log.id}
@@ -97,7 +97,7 @@ function DetailPageInner({ log, unselect }: Props) {
               title={log.title || ''}
               className="flex-1 min-w-0"
             />
-            <div className="-mt-5 -mr-3">
+            <div className="-mt-1 -mr-3">
               <Toolbar
                 logId={log.id}
                 isFavorited={log.isFavorited ?? false}
