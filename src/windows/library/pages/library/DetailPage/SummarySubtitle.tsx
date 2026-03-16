@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { ClockIcon, CopyIcon, RefreshIcon } from '../../../../shared/icons'
+import { ClockIcon, RefreshIcon } from '../../../../shared/icons'
 import { triggerGenerateSummary } from '../../../../shared/ipc'
 import { EnrichedLog } from '../../../types'
 
@@ -13,17 +13,13 @@ export function SummarySubtitle({ log }: Props) {
   const [isTruncated, setIsTruncated] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
 
   const summary = log.summary || ''
 
-  // Check if transcription exists but has no words
-  const hasTranscriptionButNoWords =
+  const hasEmptyTranscription =
     log.transcription &&
     (!log.transcription.text || log.transcription.text.trim().length === 0)
-
-  const isNothingToTranscribe = !summary && hasTranscriptionButNoWords
 
   useEffect(() => {
     if (textRef.current) {
@@ -39,45 +35,29 @@ export function SummarySubtitle({ log }: Props) {
       return
     }
 
-    // Let the AI "fail" - don't return early for empty transcription
     setIsGenerating(true)
     setError(null)
 
     try {
       await triggerGenerateSummary(log.id)
-    } catch (error) {
-      console.error('Summary generation failed:', error)
-      setError(
-        error instanceof Error ? error.message : 'Summary generation failed',
-      )
+    } catch (err) {
+      console.error('Summary generation failed:', err)
+      setError(err instanceof Error ? err.message : 'Summary generation failed')
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const handleCopy = async () => {
-    if (!summary) {
-      return
-    }
-
-    try {
-      await navigator.clipboard.writeText(summary)
-      setCopied(true)
-      setTimeout(() => {
-        setCopied(false)
-      }, 2000)
-    } catch (error) {
-      console.error('Failed to copy summary:', error)
-    }
-  }
-
   if (!summary) {
     if (!log.transcription) {
-      return null
+      return (
+        <div className="text-[13px] text-contrast opacity-40">
+          —
+        </div>
+      )
     }
 
-    // If transcription exists but has no words, show "nothing to transcribe" in italics
-    if (hasTranscriptionButNoWords) {
+    if (hasEmptyTranscription) {
       return (
         <div className="text-[13px] text-contrast opacity-60 italic">
           nothing to transcribe
@@ -90,23 +70,11 @@ export function SummarySubtitle({ log }: Props) {
         <div className="text-[13px] text-contrast opacity-40">
           No summary yet
         </div>
-        <button
+        <GenerateButton
           onClick={handleGenerateSummary}
-          className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
-          disabled={isGenerating}
-        >
-          {isGenerating ? (
-            <>
-              <ClockIcon className="w-3 h-3" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <RefreshIcon className="w-3 h-3" />
-              Generate
-            </>
-          )}
-        </button>
+          isGenerating={isGenerating}
+          label="Generate"
+        />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
     )
@@ -116,16 +84,9 @@ export function SummarySubtitle({ log }: Props) {
     <div className="flex flex-col gap-2 group">
       <div
         ref={textRef}
-        onClick={() => {
-          if (!isExpanded && isTruncated) {
-            // setIsExpanded(true)
-          }
-        }}
         className={twMerge(
-          'text-[13px] text-contrast opacity-60 leading-[1.35] cursor-default pr-3',
-          isNothingToTranscribe && 'italic',
+          'text-[13px] text-contrast opacity-60 leading-[1.35] pr-3',
           !isExpanded && 'line-clamp-4',
-          !isExpanded && isTruncated && 'cursor-pointer  transition-opacity',
         )}
       >
         {summary}
@@ -133,9 +94,7 @@ export function SummarySubtitle({ log }: Props) {
       <div className="flex items-center gap-2">
         {isTruncated && (
           <button
-            onClick={() => {
-              setIsExpanded((v) => !v)
-            }}
+            onClick={() => setIsExpanded((v) => !v)}
             className={twMerge(
               'text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity mr-2',
               !isExpanded && 'group-hover:opacity-80',
@@ -144,9 +103,10 @@ export function SummarySubtitle({ log }: Props) {
             {isExpanded ? 'Show less' : 'Show more'}
           </button>
         )}
-        <RegenerateSummaryButton
-          onRegenerate={handleGenerateSummary}
+        <GenerateButton
+          onClick={handleGenerateSummary}
           isGenerating={isGenerating}
+          label="Try again"
         />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
@@ -154,18 +114,16 @@ export function SummarySubtitle({ log }: Props) {
   )
 }
 
-interface RegenerateSummaryButtonProps {
-  onRegenerate: () => void
+interface GenerateButtonProps {
+  onClick: () => void
   isGenerating: boolean
+  label: string
 }
 
-function RegenerateSummaryButton({
-  onRegenerate,
-  isGenerating,
-}: RegenerateSummaryButtonProps) {
+function GenerateButton({ onClick, isGenerating, label }: GenerateButtonProps) {
   return (
     <button
-      onClick={onRegenerate}
+      onClick={onClick}
       className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
       disabled={isGenerating}
     >
@@ -177,7 +135,7 @@ function RegenerateSummaryButton({
       ) : (
         <>
           <RefreshIcon className="w-3 h-3" />
-          Try again
+          {label}
         </>
       )}
     </button>
