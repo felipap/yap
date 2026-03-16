@@ -67,7 +67,7 @@ export function useTranscriptionState({ logId }: Args): Return {
           } else if (state.progress) {
             setProgressLabel('Transcribing')
           } else {
-            setProgressLabel('Starting')
+            setProgressLabel('Starting trascription')
           }
         }
       } catch (error) {
@@ -150,7 +150,7 @@ export function useTranscriptionState({ logId }: Args): Return {
     setTranscription(null)
     setHasTranscription(false)
     setProgress(0)
-    setProgressLabel('Starting')
+    setProgressLabel('Starting transcription')
 
     try {
       const result = await transcribeVideo(logId)

@@ -36,10 +36,10 @@ export default function Page() {
         className={twMerge(
           'flex flex-1 h-full w-screen',
           'bg-one',
-          'overflow-hidden gap-2 pl-2 pb-2',
+          'overflow-hidden gap-2 pl-2',
         )}
       >
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden pb-2">
           <div className="drag-region h-(--nav-height) bg-one shrink-0" />
           <div className="flex-1 min-h-0 overflow-hidden">
             <Sidebar

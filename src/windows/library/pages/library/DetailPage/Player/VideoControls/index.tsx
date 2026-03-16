@@ -1,18 +1,19 @@
-import { useEffect, useState, useRef, RefObject } from 'react'
-import { twMerge } from 'tailwind-merge'
+import { RefObject, useEffect, useRef, useState } from 'react'
 import { MdReplay } from 'react-icons/md'
-import { VolumeControl } from './VolumeControl'
+import { twMerge } from 'tailwind-merge'
 import {
-  PlayIcon,
-  PauseIcon,
-  FullscreenIcon,
   FullscreenExitIcon,
-} from './icons'
+  FullscreenIcon,
+  PauseIcon,
+  PlayIcon,
+} from '~/shared/icons'
+import { VolumeControl } from './VolumeControl'
 
 interface Props {
   videoRef: RefObject<HTMLVideoElement>
   className?: string
   canFullscreen: boolean
+  onBackgroundClick?: () => void
 }
 
 // Note: Even though PlaybackPreferencesProvider exists, we're changing the state
@@ -20,7 +21,12 @@ interface Props {
 // have to know about how we wire the rest of the app. The Player component
 // (../index.tsx) catches changes to the video element (e.g., muting, playback speed)
 // via event listeners and syncs them to the global preference state.
-export function VideoControls({ videoRef, className, canFullscreen }: Props) {
+export function VideoControls({
+  videoRef,
+  className,
+  canFullscreen,
+  onBackgroundClick,
+}: Props) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -358,6 +364,11 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
         className,
       )}
     >
+      {/* Clickable area for play/pause toggle */}
+      <div
+        className="absolute inset-0 cursor-pointer"
+        onClick={onBackgroundClick}
+      />
       <div className="absolute bottom-0 left-0 right-0 p-3 pb-3">
         {/* Seek Bar */}
         <div className="mb-3">
@@ -409,7 +420,7 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
             className="hover:scale-110 transition-transform"
             title="Skip backward 10s"
           >
-            <MdReplay size={23} />
+            <MdReplay size={20} />
           </button>
 
           {/* Skip Forward */}
@@ -418,7 +429,7 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
             className="hover:-scale-x-110 transition-transform -scale-x-100"
             title="Skip forward 10s"
           >
-            <MdReplay size={23} />
+            <MdReplay size={20} />
           </button>
 
           {/* Time Display */}

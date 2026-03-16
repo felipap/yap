@@ -179,7 +179,11 @@ export const Player = withBoundary(
             Your browser does not support the video tag.
           </video>
           <PlaybackActionsOverlay logId={logId} />
-          <VideoControls videoRef={videoRef} canFullscreen={isVideo} />
+          <VideoControls
+            videoRef={videoRef}
+            canFullscreen={isVideo}
+            onBackgroundClick={handleVideoClick}
+          />
         </div>
       )
     },
