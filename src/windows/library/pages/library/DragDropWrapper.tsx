@@ -1,8 +1,10 @@
+// Lets user import an entry by drag-droping the file over the app.
+
 import { useCallback, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { ImportResult as IpcImportResult } from '../../../../shared-types'
-import { FolderIcon } from '../../../shared/icons'
-import { importVideoFile } from '../../../shared/ipc'
+import { ImportResult as IpcImportResult } from '~/../shared-types'
+import { FolderIcon } from '~/shared/icons'
+import { importVideoFile } from '~/shared/ipc'
 
 interface ImportResult {
   file: string

@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { MdMic, MdVideocam, MdDesktopMac } from 'react-icons/md'
-import { RecordingMode } from '../../../../shared-types'
+import { RecordingMode } from '~/../shared-types'
 import { twMerge } from 'tailwind-merge'
 
 const FIT_MODE = 'cover' as 'contain' | 'cover'
