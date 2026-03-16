@@ -220,7 +220,7 @@ export function RecordInner({ close }: Props) {
       </div>
 
       {/* Footer */}
-      <footer className="relative flex items-center justify-center py-4 px-6 shrink-0">
+      <footer className="relative flex items-center justify-center py-4 px-6 shrink-0 h-[80px]">
         <div className="absolute left-6">
           {selectedMicrophoneId && (
             <VolumeMeter
@@ -236,7 +236,7 @@ export function RecordInner({ close }: Props) {
           onStopRecording={handleStopRecording}
         />
         {isRecording && (
-          <div className="absolute right-6 text-[15px] font-medium text-contrast tabular-nums">
+          <div className="absolute right-6 text-[19px] font-medium text-contrast tabular-nums">
             {formatTime(recordingTime)}
           </div>
         )}

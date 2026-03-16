@@ -27,7 +27,7 @@ export function VolumeMeter({
       }
       return 'bg-green-500'
     }
-    return 'bg-gray-300 dark:bg-gray-600'
+    return 'bg-gray-400 dark:bg-gray-600'
   }
 
   return (
