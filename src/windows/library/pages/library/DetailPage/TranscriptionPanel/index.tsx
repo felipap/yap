@@ -13,6 +13,13 @@ interface Props {
   playerRef: React.RefObject<PlayerRef>
 }
 
+function getErrorMessage(error: string): string {
+  if (error.includes('cloud storage') || error.includes('not fully downloaded')) {
+    return 'File not downloaded. Make it available offline first.'
+  }
+  return error
+}
+
 export const TranscriptionPanel = withBoundary(function ({
   log,
   logId,
@@ -25,6 +32,7 @@ export const TranscriptionPanel = withBoundary(function ({
     progress,
     progressLabel,
     transcribe,
+    clearError,
   } = useTranscriptionState({ logId })
 
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle')
@@ -46,14 +54,6 @@ export const TranscriptionPanel = withBoundary(function ({
     }
   }
 
-  if (transcriptionError) {
-    return (
-      <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded text-red-600 text-sm">
-        {transcriptionError}
-      </div>
-    )
-  }
-
   if (!transcription) {
     return (
       <div className="flex flex-col items-center justify-center py-6 gap-3">
@@ -64,8 +64,16 @@ export const TranscriptionPanel = withBoundary(function ({
           progress={progress}
           progressLabel={progressLabel}
           hasTranscription={!!transcription}
-          onClick={transcribe}
+          onClick={() => {
+            clearError()
+            transcribe()
+          }}
         />
+        {transcriptionError && (
+          <div className="text-red-500 dark:text-red-400 text-sm">
+            {getErrorMessage(transcriptionError)}
+          </div>
+        )}
       </div>
     )
   }
