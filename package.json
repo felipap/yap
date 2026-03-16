@@ -2,10 +2,10 @@
   "name": "yap-camera",
   "version": "0.10.5",
   "description": "A seamless logging app with screen recording capabilities",
-  "main": "dist/main/main.js",
+  "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer-library\" \"npm run dev:renderer-camera\" \"npm run dev:renderer-settings\" \"npm run dev:watch-main\"",
-    "dev:watch-main": "NODE_ENV=development nodemon --watch src/main --ext ts --exec \"npm run build:backend && electron dist/main/main.js\"",
+    "dev:watch-main": "NODE_ENV=development nodemon --watch src/main --ext ts --exec \"npm run build:backend && electron dist/main/index.js\"",
     "dev:renderer-library": "vite --config vite.library.config.js",
     "dev:renderer-camera": "vite --config vite.camera.config.js",
     "dev:renderer-settings": "vite --config vite.settings.config.js",
