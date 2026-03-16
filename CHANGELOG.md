@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.6](https://github.com/felipap/yap/compare/v0.10.3...v0.10.6) (2026-03-16)
+
+
+### Features
+
+* add floating toolbar with share, favorite, and remove actions ([1ec3085](https://github.com/felipap/yap/commit/1ec3085dfb709795334d1c373d9f1bbf8157fc3e))
+* add floating-ui tooltips to detail page toolbar ([c30c770](https://github.com/felipap/yap/commit/c30c77048bd160f5dbc10426cce204d2a19e10bd))
+* add isFavorited property to logs ([a76cf5e](https://github.com/felipap/yap/commit/a76cf5e8b50e0cdf590bf64b899322977a9a7dbd))
+* change default route to library ([812b78d](https://github.com/felipap/yap/commit/812b78d3bafd56fe180c270bad1521a3cdb87f32))
+* misc settings ([05bf206](https://github.com/felipap/yap/commit/05bf2069032c2e01ba5fe70725c8d62475678974))
+* PRETTIER ([b0f7b08](https://github.com/felipap/yap/commit/b0f7b088b5353e409959456d05b5890d8114c56d))
+* redesign recording UI with pill nav and footer controls ([040d104](https://github.com/felipap/yap/commit/040d104c4a084cc0bd25dfbd59249d236db77378))
+* show centiseconds in recording timer ([238f973](https://github.com/felipap/yap/commit/238f973e623d01a653ee65dd2879de6fb40c14aa))
+* wip: removing navbar ([46943cd](https://github.com/felipap/yap/commit/46943cdc53cab97a5a6c027ad7f835edfb138670))
+* wip: removing navbar ([a048820](https://github.com/felipap/yap/commit/a0488204286c18975627b55d61f1e8bbb0bf613c))
+
+
+### Bug Fixes
+
+* adjust favorites icon size and color in sidebar ([edf811c](https://github.com/felipap/yap/commit/edf811c8149450d4a7737778ff986190acabe5b6))
+* improve library window layout and resize behavior ([96d6024](https://github.com/felipap/yap/commit/96d602480e0bc169f0bf858ef65eedf18f0a50ee))
+* improve recording UI visibility ([43f695c](https://github.com/felipap/yap/commit/43f695c3a160b97ad3cf018ca5972fecdf104a36))
+* polish UI details across library page ([eb6637b](https://github.com/felipap/yap/commit/eb6637b26c28d41b579f1a1ee071691e7a0c4fa6))
+* polish UI details in filter box and tooltip ([7e6400e](https://github.com/felipap/yap/commit/7e6400e0dfe25d3ef437a09678c6aff350f81780))
+* preserve camera selection on reload ([1410c67](https://github.com/felipap/yap/commit/1410c67aa6749f76d9e286660857b122b93e446e))
+* prevent recording in camera mode when no camera is available ([e3ab22b](https://github.com/felipap/yap/commit/e3ab22b46bef84bce848449e2f88945897832ddf))
+* restore safeStorage encryption for API keys ([06f1cc3](https://github.com/felipap/yap/commit/06f1cc3369afb177b0c220626e7a79ce8f5eac59))
+* use conversion icon for Convert to MP4 button ([5f558d4](https://github.com/felipap/yap/commit/5f558d4af7189f630c5b34596832d2f8c5b9b993))
+
 ### [0.10.5](https://github.com/felipap/yap/compare/v0.10.3...v0.10.5) (2026-03-13)
 
 ### [0.10.4](https://github.com/felipap/yap/compare/v0.10.3...v0.10.4) (2026-03-13)
