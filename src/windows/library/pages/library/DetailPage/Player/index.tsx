@@ -23,6 +23,31 @@ interface Props {
   onSeeked?: (currentTime: number) => void
 }
 
+function BufferingSpinner() {
+  return (
+    <svg
+      className="animate-spin h-12 w-12 text-white/80"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  )
+}
+
 export interface PlayerRef {
   currentTime: number
   paused: boolean
@@ -159,7 +184,6 @@ export const Player = withBoundary(
             // autoPlay
             className={twMerge(
               'w-full h-full',
-              isBuffering ? 'opacity-50' : 'opacity-100',
               // For audio, show background, otherwise it's weird.
               !isVideo && 'bg-neutral-500/60',
               'bg-neutral-500/60',
@@ -171,6 +195,11 @@ export const Player = withBoundary(
           >
             Your browser does not support the video tag.
           </video>
+          {isBuffering && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <BufferingSpinner />
+            </div>
+          )}
           <PlaybackActionsOverlay logId={logId} />
           <VideoControls
             videoRef={videoRef}
