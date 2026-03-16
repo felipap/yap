@@ -3,7 +3,7 @@
 Yap is a desktop app for recording and viewing your video logs. It's the fastest
 way to capture your day-to-day and revisit it later.
 
-<img src="assets/readme.jpg" width="100%" alt="Yap" />
+<img src="assets/readme.jpg" width="500" alt="Yap" />
 
 ## Download
 
@@ -16,9 +16,7 @@ OpenAI API key, and summarization requires a Gemini API key.
 
 ## Privacy
 
-Yap is fully local. Sentry is used for error reporting, but
-
-Yap is fully local and doesn't collect any data from you. All your data stays in your machine.
+Yap stores videos in a folder of your choice inside your computer.
 
 ## Contributing
 

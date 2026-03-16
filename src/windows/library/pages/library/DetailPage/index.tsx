@@ -36,6 +36,7 @@ function DetailPageInner({ log, unselect }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isPlayerMinimized, setIsPlayerMinimized] = useState(false)
 
   useEffect(() => {
     onViewLogEntry(log.id)
@@ -51,6 +52,7 @@ function DetailPageInner({ log, unselect }: Props) {
 
     const handleScroll = () => {
       setShowScrollTop(container.scrollTop > 400)
+      setIsPlayerMinimized(container.scrollTop > 100)
     }
 
     container.addEventListener('scroll', handleScroll)
@@ -79,8 +81,12 @@ function DetailPageInner({ log, unselect }: Props) {
             isVideo={!log.isAudioOnly}
             src={`log-media://${log.id}`}
             className={twMerge(
-              'w-full rounded-md',
-              log.isAudioOnly ? 'max-h-[100px]' : 'h-[350px]',
+              'w-full rounded-md transition-all duration-300',
+              log.isAudioOnly
+                ? 'max-h-[100px]'
+                : isPlayerMinimized
+                  ? 'h-[120px]'
+                  : 'h-[350px]',
             )}
           />
         </div>
