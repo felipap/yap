@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { usePlaybackPreferences } from '../../../../shared/PlaybackPreferencesProvider'
+import { usePlaybackPreferences } from '~/shared/PlaybackPreferencesProvider'
 import { PlayerRef } from './Player'
 
 interface Args {
