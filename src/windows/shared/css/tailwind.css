@@ -54,6 +54,7 @@
   /* font sizes */
   --text-sm: 13px;
   --text-md: 14px;
+  --text-lg: 16px;
 }
 
 @media (prefers-color-scheme: dark) {

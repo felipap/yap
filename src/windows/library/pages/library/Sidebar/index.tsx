@@ -40,7 +40,7 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
   })
 
   return (
-    <div className="w-[240px] min-h-0 max-h-[800px]  bg-sidebar rounded-md flex flex-col overflow-hidden h-full">
+    <div className="w-[240px] bg-sidebar rounded-md flex flex-col overflow-hidden h-full">
       <FilterBox value={filterText} onChange={setFilterText} />
 
       <div ref={parentRef} className="flex-1 overflow-y-auto pt-1 min-h-0">

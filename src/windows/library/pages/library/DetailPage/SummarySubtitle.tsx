@@ -177,7 +177,7 @@ function RegenerateSummaryButton({
       ) : (
         <>
           <RefreshIcon className="w-3 h-3" />
-          Regenerate
+          Try again
         </>
       )}
     </button>

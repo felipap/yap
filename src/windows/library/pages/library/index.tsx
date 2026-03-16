@@ -60,7 +60,7 @@ export default function Page() {
 
 function NoVideoPage() {
   return (
-    <div className="flex-1 flex items-center justify-center select-none">
+    <div className="flex-1 flex items-center justify-center select-none drag-region">
       <div className="text-center flex flex-col gap-2">
         <div className=" flex justify-center">
           <MovieIcon size={40} className="text-secondary/80" />

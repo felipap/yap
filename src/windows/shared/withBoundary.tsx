@@ -63,7 +63,13 @@ export function withBoundary<P extends object>(
   const WrappedComponent = forwardRef<any, PropsWithoutRef<P>>((props, ref) => {
     return (
       <ErrorBoundary
-        fallback={fallback || <div>Something went wrong</div>}
+        fallback={
+          fallback || (
+            <div className="flex flex-col items-center justify-center h-full w-full">
+              Something went wrong
+            </div>
+          )
+        }
         onError={(error) => {
           console.error('Component error:', error)
         }}

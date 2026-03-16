@@ -1,16 +1,12 @@
 import { useRef, useState } from 'react'
-import {
-  CopyIcon,
-  RefreshIcon,
-  VisibilityIcon,
-} from '../../../../../shared/icons'
-import { withBoundary } from '../../../../../shared/withBoundary'
+import { twMerge } from 'tailwind-merge'
+import { CopyIcon, RefreshIcon, VisibilityIcon } from '~/shared/icons'
+import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../../types'
 import { PlayerRef } from '../Player'
 import { Teleprompter } from './Teleprompter'
 import { TranscribeButton } from './TranscribeButton'
 import { useTranscriptionState } from './useTranscriptionState'
-import { twMerge } from 'tailwind-merge'
 
 interface Props {
   log: EnrichedLog
@@ -84,14 +80,14 @@ export const TranscriptionPanel = withBoundary(function ({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-contrast border bg-two rounded-md flex flex-col gap-0">
+      <div className="text-contrast px-1 bg-one rounded-md flex flex-col gap-0">
         <header
           className={twMerge(
-            'text-sm flex justify-start gap-2 h-[34px] items-center px-3 flex-row',
+            'text-sm flex justify-start gap-2 h-[34px] items-center flex-row',
             isTeleprompterVisible ? 'pt-1' : 'h-[40px]',
           )}
         >
-          <div className="text-md mr-1 font-smedium track-10 text-contrast">
+          <div className="text-lg mr-1 font-medium track-10 text-contrast">
             Transcript
           </div>
           {!isTranscribing && isTeleprompterVisible && (
