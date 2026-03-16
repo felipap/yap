@@ -27,6 +27,10 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       null,
     )
     const previousActiveIndexRef = useRef<number | null>(null)
+    const [isUserScrolling, setIsUserScrolling] = useState(false)
+    const userScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    )
 
     const formatTime = (seconds: number): string => {
       const mins = Math.floor(seconds / 60)
@@ -83,16 +87,75 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
         return
       }
 
+      // Don't auto-scroll if user is scrolling
+      if (isUserScrolling) {
+        return
+      }
+
       // Scroll the segment into view smoothly
       segmentElement.scrollIntoView({
         behavior: 'auto',
         block: 'center',
       })
-    }, [playerRef, transcription.segments])
+    }, [playerRef, transcription.segments, isUserScrolling])
 
     useImperativeHandle(ref, () => ({
       syncToVideo,
     }))
+
+    // Detect user scroll to pause auto-tracking
+    // Using 'wheel' event because it only fires on user-initiated scrolls, not programmatic ones
+    useEffect(() => {
+      const container = containerRef.current
+      if (!container) {
+        return
+      }
+
+      // Find the scrollable parent (the detail page scroll container)
+      const getScrollParent = (element: HTMLElement): HTMLElement | null => {
+        let parent = element.parentElement
+        while (parent) {
+          const { overflow, overflowY } = getComputedStyle(parent)
+          if (overflow === 'auto' || overflow === 'scroll' || overflowY === 'auto' || overflowY === 'scroll') {
+            return parent
+          }
+          parent = parent.parentElement
+        }
+        return null
+      }
+
+      const scrollParent = getScrollParent(container)
+      if (!scrollParent) {
+        return
+      }
+
+      const handleUserScroll = () => {
+        setIsUserScrolling(true)
+
+        // Clear any existing timeout
+        if (userScrollTimeoutRef.current) {
+          clearTimeout(userScrollTimeoutRef.current)
+        }
+
+        // Resume auto-tracking after 5 seconds of no user scroll
+        userScrollTimeoutRef.current = setTimeout(() => {
+          setIsUserScrolling(false)
+        }, 5000)
+      }
+
+      // wheel event only fires on user-initiated scrolls (mouse wheel, trackpad)
+      scrollParent.addEventListener('wheel', handleUserScroll)
+      // touchmove for touch devices
+      scrollParent.addEventListener('touchmove', handleUserScroll)
+
+      return () => {
+        scrollParent.removeEventListener('wheel', handleUserScroll)
+        scrollParent.removeEventListener('touchmove', handleUserScroll)
+        if (userScrollTimeoutRef.current) {
+          clearTimeout(userScrollTimeoutRef.current)
+        }
+      }
+    }, [])
 
     // Automatically sync to video as it plays
     useEffect(() => {
