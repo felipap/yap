@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MicrophoneIcon } from '~/shared/icons'
-import {
-  getRecordingMode,
-  setRecordingMode as saveRecordingMode,
-} from '~/shared/ipc'
+import { getRecordingMode } from '~/shared/ipc'
 import { useRouter } from '~/shared/Router'
 import { VolumeMeter } from '~/shared/ui/VolumeMeter'
 import { RecordingMode } from '../../types'
@@ -13,7 +10,6 @@ import { useMicrophones } from './hooks/useMicrophones'
 import { usePreviewStreams } from './hooks/usePreviewStreams'
 import { useRecording } from './hooks/useRecording'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
-import { RecordingModeSelector } from './RecordingModeSelector'
 
 interface Props {
   close: () => void
@@ -70,20 +66,6 @@ export function RecordInner({ close }: Props) {
             <PreviewScreen mode={recordingMode} ref={previewRef} />
           </div>
         </div>
-
-        {/* Controls - Recording Mode Selection */}
-        {!isRecording && (
-          <div className="absolute flex flex-col gap-4 w-full shrink-0 z-10 px-4">
-            <RecordingModeSelector
-              recordingMode={recordingMode}
-              onModeChange={(mode) => {
-                setRecordingMode(mode)
-                saveRecordingMode(mode)
-              }}
-              isRecording={isRecording}
-            />
-          </div>
-        )}
       </div>
 
       {/* Footer */}
@@ -127,13 +109,14 @@ export function RecordInner({ close }: Props) {
   )
 }
 
-const formatTime = (seconds: number): string => {
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
+const formatTime = (totalSeconds: number): string => {
+  const hrs = Math.floor(totalSeconds / 3600)
+  const mins = Math.floor((totalSeconds % 3600) / 60)
+  const secs = Math.floor(totalSeconds % 60)
+  const centiseconds = Math.floor((totalSeconds * 100) % 100)
 
   if (hrs > 0) {
-    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`
   }
-  return `${mins}:${secs.toString().padStart(2, '0')}`
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`
 }

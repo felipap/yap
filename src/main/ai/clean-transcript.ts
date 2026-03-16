@@ -1,11 +1,11 @@
-import { GoogleGenAI } from '@google/genai'
+import OpenAI from 'openai'
 import type { TranscriptionResult } from '../../shared-types'
 
 export async function cleanTranscript(
   result: TranscriptionResult,
-  geminiApiKey: string,
+  openaiApiKey: string,
 ): Promise<TranscriptionResult> {
-  if (!geminiApiKey || result.segments.length === 0) {
+  if (!openaiApiKey || result.segments.length === 0) {
     return result
   }
 
@@ -24,22 +24,18 @@ Return a JSON array of strings, one per input segment, in the same order.
 Input segments:
 ${JSON.stringify(texts)}`
 
-  const client = new GoogleGenAI({ apiKey: geminiApiKey })
+  const client = new OpenAI({ apiKey: openaiApiKey })
 
-  const res = await client.models.generateContent({
-    model: 'gemini-2.0-flash',
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: 'array',
-        items: { type: 'string' },
-      },
-      temperature: 0.1,
-    },
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' },
+    temperature: 0.1,
   })
 
-  const cleaned: string[] = JSON.parse(res.text || '[]')
+  const responseContent = res.choices[0]?.message?.content || '{}'
+  const parsed = JSON.parse(responseContent)
+  const cleaned: string[] = Array.isArray(parsed) ? parsed : parsed.segments || []
 
   if (cleaned.length !== result.segments.length) {
     console.warn(

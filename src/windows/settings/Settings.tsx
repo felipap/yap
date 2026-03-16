@@ -8,7 +8,6 @@ const TABS = ['general', 'transcripts']
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState('general')
-  const [apiKey, setApiKey] = useState('')
   const [openaiApiKey, setOpenaiApiKey] = useState('')
   const [recordingsFolder, setRecordingsFolder] = useState('')
   const [userContext, setUserContext] = useState('')
@@ -18,9 +17,6 @@ export function Settings() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const key = await window.electronAPI.getGeminiApiKey()
-        setApiKey(key)
-
         const oaiKey = await window.electronAPI.getOpenaiApiKey()
         setOpenaiApiKey(oaiKey)
 
@@ -59,25 +55,6 @@ export function Settings() {
       clearTimeout(timeoutId)
     }
   }, [userContext])
-
-  // Autosave Gemini API key
-  useEffect(() => {
-    if (isInitialLoad.current) {
-      return
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        await window.electronAPI.setGeminiApiKey(apiKey)
-      } catch (error) {
-        console.error('Failed to autosave API key:', error)
-      }
-    }, 500)
-
-    return () => {
-      clearTimeout(timeoutId)
-    }
-  }, [apiKey])
 
   // Autosave OpenAI API key
   useEffect(() => {
@@ -157,10 +134,10 @@ export function Settings() {
         tabs={TABS}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        hasTranscriptWarning={!apiKey || !openaiApiKey}
+        hasTranscriptWarning={!openaiApiKey}
       />
 
-      <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-2xl">
+      <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-2xl flex flex-col">
         {activeTab === 'general' && (
           <GeneralSettings
             recordingsFolder={recordingsFolder}
@@ -172,19 +149,17 @@ export function Settings() {
 
         {activeTab === 'transcripts' && (
           <TranscriptsSettings
-            apiKey={apiKey}
-            onApiKeyChange={setApiKey}
             openaiApiKey={openaiApiKey}
             onOpenaiApiKeyChange={setOpenaiApiKey}
             userContext={userContext}
             onUserContextChange={setUserContext}
           />
         )}
-      </div>
 
-      <footer className="mt-3">
-        <MacOsButton onClick={() => {}}>Save</MacOsButton>
-      </footer>
+        <div className="mt-auto pt-4">
+          <MacOsButton onClick={() => {}}>Save</MacOsButton>
+        </div>
+      </div>
     </div>
   )
 }

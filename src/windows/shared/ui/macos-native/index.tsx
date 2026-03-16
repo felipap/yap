@@ -76,3 +76,5 @@ export function MacOsButton({
     </button>
   )
 }
+
+export { PasswordInput } from './PasswordInput'

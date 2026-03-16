@@ -30,17 +30,30 @@ export function useRecording({
   const handleStopRecordingRef = useRef<(() => Promise<void>) | null>(null)
   const recorderRef = useRef<Recorder | null>(null)
 
-  // Timer
+  // Timer using actual elapsed time for accuracy
+  const startTimeRef = useRef<number | null>(null)
+  const accumulatedTimeRef = useRef<number>(0)
+
   useEffect(() => {
-    if (state !== 'recording') {
-      return
+    if (state === 'recording') {
+      startTimeRef.current = performance.now()
+
+      const interval = setInterval(() => {
+        if (startTimeRef.current !== null) {
+          const elapsed = (performance.now() - startTimeRef.current) / 1000
+          setRecordingTime(accumulatedTimeRef.current + elapsed)
+        }
+      }, 64)
+
+      return () => {
+        if (startTimeRef.current !== null) {
+          accumulatedTimeRef.current +=
+            (performance.now() - startTimeRef.current) / 1000
+          startTimeRef.current = null
+        }
+        clearInterval(interval)
+      }
     }
-
-    const interval = setInterval(() => {
-      setRecordingTime((prev) => prev + 1)
-    }, 1000)
-
-    return () => clearInterval(interval)
   }, [state])
 
   // Crash protection - warn before leaving
@@ -109,6 +122,7 @@ export function useRecording({
       const newRecorder = new Recorder(recordingMode, cameraId, microphoneId)
       setRecorder(newRecorder)
       await newRecorder.start()
+      accumulatedTimeRef.current = 0
       setState('recording')
       setRecordingTime(0)
 

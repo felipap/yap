@@ -43,9 +43,6 @@ const schema: Schema<State> = {
   openaiApiKey: {
     type: 'string',
   },
-  geminiApiKey: {
-    type: 'string',
-  },
   windowBounds: {
     type: 'object',
     properties: {
@@ -135,15 +132,6 @@ export {
 } from './logs'
 
 import { decryptSecret, encryptSecret } from './safe-storage'
-
-export function getGeminiApiKey(): string {
-  const stored = store.get('geminiApiKey') || ''
-  return decryptSecret(stored)
-}
-
-export function setGeminiApiKey(apiKey: string): void {
-  store.set('geminiApiKey', encryptSecret(apiKey))
-}
 
 export function getOpenaiApiKey(): string {
   const stored = store.get('openaiApiKey') || ''

@@ -1,7 +1,7 @@
 import { cleanTranscript } from './ai/clean-transcript'
 import { generateSummary } from './ai/summarize-transcript'
 import { transcribeVideo } from './lib/transcription'
-import { getGeminiApiKey, getLog, store } from './store'
+import { getOpenaiApiKey, getLog, store } from './store'
 import * as ephemeral from './store/ephemeral'
 import {
   getTranscriptionData,
@@ -54,23 +54,19 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
 
       ephemeral.removeTranscription(logId)
 
-      // Clean up filler words with Gemini if key is available
-      const geminiApiKey = getGeminiApiKey() || null
-      if (geminiApiKey) {
-        try {
-          result = await cleanTranscript(result, geminiApiKey)
-        } catch (error) {
-          console.warn('Transcript cleaning failed, using raw transcription:', error)
-        }
+      // Clean up filler words
+      try {
+        result = await cleanTranscript(result, openaiApiKey)
+      } catch (error) {
+        console.warn('Transcript cleaning failed, using raw transcription:', error)
       }
 
       await setTranscriptionData(logId, {
         status: 'completed',
         result,
       })
-      if (geminiApiKey) {
-        triggerGenerateSummary(logId, geminiApiKey)
-      }
+
+      triggerGenerateSummary(logId, openaiApiKey)
 
       return result
     } catch (error) {
@@ -82,8 +78,7 @@ export async function triggerTranscribe(logId: string, openaiApiKey: string) {
 
 export async function triggerGenerateSummary(
   logId: string,
-  // Take as an argument to force parent to deal with abscence of key.
-  geminiApiKey: string,
+  openaiApiKey: string,
 ) {
   setTimeout(async () => {
     try {
@@ -105,7 +100,7 @@ export async function triggerGenerateSummary(
         throw new Error('Transcript not found')
       }
 
-      const result = await generateSummary(transcription.result.text, geminiApiKey)
+      const result = await generateSummary(transcription.result.text, openaiApiKey)
       if (!result.success) {
         return result
       }

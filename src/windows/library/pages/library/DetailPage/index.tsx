@@ -138,7 +138,7 @@ function ScrollToTopButton({
       <Tooltip content="Scroll to top" placement="left">
         <button
           onClick={onClick}
-          className="w-8 h-8 text-white font-light bg-contrast rounded-full shadow-lg flex items-center justify-center text-xl transition-all duration-200"
+          className="w-8 h-8 text-inverted not-dark:font-light bg-contrast rounded-full shadow-lg flex items-center justify-center text-xl transition-all duration-200"
         >
           ↑
         </button>

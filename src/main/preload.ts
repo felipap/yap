@@ -155,14 +155,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('hideSettingsWindow')
   },
 
-  getGeminiApiKey: (): Promise<string> => {
-    return ipcRenderer.invoke('getGeminiApiKey')
-  },
-
-  setGeminiApiKey: (apiKey: string): Promise<boolean> => {
-    return ipcRenderer.invoke('setGeminiApiKey', apiKey)
-  },
-
   getOpenaiApiKey: (): Promise<string> => {
     return ipcRenderer.invoke('getOpenaiApiKey')
   },

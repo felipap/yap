@@ -42,7 +42,6 @@ export interface State {
   globalVideoMute: boolean
   globalPlaybackSpeed: number
   openaiApiKey?: string
-  geminiApiKey?: string
   windowBounds?: {
     width: number
     height: number
@@ -168,8 +167,6 @@ export type SharedIpcMethods = {
   onLogUpdated: (callback: (logId: string) => void) => () => void
   openSettingsWindow: () => Promise<{ success: boolean; windowId: number }>
   hideSettingsWindow: () => Promise<void>
-  getGeminiApiKey: () => Promise<string>
-  setGeminiApiKey: (apiKey: string) => Promise<boolean>
   getOpenaiApiKey: () => Promise<string>
   setOpenaiApiKey: (apiKey: string) => Promise<boolean>
   getUserContext: () => Promise<string>

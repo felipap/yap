@@ -190,14 +190,6 @@ export async function hideSettingsWindow(): Promise<void> {
   return window.electronAPI.hideSettingsWindow()
 }
 
-export async function getGeminiApiKey(): Promise<string> {
-  return window.electronAPI.getGeminiApiKey()
-}
-
-export async function setGeminiApiKey(apiKey: string): Promise<boolean> {
-  return window.electronAPI.setGeminiApiKey(apiKey)
-}
-
 export async function getRecordingsFolder(): Promise<string> {
   return window.electronAPI.getRecordingsFolder()
 }

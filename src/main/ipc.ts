@@ -29,11 +29,9 @@ import {
   deleteLog,
   generateLogId,
   getAllLogs,
-  getGeminiApiKey,
   getLog,
   getOpenaiApiKey,
   onLogChange,
-  setGeminiApiKey,
   setLog,
   setOpenaiApiKey,
   store,
@@ -378,9 +376,9 @@ export function setupIpcHandlers() {
   ipcMain.handle(
     'triggerGenerateSummary',
     tryCatchIpcMain(async (_, logId: string) => {
-      const apiKey = getGeminiApiKey()
+      const apiKey = getOpenaiApiKey()
       if (!apiKey) {
-        throw new Error('Gemini API key is not set')
+        throw new Error('OpenAI API key is not set')
       }
       triggerGenerateSummary(logId, apiKey)
       return true
@@ -548,21 +546,6 @@ export function setupIpcHandlers() {
     'hideSettingsWindow',
     tryCatchIpcMain(async () => {
       settingsWindow?.hide()
-    }),
-  )
-
-  ipcMain.handle(
-    'getGeminiApiKey',
-    tryCatchIpcMain(async () => {
-      return getGeminiApiKey()
-    }),
-  )
-
-  ipcMain.handle(
-    'setGeminiApiKey',
-    tryCatchIpcMain(async (_, apiKey: string) => {
-      setGeminiApiKey(apiKey)
-      return true
     }),
   )
 

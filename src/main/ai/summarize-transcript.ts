@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai'
+import OpenAI from 'openai'
 import { z } from 'zod'
 import { store } from '../store'
 
@@ -25,10 +25,15 @@ export type Result = z.infer<typeof ResultSchema>
 
 export async function generateSummary(
   transcription: string,
-  geminiApiKey: string,
+  openaiApiKey: string,
 ): Promise<Result> {
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key is not set')
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key is not set')
+  }
+
+  // If transcription is empty, return early
+  if (!transcription || transcription.trim().length === 0) {
+    return { success: false, summary: '', hasContent: false }
   }
 
   // Get user context for personalized summaries
@@ -39,7 +44,7 @@ export async function generateSummary(
     ? `\n\nAdditional context about the speaker:\n${userContext}`
     : ''
 
-  const prompt = `You are a helpful assistant that creates objective, factual summaries of video logs.
+  const systemPrompt = `You are a helpful assistant that creates objective, factual summaries of video logs.
 
 Create a summary that:
 - Captures the main points, key topics, and important insights in 2-3 paragraphs
@@ -53,49 +58,34 @@ Create a summary that:
 
 If the transcript is empty or contains no meaningful words, set hasContent to false.
 
-Please create an objective summary of this log transcript:
+Respond with a JSON object containing:
+- "summary": string (the summary text)
+- "hasContent": boolean (whether there was meaningful content)`
 
-${transcription || ''}`
-
-  const client = new GoogleGenAI({ apiKey: geminiApiKey })
+  const client = new OpenAI({ apiKey: openaiApiKey })
 
   let res
   try {
-    res = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'object',
-          properties: {
-            summary: {
-              type: 'string',
-              description: 'The objective summary of the log transcript',
-            },
-            hasContent: {
-              type: 'boolean',
-              description:
-                'Whether the transcript contains meaningful content to summarize',
-            },
-          },
-          required: ['summary', 'hasContent'],
+    res = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Please create an objective summary of this log transcript:\n\n${transcription}`,
         },
-        maxOutputTokens: 500,
-        temperature: 0.7,
-      },
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 500,
+      temperature: 0.7,
     })
   } catch (error) {
-    // If transcription is empty, return empty string (don't set summary)
-    if (!transcription || transcription.trim().length === 0) {
-      return { success: false, summary: '', hasContent: false }
-    }
     throw new Error(
-      `Gemini API error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`,
     )
   }
 
-  const rawResponse = JSON.parse(res.text || '{}')
+  const rawResponse = JSON.parse(res.choices[0]?.message?.content || '{}')
 
   // Validate with Zod (API response doesn't include success)
   const parsedResponse = ApiResponseSchema.parse(rawResponse)
