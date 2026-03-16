@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, RefObject } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { MdForward10, MdReplay10 } from 'react-icons/md'
 import { VolumeControl } from './VolumeControl'
+import { PlayIcon, PauseIcon, FullscreenIcon, FullscreenExitIcon } from './icons'
 
 interface Props {
   videoRef: RefObject<HTMLVideoElement>
@@ -347,142 +348,111 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
     <div
       ref={controlsRef}
       className={twMerge(
-        'absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 pb-3 transition-opacity duration-300 rounded-md',
+        'absolute bottom-0 top-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-black/10 transition-opacity duration-300 rounded-md',
         showControls ? 'opacity-100' : 'opacity-0',
         className,
       )}
     >
-      {/* Seek Bar */}
-      <div className="mb-3">
-        <div
-          className="relative cursor-pointer py-2 -my-2 group"
-          onClick={handleSeekBarClick}
-          onMouseDown={handleSeekBarMouseDown}
-        >
+      <div className="absolute bottom-0 left-0 right-0 p-3 pb-3">
+        {/* Seek Bar */}
+        <div className="mb-3">
           <div
-            ref={seekBarRef}
-            className="relative h-1 bg-white/30 rounded-full pointer-events-none"
+            className="relative cursor-pointer py-2 -my-2 group"
+            onClick={handleSeekBarClick}
+            onMouseDown={handleSeekBarMouseDown}
           >
-            {/* Buffered Progress */}
             <div
-              className="absolute h-full bg-white/40 rounded-full pointer-events-none"
-              style={{ width: `${getBufferedPercent()}%` }}
+              ref={seekBarRef}
+              className="relative h-1 bg-white/30 rounded-full pointer-events-none"
+            >
+              {/* Buffered Progress */}
+              <div
+                className="absolute h-full bg-white/40 rounded-full pointer-events-none"
+                style={{ width: `${getBufferedPercent()}%` }}
+              />
+              {/* Played Progress */}
+              <div
+                className="absolute h-full bg-white rounded-full pointer-events-none"
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
+              {/* Seek Handle */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                style={{
+                  left: `${(currentTime / duration) * 100}%`,
+                  marginLeft: '-6px',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Controls Row */}
+        <div className="flex items-center gap-3 text-white">
+          {/* Play/Pause */}
+          <button
+            onClick={togglePlay}
+            className="hover:scale-110 transition-transform outline-none"
+            title={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? <PauseIcon /> : <PlayIcon />}
+          </button>
+
+          {/* Skip Backward */}
+          <button
+            onClick={skipBackward}
+            className="hover:scale-110 transition-transform"
+            title="Skip backward 10s"
+          >
+            <MdReplay10 size={28} />
+          </button>
+
+          {/* Skip Forward */}
+          <button
+            onClick={skipForward}
+            className="hover:scale-110 transition-transform"
+            title="Skip forward 10s"
+          >
+            <MdForward10 size={28} />
+          </button>
+
+          {/* Time Display */}
+          <div className="text-sm font-medium whitespace-nowrap select-none">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </div>
+
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-2">
+            {/* Volume */}
+            <VolumeControl
+              videoRef={videoRef}
+              isMuted={isMuted}
+              toggleMute={toggleMute}
             />
-            {/* Played Progress */}
-            <div
-              className="absolute h-full bg-white rounded-full pointer-events-none"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-            {/* Seek Handle */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-              style={{
-                left: `${(currentTime / duration) * 100}%`,
-                marginLeft: '-6px',
-              }}
-            />
+
+            {/* Playback Speed */}
+            <button
+              onClick={cycleSpeed}
+              className="text-sm font-medium px-2 py-1 hover:bg-white/20 rounded transition-colors w-[50px] text-center outline-none"
+              title="Cycle playback speed"
+            >
+              {playbackSpeed}x
+            </button>
+
+            {/* Fullscreen */}
+            {canFullscreen && (
+              <button
+                onClick={toggleFullscreen}
+                className="hover:scale-110 transition-transform"
+                title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              >
+                {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Controls Row */}
-      <div className="flex items-center gap-3 text-white">
-        {/* Play/Pause */}
-        <button
-          onClick={togglePlay}
-          className="hover:scale-110 transition-transform outline-none"
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
-
-        {/* Skip Backward */}
-        <button
-          onClick={skipBackward}
-          className="hover:scale-110 transition-transform"
-          title="Skip backward 10s"
-        >
-          <MdReplay10 size={28} />
-        </button>
-
-        {/* Skip Forward */}
-        <button
-          onClick={skipForward}
-          className="hover:scale-110 transition-transform"
-          title="Skip forward 10s"
-        >
-          <MdForward10 size={28} />
-        </button>
-
-        {/* Time Display */}
-        <div className="text-sm font-medium whitespace-nowrap select-none">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </div>
-
-        <div className="flex-1" />
-
-        <div className="flex items-center gap-2">
-          {/* Volume */}
-          <VolumeControl
-            videoRef={videoRef}
-            isMuted={isMuted}
-            toggleMute={toggleMute}
-          />
-
-          {/* Playback Speed */}
-          <button
-            onClick={cycleSpeed}
-            className="text-sm font-medium px-2 py-1 hover:bg-white/20 rounded transition-colors w-[50px] text-center outline-none"
-            title="Cycle playback speed"
-          >
-            {playbackSpeed}x
-          </button>
-
-          {/* Fullscreen */}
-          {canFullscreen && (
-            <button
-              onClick={toggleFullscreen}
-              className="hover:scale-110 transition-transform"
-              title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-            >
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </button>
-          )}
-        </div>
-      </div>
     </div>
-  )
-}
-
-// Icons
-function PlayIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  )
-}
-
-function PauseIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-    </svg>
-  )
-}
-
-function FullscreenIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-    </svg>
-  )
-}
-
-function FullscreenExitIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
-    </svg>
   )
 }

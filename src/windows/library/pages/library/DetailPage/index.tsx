@@ -5,14 +5,15 @@ import { PlaybackPreferencesProvider } from '~/shared/PlaybackPreferencesProvide
 import { Tooltip } from '~/shared/ui/Tooltip'
 import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../types'
-import { Toolbar } from './Toolbar'
+import { DebugToolbar } from './DebugToolbar'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
+import { ShrinkingPlayer } from './ShrinkingPlayer'
 import { SummarySubtitle } from './SummarySubtitle'
 import { TitleInput } from './TitleInput'
+import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
-import { DebugToolbar } from './DebugToolbar'
 
 interface Props {
   log: EnrichedLog
@@ -36,7 +37,6 @@ function DetailPageInner({ log, unselect }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [isPlayerMinimized, setIsPlayerMinimized] = useState(false)
 
   useEffect(() => {
     onViewLogEntry(log.id)
@@ -52,7 +52,6 @@ function DetailPageInner({ log, unselect }: Props) {
 
     const handleScroll = () => {
       setShowScrollTop(container.scrollTop > 400)
-      setIsPlayerMinimized(container.scrollTop > 100)
     }
 
     container.addEventListener('scroll', handleScroll)
@@ -75,20 +74,18 @@ function DetailPageInner({ log, unselect }: Props) {
       <div className="sticky top-0 z-10 bg-one">
         <div className="h-(--nav-height) drag-region " />
         <div className="pl-2 pr-4 pb-3">
-          <Player
-            ref={playerRef}
-            logId={log.id}
-            isVideo={!log.isAudioOnly}
-            src={`log-media://${log.id}`}
-            className={twMerge(
-              'w-full rounded-md transition-all duration-300',
-              log.isAudioOnly
-                ? 'max-h-[100px]'
-                : isPlayerMinimized
-                  ? 'h-[120px]'
-                  : 'h-[350px]',
-            )}
-          />
+          <ShrinkingPlayer scrollRef={scrollRef} disabled={log.isAudioOnly}>
+            <Player
+              ref={playerRef}
+              logId={log.id}
+              isVideo={!log.isAudioOnly}
+              src={`log-media://${log.id}`}
+              className={twMerge(
+                'w-full rounded-md',
+                log.isAudioOnly ? 'h-[100px]' : 'h-[350px]',
+              )}
+            />
+          </ShrinkingPlayer>
         </div>
       </div>
       <main className="flex flex-col gap-5 mt-4 pl-2 pr-4">
