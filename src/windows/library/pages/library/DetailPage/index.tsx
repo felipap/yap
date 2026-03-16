@@ -89,7 +89,7 @@ function DetailPageInner({ log, unselect }: Props) {
         </div>
       </div>
       <main className="flex flex-col gap-4 mt-4 pl-2 pr-4">
-        <div className="bg-two rounded-lg p-3 pt-3 flex flex-col gap-2">
+        <div className="bg-two rounded-lg p-3 pt-3 flex flex-col gap-1">
           <div className="flex items-start gap-2 -ml-3">
             <TitleInput
               logId={log.id}
