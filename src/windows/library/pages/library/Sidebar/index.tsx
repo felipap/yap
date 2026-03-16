@@ -40,10 +40,10 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
   })
 
   return (
-    <div className="w-[240px] h-full flex flex-col">
+    <div className="w-[240px] min-h-0 max-h-[800px]  bg-sidebar rounded-md flex flex-col overflow-hidden h-full">
       <FilterBox value={filterText} onChange={setFilterText} />
 
-      <div ref={parentRef} className="flex-1 overflow-y-auto pt-1">
+      <div ref={parentRef} className="flex-1 overflow-y-auto pt-1 min-h-0">
         {filteredLogs.length === 0 ? (
           <div className="text-center text-xs text-secondary/50 p-4 track-10">
             {filterText
@@ -86,21 +86,21 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
         )}
       </div>
 
-      <SidebarRecordButton onClick={() => navigate({ name: 'record' })} />
+      <div className="border-t p-3 h-[70px] shrink-0 flex justify-center">
+        <SidebarRecordButton onClick={() => navigate({ name: 'record' })} />
+      </div>
     </div>
   )
 }
 
 function SidebarRecordButton({ onClick }: { onClick: () => void }) {
   return (
-    <div className="border-t p-3 flex justify-center">
-      <button
-        onClick={onClick}
-        className="w-10 h-10 p-0.5 rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-105"
-      >
-        <div className="w-full h-full rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
-      </button>
-    </div>
+    <button
+      onClick={onClick}
+      className="w-10 h-10 p-0.5 rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-105"
+    >
+      <div className="w-full h-full rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
+    </button>
   )
 }
 

@@ -19,24 +19,22 @@ export function onChangeTopLevelPage(page: 'library' | 'record'): void {
     // libraryWindow.center()
   } else {
     // Restore previous bounds
-    const previousBounds = store.get('previousWindowBounds') as any
+    const previousBounds = store.get('previousWindowBounds') as {
+      width: number
+      height: number
+    } | null
 
     // Restore min/max constraints to library window defaults
     libraryWindow.setMinimumSize(800, 500)
     libraryWindow.setMaximumSize(800, 1000)
 
-    // Restore size
+    // Restore only the size, keeping the current window position
+    // (user may have moved the window while recording)
     if (previousBounds) {
-      libraryWindow.setBounds({
-        width: previousBounds.width,
-        height: previousBounds.height,
-        x: previousBounds.x,
-        y: previousBounds.y,
-      })
+      libraryWindow.setSize(previousBounds.width, previousBounds.height)
     } else {
       // Fallback to default library size
       libraryWindow.setSize(800, 500)
-      libraryWindow.center()
     }
   }
 }

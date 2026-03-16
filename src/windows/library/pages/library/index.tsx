@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import { MovieIcon } from '../../../shared/icons'
-import { PlaybackPreferencesProvider } from '../../../shared/PlaybackPreferencesProvider'
-import { useLog } from '../../../shared/useLog'
+import { useState } from 'react'
+import { twMerge } from 'tailwind-merge'
+import { MovieIcon } from '~/shared/icons'
+import { useLog } from '~/shared/useLog'
 import { SidebarLog } from '../../types'
-import { DetailPage } from './detail'
+import { DetailPage } from './DetailPage'
 import { DragDropWrapper } from './DragDropWrapper'
 import { Sidebar } from './Sidebar'
 
@@ -18,15 +18,13 @@ export default function Page() {
   let main
   if (log) {
     main = (
-      <PlaybackPreferencesProvider>
-        <DetailPage
-          key={log.id}
-          log={log}
-          unselect={() => {
-            setSelectedLogId(null)
-          }}
-        />
-      </PlaybackPreferencesProvider>
+      <DetailPage
+        key={log.id}
+        log={log}
+        unselect={() => {
+          setSelectedLogId(null)
+        }}
+      />
     )
   } else {
     main = <NoVideoPage />
@@ -34,13 +32,22 @@ export default function Page() {
 
   return (
     <DragDropWrapper>
-      <div className="flex h-full w-screen overflow-hidden bg-one gap-2 pl-2 pr-1.5 pb-2">
-        <div className="h-full bg-sidebar rounded-md">
-          <Sidebar
-            selectedLog={log ?? null}
-            onSelect={handleSelectLog}
-            unselect={() => setSelectedLogId(null)}
-          />
+      <div
+        className={twMerge(
+          'flex flex-1 h-full w-screen',
+          'bg-one',
+          'overflow-hidden gap-2 pl-2 pr-1.5 pb-2',
+        )}
+      >
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="drag-region h-(--nav-height) bg-one shrink-0" />
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Sidebar
+              selectedLog={log ?? null}
+              onSelect={handleSelectLog}
+              unselect={() => setSelectedLogId(null)}
+            />
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col h-full overflow-hidden rounded-md">
@@ -59,7 +66,7 @@ function NoVideoPage() {
           <MovieIcon size={40} className="text-secondary/80" />
         </div>
         <h3 className="text-md text-secondary/60">
-          Select a log or drag a file to import
+          Click an entry or drag a file to import
         </h3>
       </div>
     </div>
