@@ -21,9 +21,7 @@ export function RecordButton({
         <button
           onClick={onTogglePause}
           className="relative w-10 h-10 rounded-full bg-red-500 flex items-center justify-center transition-all hover:bg-red-600 hover:scale-110"
-        >
-          {/* <PlayIcon /> */}
-        </button>
+        ></button>
       )
     }
 
@@ -66,20 +64,6 @@ export function RecordButton({
   )
 }
 
-function PlayIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="text-white"
-    >
-      <path d="M8 5.14v14.72a1 1 0 0 0 1.5.86l11.5-7.36a1 1 0 0 0 0-1.72L9.5 4.28a1 1 0 0 0-1.5.86z" />
-    </svg>
-  )
-}
-
 interface PillButtonProps {
   onClick: () => void
   children: React.ReactNode
@@ -90,7 +74,7 @@ export function PillButton({ onClick, children }: PillButtonProps) {
     <button
       onClick={onClick}
       className={twMerge(
-        'px-3.5 shadow-md py-1.5 text-[15px] font-medium rounded-full transition-colors',
+        'px-3.5  py-1.5 text-[15px] font-medium rounded-full transition-colors',
         // 'text-white bg-black hover:bg-neutral-950'
         'text-black bg-white/80 hover:bg-neutral-100',
       )}

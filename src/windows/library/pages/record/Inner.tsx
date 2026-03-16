@@ -73,7 +73,9 @@ export function RecordInner({ close }: Props) {
         <div className="absolute left-6 flex items-center gap-3">
           {selectedMicrophoneId && (
             <>
-              <MicrophoneIcon />
+              <div className="text-black/50 dark:text-gray-50/20">
+                <MicrophoneIcon />
+              </div>
               <VolumeMeter
                 microphoneId={selectedMicrophoneId}
                 size="sm"
