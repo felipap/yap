@@ -109,8 +109,8 @@ function ItemImage({ data }: { data: SidebarItem }) {
 
       {data.isFavorited && (
         <MdFavorite
-          size={14}
-          className="absolute top-0.5 right-0.5 text-red-500 drop-shadow-sm"
+          size={12}
+          className="absolute top-1 right-1 text-white drop-shadow-sm"
         />
       )}
     </>
