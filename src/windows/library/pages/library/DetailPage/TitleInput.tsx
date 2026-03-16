@@ -6,9 +6,10 @@ interface Props {
   logId: string
   title: string
   isVideo: boolean
+  className?: string
 }
 
-export function TitleInput({ logId, isVideo, title }: Props) {
+export function TitleInput({ logId, isVideo, title, className }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [localTitle, setLocalTitle] = useState(title)
 
@@ -28,10 +29,11 @@ export function TitleInput({ logId, isVideo, title }: Props) {
     <textarea
       ref={textareaRef}
       className={twMerge(
-        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-3 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words',
+        'bg-transparent text-contrast !shadow-0 outline-0 select-none !ring-0 !border-0 rounded px-3 ml-[-5px] py-1 text-[20px] font-bold transition resize-none overflow-hidden whitespace-pre-wrap break-words w-full',
         localTitle.length > 0
           ? ''
           : 'placeholder:text-contrast !opacity-40 focus:opacity-80',
+        className,
       )}
       placeholder={isVideo ? 'Untitled video' : 'Untitled audio'}
       value={localTitle}

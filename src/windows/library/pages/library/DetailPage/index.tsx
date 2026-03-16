@@ -61,11 +61,12 @@ function DetailPageInner({ log, unselect }: Props) {
       </div>
       <div className="flex flex-col items-center gap-8 justify-start mt-5">
         <header className="px-0 flex flex-col gap-1 w-full">
-          <div className="flex items-start justify-between gap-2 pr-3">
+          <div className="flex items-start gap-2 pr-3">
             <TitleInput
               logId={log.id}
               isVideo={!log.isAudioOnly}
               title={log.title || ''}
+              className="flex-1 min-w-0"
             />
             <FloatingToolbar logId={log.id} onDeleted={unselect} />
           </div>

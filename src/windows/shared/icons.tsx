@@ -2,10 +2,10 @@ import { BsFillCollectionFill } from 'react-icons/bs'
 import {
   MdAccessTime,
   MdContentCopy,
-  MdDelete,
+  MdDeleteOutline,
   MdFavorite,
   MdFavoriteBorder,
-  MdFolder,
+  MdFolderOpen,
   MdIosShare,
   MdMic,
   MdMovie,
@@ -53,7 +53,7 @@ export function MicIcon({ size = 16, className }: IconProps) {
 }
 
 export function FolderIcon({ size = 16, className, ...props }: IconProps) {
-  return <MdFolder size={size} className={className} {...props} />
+  return <MdFolderOpen size={size} className={className} {...props} />
 }
 
 export function LibraryIcon({ size = 16, className }: IconProps) {
@@ -131,5 +131,5 @@ export function HeartIcon({
 }
 
 export function TrashIcon({ size = 16, className }: IconProps) {
-  return <MdDelete size={size} className={className} />
+  return <MdDeleteOutline size={size} className={className} />
 }
