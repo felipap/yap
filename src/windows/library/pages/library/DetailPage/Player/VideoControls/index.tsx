@@ -1,8 +1,13 @@
 import { useEffect, useState, useRef, RefObject } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { MdForward10, MdReplay10 } from 'react-icons/md'
+import { MdReplay } from 'react-icons/md'
 import { VolumeControl } from './VolumeControl'
-import { PlayIcon, PauseIcon, FullscreenIcon, FullscreenExitIcon } from './icons'
+import {
+  PlayIcon,
+  PauseIcon,
+  FullscreenIcon,
+  FullscreenExitIcon,
+} from './icons'
 
 interface Props {
   videoRef: RefObject<HTMLVideoElement>
@@ -349,7 +354,7 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
       ref={controlsRef}
       className={twMerge(
         'absolute bottom-0 top-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-black/10 transition-opacity duration-300 rounded-md',
-        showControls ? 'opacity-100' : 'opacity-0',
+        showControls ? 'opacity-100' : 'opacity-0 pointer-events-none',
         className,
       )}
     >
@@ -404,16 +409,16 @@ export function VideoControls({ videoRef, className, canFullscreen }: Props) {
             className="hover:scale-110 transition-transform"
             title="Skip backward 10s"
           >
-            <MdReplay10 size={28} />
+            <MdReplay size={23} />
           </button>
 
           {/* Skip Forward */}
           <button
             onClick={skipForward}
-            className="hover:scale-110 transition-transform"
+            className="hover:-scale-x-110 transition-transform -scale-x-100"
             title="Skip forward 10s"
           >
-            <MdForward10 size={28} />
+            <MdReplay size={23} />
           </button>
 
           {/* Time Display */}

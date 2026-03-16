@@ -60,7 +60,9 @@ export function withBoundary<P extends object>(
   ComponentToWrap: ComponentType<P>,
   fallback?: React.ReactNode,
 ): ComponentType<P> {
-  const WrappedComponent = forwardRef<any, PropsWithoutRef<P>>((props, ref) => {
+  const WrappedComponent = forwardRef<unknown, P>((props, ref) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const propsWithRef = { ...props, ref } as any
     return (
       <ErrorBoundary
         fallback={
@@ -74,7 +76,7 @@ export function withBoundary<P extends object>(
           console.error('Component error:', error)
         }}
       >
-        {createElement(ComponentToWrap, { ...props, ref } as P)}
+        <ComponentToWrap {...propsWithRef} />
       </ErrorBoundary>
     )
   })
