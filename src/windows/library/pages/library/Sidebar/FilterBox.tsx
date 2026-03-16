@@ -7,7 +7,7 @@ interface Props {
 
 export function FilterBox({ value, onChange }: Props) {
   return (
-    <div className="border-t p-1 group">
+    <div className="border-b p-1 group">
       <div className="relative">
         <SearchIcon
           className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary transition group-focus:opacity-20"

@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useMemo, useRef, useState } from 'react'
+import { useRouter } from '../../../../shared/Router'
 import { SidebarLog } from '../../../types'
 import { FilterBox } from './FilterBox'
 import { Item } from './Item'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
+  const { navigate } = useRouter()
   const { displayLogs, loading } = useIndexedLogData()
   const { filteredLogs, filterText, setFilterText } = useLogFilter(displayLogs)
 
@@ -39,6 +41,8 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
 
   return (
     <div className="w-[240px] h-full flex flex-col">
+      <FilterBox value={filterText} onChange={setFilterText} />
+
       <div ref={parentRef} className="flex-1 overflow-y-auto pt-1">
         {filteredLogs.length === 0 ? (
           <div className="text-center text-xs text-secondary/50 p-4 track-10">
@@ -82,7 +86,20 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
         )}
       </div>
 
-      <FilterBox value={filterText} onChange={setFilterText} />
+      <SidebarRecordButton onClick={() => navigate({ name: 'record' })} />
+    </div>
+  )
+}
+
+function SidebarRecordButton({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="border-t p-3 flex justify-center">
+      <button
+        onClick={onClick}
+        className="w-10 h-10 p-0.5 rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-105"
+      >
+        <div className="w-full h-full rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
+      </button>
     </div>
   )
 }
