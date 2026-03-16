@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/felipap/yap/compare/v0.10.6...v1.2.0) (2026-03-16)
+
+
+### Features
+
+* misc settings ([b6e5d00](https://github.com/felipap/yap/commit/b6e5d00df0ae94563b38d772d06ba1f131dbf259))
+
+
+### Bug Fixes
+
+* improve audio/video sync in MP4 recordings ([586fbc5](https://github.com/felipap/yap/commit/586fbc558b2fe8ceaaca94dbd5631a483fd4a054))
+* improve summary button labels ([ad3e5b0](https://github.com/felipap/yap/commit/ad3e5b0d4d5d3c52ba74f2aa8192d6f4d43db37d))
+* only auto-scroll transcript after clicking a subtitle ([caf0b6d](https://github.com/felipap/yap/commit/caf0b6d535db0f87a0fe3aa42e1b5861ae1216d5))
+* report progress when using cached audio extraction ([21c141d](https://github.com/felipap/yap/commit/21c141d1aa0b19e5cf66fdb047fe2212bf3fd104))
+
 ## [1.1.0](https://github.com/felipap/yap/compare/v0.10.6...v1.1.0) (2026-03-16)
 
 
