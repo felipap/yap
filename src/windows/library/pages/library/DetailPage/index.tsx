@@ -82,7 +82,7 @@ function DetailPageInner({ log, unselect }: Props) {
               src={`log-media://${log.id}`}
               className={twMerge(
                 'w-full rounded-md',
-                log.isAudioOnly ? 'h-[100px]' : 'h-[350px]',
+                log.isAudioOnly ? 'h-[100px]' : 'h-full',
               )}
             />
           </ShrinkingPlayer>

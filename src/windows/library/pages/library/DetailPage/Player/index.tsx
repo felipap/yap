@@ -154,22 +154,24 @@ export const Player = withBoundary(
 
       return (
         <div
-          className={twMerge('relative group', isFullscreen && 'w-full h-full')}
+          className={twMerge(
+            'relative group',
+            className,
+            isFullscreen && 'w-full h-full',
+          )}
         >
           <video
             ref={videoRef}
             controls={false}
             // autoPlay
             className={twMerge(
-              isBuffering
-                ? 'w-full h-auto rounded-lg shadow-lg opacity-50'
-                : 'opacity-100',
-              className,
+              'w-full h-full rounded-md',
+              isBuffering ? 'opacity-50' : 'opacity-100',
               // For audio, show background, otherwise it's weird.
               !isVideo && 'bg-neutral-500/60',
               'bg-neutral-500/60',
               'cursor-pointer',
-              isFullscreen ? 'w-full h-full object-contain' : 'object-cover',
+              isFullscreen ? 'object-contain' : 'object-cover',
             )}
             src={src}
             onClick={handleVideoClick}
