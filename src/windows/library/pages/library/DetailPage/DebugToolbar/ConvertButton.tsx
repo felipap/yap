@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MdRefresh, MdVideocam } from 'react-icons/md'
+import { MdRefresh, MdSyncAlt } from 'react-icons/md'
 import { convertToMp4, getConversionState } from '../../../../../shared/ipc'
 import { Button } from '../../../../../shared/ui/Button'
 
@@ -96,7 +96,7 @@ export function ConvertButton({ logId, disabled }: Props) {
     }
     return (
       <>
-        <MdVideocam size={16} />
+        <MdSyncAlt size={16} />
         <span>Convert to MP4</span>
       </>
     )

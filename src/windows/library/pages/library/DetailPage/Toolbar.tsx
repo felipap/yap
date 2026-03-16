@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { MdOutlineDriveFileMove, MdRefresh, MdVideocam } from 'react-icons/md'
+import { MdOutlineDriveFileMove, MdRefresh, MdSyncAlt } from 'react-icons/md'
 import { FolderIcon, HeartIcon, TrashIcon } from '~/shared/icons'
 import {
   convertToMp4,
@@ -180,7 +180,7 @@ export function Toolbar({
           {isConverting ? (
             <MdRefresh size={18} className="animate-spin" />
           ) : (
-            <MdVideocam size={18} />
+            <MdSyncAlt size={18} />
           )}
         </TooltipButton>
       )}
