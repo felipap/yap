@@ -82,7 +82,7 @@ export function SummarySubtitle({ log }: Props) {
         <GenerateButton
           onClick={handleGenerateSummary}
           isGenerating={isGenerating}
-          label="Generate"
+          label={isGenerating ? 'Summarizing...' : 'Summarize'}
         />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
@@ -115,6 +115,7 @@ export function SummarySubtitle({ log }: Props) {
         <GenerateButton
           onClick={handleGenerateSummary}
           isGenerating={isGenerating}
+          label={isGenerating ? 'Summarizing...' : 'Try again'}
         />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
@@ -125,9 +126,10 @@ export function SummarySubtitle({ log }: Props) {
 interface GenerateButtonProps {
   onClick: () => void
   isGenerating: boolean
+  label: string
 }
 
-function GenerateButton({ onClick, isGenerating }: GenerateButtonProps) {
+function GenerateButton({ onClick, isGenerating, label }: GenerateButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -137,7 +139,7 @@ function GenerateButton({ onClick, isGenerating }: GenerateButtonProps) {
       <RefreshIcon
         className={twMerge('w-3 h-3', isGenerating && 'animate-spin')}
       />
-      {isGenerating ? 'Summarizing...' : 'Try again'}
+      {label}
     </button>
   )
 }
