@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getRecordingMode,
-  getScreenSources,
   setRecordingMode as saveRecordingMode,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
@@ -9,6 +8,7 @@ import { RecordingMode } from '../../types'
 import { DeviceSelector } from './DeviceSelector'
 import { useCameras } from './hooks/useCameras'
 import { useMicrophones } from './hooks/useMicrophones'
+import { usePreviewStreams } from './hooks/usePreviewStreams'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
 import { RecordButton } from './RecordButton'
 import { Recorder } from './Recorder'
@@ -26,15 +26,19 @@ export function RecordInner({ close }: Props) {
     useCameras()
   const { microphones, selectedMicrophoneId, setSelectedMicrophoneId } =
     useMicrophones()
-  const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
-  const [screenPreviewStream, setScreenPreviewStream] =
-    useState<MediaStream | null>(null)
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const previewRef = useRef<PreviewScreenRef | null>(null)
   const handleStopRecordingRef = useRef<(() => Promise<void>) | null>(null)
   const recorderRef = useRef<Recorder | null>(null)
+
+  usePreviewStreams({
+    recordingMode,
+    selectedCameraId,
+    isRecording,
+    previewRef,
+  })
 
   useEffect(() => {
     if (!isRecording) {
@@ -86,125 +90,16 @@ export function RecordInner({ close }: Props) {
     }
   }, [])
 
-  const startCameraPreview = async (cameraId: string) => {
-    try {
-      // Stop any existing preview
-      if (previewStream) {
-        previewStream.getTracks().forEach((track) => track.stop())
-      }
-
-      // Start new preview
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: cameraId ? { exact: cameraId } : undefined,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      })
-      setPreviewStream(stream)
-
-      if (previewRef.current) {
-        previewRef.current.srcObject = stream
-      }
-    } catch (error) {
-      console.error('Failed to start camera preview:', error)
-    }
-  }
-
-  const stopCameraPreview = () => {
-    if (previewStream) {
-      previewStream.getTracks().forEach((track) => track.stop())
-      setPreviewStream(null)
-    }
-  }
-
-  const startScreenPreview = async () => {
-    try {
-      // Stop any existing screen preview
-      if (screenPreviewStream) {
-        screenPreviewStream.getTracks().forEach((track) => track.stop())
-      }
-
-      // Get screen sources
-      const sources = await getScreenSources()
-
-      if (sources.length === 0) {
-        throw new Error(
-          'No screen sources available. Please check screen recording permissions.',
-        )
-      }
-
-      const screenSource =
-        sources.find((source) => source.name.includes('Screen')) || sources[0]
-      console.log('Starting screen preview with source:', screenSource.name)
-
-      // Start screen preview
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          // @ts-ignore - Electron specific constraint
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: screenSource.id,
-            minWidth: 1280,
-            maxWidth: 1920,
-            minHeight: 720,
-            maxHeight: 1080,
-          },
-        },
-      })
-      setScreenPreviewStream(stream)
-
-      if (previewRef.current) {
-        previewRef.current.srcObject = stream
-      }
-    } catch (error) {
-      console.error('Failed to start screen preview:', error)
-    }
-  }
-
-  const stopScreenPreview = () => {
-    if (screenPreviewStream) {
-      screenPreviewStream.getTracks().forEach((track) => track.stop())
-      setScreenPreviewStream(null)
-    }
-  }
-
   useEffect(() => {
     loadSettings()
 
     return () => {
-      stopCameraPreview()
-      stopScreenPreview()
       // Cleanup if component unmounts while recording
       if (recorderRef.current) {
-        // Force stop recording and save any recorded data
         recorderRef.current.stop().catch(console.error)
       }
     }
   }, [loadSettings])
-
-  useEffect(() => {
-    if (!isRecording) {
-      if (recordingMode === 'camera' || recordingMode === 'both') {
-        if (selectedCameraId) {
-          startCameraPreview(selectedCameraId)
-        }
-        stopScreenPreview()
-      } else if (recordingMode === 'screen') {
-        startScreenPreview()
-        stopCameraPreview()
-      } else if (recordingMode === 'audio') {
-        // Audio mode doesn't need any preview
-        stopCameraPreview()
-        stopScreenPreview()
-      }
-    } else {
-      stopCameraPreview()
-      stopScreenPreview()
-    }
-  }, [recordingMode, selectedCameraId, isRecording])
 
   // Update video element when recording stream changes
   useEffect(() => {
@@ -222,7 +117,6 @@ export function RecordInner({ close }: Props) {
 
   const handleStartRecording = async () => {
     try {
-      // Start recording first
       const newRecorder = new Recorder(
         recordingMode,
         selectedCameraId,
@@ -240,9 +134,6 @@ export function RecordInner({ close }: Props) {
           previewRef.current.srcObject = cameraStream
         }
       }
-
-      // Stop preview stream after new stream is set up
-      stopCameraPreview()
     } catch (error) {
       console.error('Failed to start recording:', error)
       const errorMessage =
@@ -289,14 +180,13 @@ export function RecordInner({ close }: Props) {
   }, [recorder])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-one/40">
-      <div className="h-10 bg-black/40 shrink-0 drag-region" />
+    <div className="flex flex-col h-full overflow-hidden dark:bg-one/40 bg-white/20">
+      <div className="h-10  shrink-0 drag-region" />
       <div className="relative flex-1 flex flex-col items-center justify-center gap-4 min-h-0">
         {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">
           <div className="relative w-full h-full">
             <PreviewScreen mode={recordingMode} ref={previewRef} />
-
           </div>
         </div>
 
@@ -327,7 +217,6 @@ export function RecordInner({ close }: Props) {
             )}
           </div>
         )}
-
       </div>
 
       {/* Footer */}
