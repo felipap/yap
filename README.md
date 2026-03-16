@@ -9,10 +9,9 @@ way to capture your day-to-day and revisit it later.
 
 Download for macOS, Windows, and Linux from the [releases page](https://github.com/felipap/yap/releases/latest).
 
-## Sharing with AI
+## Transcription
 
-Yap lets you transcribe and summarize your videos. Trascription requires an
-OpenAI API key, and summarization requires a Gemini API key.
+Yap transcribes and summarizes your videos if you provide it an OpenAI API key.
 
 ## Privacy
 
