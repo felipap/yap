@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
 type Route = { name: 'library' } | { name: 'record' }
-const DEFAULT_ROUTE: Route = { name: 'record' }
+
+const DEFAULT_ROUTE: Route = { name: 'library' }
 
 interface RouterContextType {
   currentRoute: Route

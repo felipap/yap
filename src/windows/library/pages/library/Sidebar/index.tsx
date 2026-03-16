@@ -86,7 +86,7 @@ export function Sidebar({ selectedLog, onSelect, unselect }: Props) {
         )}
       </div>
 
-      <div className="border-t p-3 h-[70px] shrink-0 flex justify-center">
+      <div className="border-t p-3 h-[60px] shrink-0 flex justify-center">
         <SidebarRecordButton onClick={() => navigate({ name: 'record' })} />
       </div>
     </div>
