@@ -27,10 +27,7 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       null,
     )
     const previousActiveIndexRef = useRef<number | null>(null)
-    const [isUserScrolling, setIsUserScrolling] = useState(false)
-    const userScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-      null,
-    )
+    const [isScrollLocked, setIsScrollLocked] = useState(false)
 
     const formatTime = (seconds: number): string => {
       const mins = Math.floor(seconds / 60)
@@ -42,6 +39,7 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       if (playerRef.current) {
         playerRef.current.seekTo(startTime)
       }
+      setIsScrollLocked(true)
     }
 
     const syncToVideo = useCallback(() => {
@@ -87,8 +85,8 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
         return
       }
 
-      // Don't auto-scroll if user is scrolling
-      if (isUserScrolling) {
+      // Only auto-scroll if scroll is locked (user clicked a subtitle)
+      if (!isScrollLocked) {
         return
       }
 
@@ -97,14 +95,13 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
         behavior: 'auto',
         block: 'center',
       })
-    }, [playerRef, transcription.segments, isUserScrolling])
+    }, [playerRef, transcription.segments, isScrollLocked])
 
     useImperativeHandle(ref, () => ({
       syncToVideo,
     }))
 
-    // Detect user scroll to pause auto-tracking
-    // Using 'wheel' event because it only fires on user-initiated scrolls, not programmatic ones
+    // Unlock scroll when user scrolls manually
     useEffect(() => {
       const container = containerRef.current
       if (!container) {
@@ -130,17 +127,7 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       }
 
       const handleUserScroll = () => {
-        setIsUserScrolling(true)
-
-        // Clear any existing timeout
-        if (userScrollTimeoutRef.current) {
-          clearTimeout(userScrollTimeoutRef.current)
-        }
-
-        // Resume auto-tracking after 5 seconds of no user scroll
-        userScrollTimeoutRef.current = setTimeout(() => {
-          setIsUserScrolling(false)
-        }, 5000)
+        setIsScrollLocked(false)
       }
 
       // wheel event only fires on user-initiated scrolls (mouse wheel, trackpad)
@@ -151,9 +138,6 @@ export const Teleprompter = forwardRef<TeleprompterRef, TeleprompterProps>(
       return () => {
         scrollParent.removeEventListener('wheel', handleUserScroll)
         scrollParent.removeEventListener('touchmove', handleUserScroll)
-        if (userScrollTimeoutRef.current) {
-          clearTimeout(userScrollTimeoutRef.current)
-        }
       }
     }, [])
 
