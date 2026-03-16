@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge'
 interface Props {
   isRecording: boolean
   isPaused: boolean
+  disabled?: boolean
   onStartRecording: () => void
   onTogglePause: () => void
 }
@@ -10,6 +11,7 @@ interface Props {
 export function RecordButton({
   isRecording,
   isPaused,
+  disabled,
   onStartRecording,
   onTogglePause,
 }: Props) {
@@ -48,9 +50,18 @@ export function RecordButton({
   return (
     <button
       onClick={onStartRecording}
-      className="w-12 h-12 p-1 rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-[105%] group"
+      disabled={disabled}
+      className={twMerge(
+        'w-12 h-12 p-[2px] rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-[105%] group',
+        disabled && 'opacity-50 cursor-not-allowed hover:scale-100',
+      )}
     >
-      <div className="w-full h-full rounded-full bg-red-500 hover:bg-red-600 transition" />
+      <div
+        className={twMerge(
+          'w-full h-full rounded-full bg-red-500 transition',
+          !disabled && 'hover:bg-red-600',
+        )}
+      />
     </button>
   )
 }

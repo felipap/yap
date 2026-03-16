@@ -7,6 +7,7 @@ type RecordingState = 'idle' | 'recording' | 'paused'
 
 interface Props {
   recordingMode: RecordingMode
+  cameraId: string
   microphoneId: string
   previewRef: React.RefObject<PreviewScreenRef | null>
   onRecordingComplete: () => void
@@ -14,6 +15,7 @@ interface Props {
 
 export function useRecording({
   recordingMode,
+  cameraId,
   microphoneId,
   previewRef,
   onRecordingComplete,
@@ -104,7 +106,7 @@ export function useRecording({
 
   const start = useCallback(async () => {
     try {
-      const newRecorder = new Recorder(recordingMode, '', microphoneId)
+      const newRecorder = new Recorder(recordingMode, cameraId, microphoneId)
       setRecorder(newRecorder)
       await newRecorder.start()
       setState('recording')
@@ -128,7 +130,7 @@ export function useRecording({
 
       alert(`Failed to start recording: ${errorMessage}${errorContext}`)
     }
-  }, [recordingMode, microphoneId, previewRef])
+  }, [recordingMode, cameraId, microphoneId, previewRef])
 
   const stop = useCallback(async () => {
     if (!recorder) {

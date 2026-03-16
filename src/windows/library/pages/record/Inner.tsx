@@ -8,6 +8,7 @@ import { useRouter } from '~/shared/Router'
 import { VolumeMeter } from '~/shared/ui/VolumeMeter'
 import { RecordingMode } from '../../types'
 import { PillButton, RecordButton } from './buttons'
+import { useCameras } from './hooks/useCameras'
 import { useMicrophones } from './hooks/useMicrophones'
 import { usePreviewStreams } from './hooks/usePreviewStreams'
 import { useRecording } from './hooks/useRecording'
@@ -22,11 +23,20 @@ export function RecordInner({ close }: Props) {
   const router = useRouter()
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
   const { selectedMicrophoneId } = useMicrophones()
+  const { cameras, selectedCameraId } = useCameras()
   const previewRef = useRef<PreviewScreenRef | null>(null)
+
+  const hasCamera = cameras.length > 0
+  const canRecord =
+    recordingMode === 'screen' ||
+    recordingMode === 'audio' ||
+    (recordingMode === 'camera' && hasCamera) ||
+    (recordingMode === 'both' && hasCamera)
 
   const { isRecording, isPaused, recordingTime, start, stop, togglePause } =
     useRecording({
       recordingMode,
+      cameraId: selectedCameraId,
       microphoneId: selectedMicrophoneId,
       previewRef,
       onRecordingComplete: () => router.navigate({ name: 'library' }),
@@ -34,7 +44,7 @@ export function RecordInner({ close }: Props) {
 
   usePreviewStreams({
     recordingMode,
-    selectedCameraId: null,
+    selectedCameraId,
     isRecording,
     previewRef,
   })
@@ -93,6 +103,7 @@ export function RecordInner({ close }: Props) {
         <RecordButton
           isRecording={isRecording}
           isPaused={isPaused}
+          disabled={!canRecord}
           onStartRecording={start}
           onTogglePause={togglePause}
         />
