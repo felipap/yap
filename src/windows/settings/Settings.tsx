@@ -153,15 +153,18 @@ export function Settings() {
 
   return (
     <div className="min-h-screen select-none dark:bg-[#2B2C2C] bg-[#FFF] py-5 px-[16px]">
-      <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        hasTranscriptWarning={!apiKey || !openaiApiKey}
+      />
 
       <div className="min-h-[calc(100vh-85px)] mt-[-12px] py-4 px-[20px] bg-[#F7F7F7] dark:bg-[#323333] border border-[#ECECEC] dark:border-[#4B4B4B] rounded-2xl">
         {activeTab === 'general' && (
           <GeneralSettings
             recordingsFolder={recordingsFolder}
             onRecordingsFolderChange={setRecordingsFolder}
-            userContext={userContext}
-            onUserContextChange={setUserContext}
             sentryEnabled={sentryEnabled}
             onSentryEnabledChange={setSentryEnabled}
           />
@@ -173,6 +176,8 @@ export function Settings() {
             onApiKeyChange={setApiKey}
             openaiApiKey={openaiApiKey}
             onOpenaiApiKeyChange={setOpenaiApiKey}
+            userContext={userContext}
+            onUserContextChange={setUserContext}
           />
         )}
       </div>
@@ -188,9 +193,10 @@ interface Props {
   tabs: string[]
   activeTab: string
   onTabChange: (tab: string) => void
+  hasTranscriptWarning: boolean
 }
 
-export function Tabs({ tabs, activeTab, onTabChange }: Props) {
+export function Tabs({ tabs, activeTab, onTabChange, hasTranscriptWarning }: Props) {
   return (
     <div className="flex justify-center">
       <div className="inline-flex bg-neutral-200 dark:bg-neutral-700 rounded-lg">
@@ -199,13 +205,15 @@ export function Tabs({ tabs, activeTab, onTabChange }: Props) {
             key={tab}
             onClick={() => onTabChange(tab)}
             className={twMerge(
-              'px-4 h-[24px] text-sm font-medium antialiased font-text text-[13px] rounded-md transition-all',
+              'px-4 h-[24px] text-sm font-medium antialiased font-text text-[13px] rounded-md transition-all flex items-center gap-1.5',
               activeTab === tab
-                ? // ? 'bg-white dark:bg-neutral-600 text-contrast shadow-sm'
-                  'bg-highlight text-white dark:text-white'
+                ? 'bg-highlight text-white dark:text-white'
                 : 'text-secondary hover:text-contrast',
             )}
           >
+            {tab === 'transcripts' && hasTranscriptWarning && (
+              <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            )}
             {tab === 'general' ? 'General' : 'Transcripts'}
           </button>
         ))}

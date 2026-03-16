@@ -7,6 +7,8 @@ interface Props {
   onApiKeyChange: (key: string) => void
   openaiApiKey: string
   onOpenaiApiKeyChange: (key: string) => void
+  userContext: string
+  onUserContextChange: (context: string) => void
 }
 
 export function TranscriptsSettings({
@@ -14,12 +16,27 @@ export function TranscriptsSettings({
   onApiKeyChange,
   openaiApiKey,
   onOpenaiApiKeyChange,
+  userContext,
+  onUserContextChange,
 }: Props) {
   const [showApiKey, setShowApiKey] = useState(false)
   const [showOpenaiKey, setShowOpenaiKey] = useState(false)
 
   return (
     <div className="space-y-4">
+      <div>
+        <Title htmlFor="userContext">About you</Title>
+        <Subtitle>Context will help AI generate better summaries.</Subtitle>
+        <textarea
+          id="userContext"
+          value={userContext}
+          onChange={(e) => onUserContextChange(e.target.value)}
+          placeholder="Enter information about yourself, your role, interests, and context..."
+          rows={8}
+          className="w-full native-input text-[14px] min-h-[150px] py-2 leading-[1.3] bg-three border text-contrast placeholder:text-secondary"
+        />
+      </div>
+
       <div>
         <Title htmlFor="apiKey">Gemini API Key</Title>
         <Subtitle>Used for AI summaries</Subtitle>
