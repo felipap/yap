@@ -1,7 +1,7 @@
 import 'source-map-support/register'
 
 import { IPCMode, init as SentryInit } from '@sentry/electron/main'
-import { app } from 'electron'
+import { app, dialog } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
@@ -10,6 +10,10 @@ import { migrateTranscriptsFromStore } from './store/transcripts'
 import { setupMenu } from './menu'
 // import { createTray } from './tray'
 import { setupAutoUpdater } from './updater'
+import {
+  cancelStreamingRecording,
+  isRecordingActive,
+} from './recording'
 import {
   createLibraryWindow,
   createSettingsWindow,
@@ -140,6 +144,28 @@ app.on('window-all-closed', () => {
 })
 
 // Before app quits
-app.on('before-quit', () => {
-  app.isQuitting = true
+app.on('before-quit', async (event) => {
+  if (isRecordingActive() && !app.isQuitting) {
+    event.preventDefault()
+
+    const response = await dialog.showMessageBox(libraryWindow, {
+      type: 'warning',
+      buttons: ['Cancel', 'Quit Anyway'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Recording in Progress',
+      message: 'A recording is currently in progress.',
+      detail:
+        'Quitting will stop the recording. Are you sure you want to quit?',
+    })
+
+    if (response.response === 1) {
+      libraryWindow?.webContents.send('stop-recording-requested')
+      await cancelStreamingRecording()
+      app.isQuitting = true
+      app.quit()
+    }
+  } else {
+    app.isQuitting = true
+  }
 })
