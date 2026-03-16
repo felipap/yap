@@ -221,13 +221,16 @@ export function RecordInner({ close }: Props) {
 
       {/* Footer */}
       <footer className="relative flex items-center justify-center py-4 px-6 shrink-0 h-[80px]">
-        <div className="absolute left-6">
+        <div className="absolute left-6 flex items-center gap-3">
           {selectedMicrophoneId && (
-            <VolumeMeter
-              microphoneId={selectedMicrophoneId}
-              size="sm"
-              showLabel={false}
-            />
+            <>
+              <MicrophoneIcon />
+              <VolumeMeter
+                microphoneId={selectedMicrophoneId}
+                size="sm"
+                showLabel={false}
+              />
+            </>
           )}
         </div>
         <RecordButton
@@ -245,7 +248,7 @@ export function RecordInner({ close }: Props) {
             onClick={close}
             className="absolute right-6 px-3 py-1.5 text-[15px] font-medium text-black/70 bg-white/70 hover:bg-white/80 rounded-full transition-colors"
           >
-            Cancel
+            Library
           </button>
         )}
       </footer>
@@ -262,4 +265,24 @@ const formatTime = (seconds: number): string => {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function MicrophoneIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-black/30 dark:text-gray-50/20"
+    >
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" x2="12" y1="19" y2="22" />
+    </svg>
+  )
 }
