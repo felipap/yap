@@ -71,7 +71,7 @@ function DetailPageInner({ log, unselect }: Props) {
       )}
     >
       <div className="sticky top-0 z-10 bg-one">
-        <div className="h-(--nav-height) drag-region" />
+        <div className="h-(--nav-height) drag-region " />
         <div className="pl-2 pr-4 pb-3">
           <Player
             ref={playerRef}

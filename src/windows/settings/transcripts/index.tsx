@@ -1,61 +1,82 @@
-import { useState } from 'react'
-import { VisibilityIcon, VisibilityOffIcon } from '../../shared/icons'
-import { Subtitle, Title } from '../../shared/ui/macos-native'
+import { useEffect, useRef, useState } from 'react'
+import { PasswordInput, Subtitle, Title } from '../../shared/ui/macos-native'
 
 interface Props {
-  openaiApiKey: string
-  onOpenaiApiKeyChange: (key: string) => void
-  userContext: string
-  onUserContextChange: (context: string) => void
+  onApiKeyChange: (hasKey: boolean) => void
 }
 
-export function TranscriptsSettings({
-  openaiApiKey,
-  onOpenaiApiKeyChange,
-  userContext,
-  onUserContextChange,
-}: Props) {
-  const [showOpenaiKey, setShowOpenaiKey] = useState(false)
+export function TranscriptsSettings({ onApiKeyChange }: Props) {
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
+  const [userContext, setUserContext] = useState('')
+  const isInitialLoad = useRef(true)
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const oaiKey = await window.electronAPI.getOpenaiApiKey()
+      setOpenaiApiKey(oaiKey)
+      onApiKeyChange(!!oaiKey)
+
+      const context = await window.electronAPI.getUserContext()
+      setUserContext(context)
+
+      isInitialLoad.current = false
+    }
+    loadSettings()
+  }, [onApiKeyChange])
+
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      await window.electronAPI.setOpenaiApiKey(openaiApiKey)
+      onApiKeyChange(!!openaiApiKey)
+    }, 500)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [openaiApiKey, onApiKeyChange])
+
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      await window.electronAPI.setUserContext(userContext)
+    }, 500)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [userContext])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div>
+        <Title htmlFor="openaiApiKey">OpenAI API Key</Title>
+        <Subtitle>Used to transcribe and summarize your logs.</Subtitle>
+        <PasswordInput
+          id="openaiApiKey"
+          value={openaiApiKey}
+          onChange={setOpenaiApiKey}
+          placeholder="Enter your OpenAI API key"
+        />
+      </div>
+
       <div>
         <Title htmlFor="userContext">About you</Title>
         <Subtitle>Context will help AI generate better summaries.</Subtitle>
         <textarea
           id="userContext"
           value={userContext}
-          onChange={(e) => onUserContextChange(e.target.value)}
+          onChange={(e) => setUserContext(e.target.value)}
           placeholder="Enter information about yourself, your role, interests, and context..."
           rows={8}
           className="w-full native-input text-[14px] min-h-[150px] py-2 leading-[1.3] bg-three border text-contrast placeholder:text-secondary"
         />
-      </div>
-
-      <div>
-        <Title htmlFor="openaiApiKey">OpenAI API Key</Title>
-        <Subtitle>Used for transcription and summaries</Subtitle>
-        <div className="flex gap-2 items-center">
-          <input
-            id="openaiApiKey"
-            type={showOpenaiKey ? 'text' : 'password'}
-            value={openaiApiKey}
-            onChange={(e) => onOpenaiApiKeyChange(e.target.value)}
-            placeholder="Enter your OpenAI API key"
-            className="native-input text-[14px] flex-1 h-8 bg-three border-none text-contrast focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => setShowOpenaiKey(!showOpenaiKey)}
-            className="text-secondary hover:text-contrast transition-colors"
-          >
-            {showOpenaiKey ? (
-              <VisibilityOffIcon size={18} />
-            ) : (
-              <VisibilityIcon size={18} />
-            )}
-          </button>
-        </div>
       </div>
     </div>
   )

@@ -4,18 +4,21 @@ import { findIconPath } from './utils'
 
 export let settingsWindow: BrowserWindow | null = null
 
+const WIDTH = 500
+const HEIGHT = 500
+
 export function createSettingsWindow(): BrowserWindow {
   if (settingsWindow) {
     throw new Error('SettingsWindow already created')
   }
 
   const settingsWindowOptions: Electron.BrowserWindowConstructorOptions = {
-    width: 500,
-    height: 600,
-    minWidth: 500,
-    minHeight: 600,
-    maxWidth: 500,
-    maxHeight: 600,
+    width: WIDTH,
+    height: HEIGHT,
+    minWidth: WIDTH,
+    minHeight: HEIGHT,
+    maxWidth: WIDTH,
+    maxHeight: HEIGHT,
     center: true,
     resizable: true,
     alwaysOnTop: true,

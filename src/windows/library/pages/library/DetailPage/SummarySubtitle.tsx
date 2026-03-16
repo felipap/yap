@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { ClockIcon, RefreshIcon } from '../../../../shared/icons'
-import { triggerGenerateSummary } from '../../../../shared/ipc'
+import { RefreshIcon } from '~/shared/icons'
+import { triggerGenerateSummary } from '~/shared/ipc'
 import { EnrichedLog } from '../../../types'
 
 interface Props {
@@ -14,6 +14,7 @@ export function SummarySubtitle({ log }: Props) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const textRef = useRef<HTMLDivElement>(null)
+  const summaryAtGenerateStart = useRef<string | null>(null)
 
   const summary = log.summary || ''
 
@@ -29,22 +30,34 @@ export function SummarySubtitle({ log }: Props) {
     }
   }, [summary])
 
+  useEffect(() => {
+    if (isGenerating && summary !== summaryAtGenerateStart.current) {
+      setIsGenerating(false)
+      summaryAtGenerateStart.current = null
+    }
+  }, [isGenerating, summary])
+
   const handleGenerateSummary = async () => {
     if (!log.transcription) {
       setError('No transcription available to generate summary')
       return
     }
 
+    summaryAtGenerateStart.current = summary
     setIsGenerating(true)
     setError(null)
 
     try {
       await triggerGenerateSummary(log.id)
+      setTimeout(() => {
+        setIsGenerating(false)
+        summaryAtGenerateStart.current = null
+      }, 30000)
     } catch (err) {
       console.error('Summary generation failed:', err)
       setError(err instanceof Error ? err.message : 'Summary generation failed')
-    } finally {
       setIsGenerating(false)
+      summaryAtGenerateStart.current = null
     }
   }
 
@@ -93,7 +106,7 @@ export function SummarySubtitle({ log }: Props) {
             onClick={() => setIsExpanded((v) => !v)}
             className={twMerge(
               'text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity mr-2',
-              !isExpanded && 'group-hover:opacity-80',
+              !isExpanded && 'hover:opacity-80',
             )}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -102,7 +115,6 @@ export function SummarySubtitle({ log }: Props) {
         <GenerateButton
           onClick={handleGenerateSummary}
           isGenerating={isGenerating}
-          label="Try again"
         />
         {error && <div className="text-xs text-red-600">{error}</div>}
       </div>
@@ -113,27 +125,19 @@ export function SummarySubtitle({ log }: Props) {
 interface GenerateButtonProps {
   onClick: () => void
   isGenerating: boolean
-  label: string
 }
 
-function GenerateButton({ onClick, isGenerating, label }: GenerateButtonProps) {
+function GenerateButton({ onClick, isGenerating }: GenerateButtonProps) {
   return (
     <button
       onClick={onClick}
       className="text-xs text-contrast opacity-40 hover:opacity-70 transition-opacity flex items-center gap-1"
       disabled={isGenerating}
     >
-      {isGenerating ? (
-        <>
-          <ClockIcon className="w-3 h-3" />
-          Generating...
-        </>
-      ) : (
-        <>
-          <RefreshIcon className="w-3 h-3" />
-          {label}
-        </>
-      )}
+      <RefreshIcon
+        className={twMerge('w-3 h-3', isGenerating && 'animate-spin')}
+      />
+      {isGenerating ? 'Summarizing...' : 'Try again'}
     </button>
   )
 }
