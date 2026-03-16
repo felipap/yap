@@ -28,7 +28,9 @@
     "@typescript-eslint/no-empty-function": "off",
     // "consistent-return": "error",
     "@typescript-eslint/no-extra-semi": "off",
-    "no-extra-semi": "off" // apparently still needed?
+    "no-extra-semi": "off", // apparently still needed?
     // "no-console": "warn"
+    "import/default": "off",
+    "import/no-named-as-default-member": "off"
   }
 }
