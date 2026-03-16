@@ -61,8 +61,7 @@ export function withBoundary<P extends object>(
   fallback?: React.ReactNode,
 ): ComponentType<P> {
   const WrappedComponent = forwardRef<unknown, P>((props, ref) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const propsWithRef = { ...props, ref } as any
+    const propsWithRef = { ...props, ref } as P & { ref: typeof ref }
     return (
       <ErrorBoundary
         fallback={
