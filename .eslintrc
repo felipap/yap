@@ -13,6 +13,13 @@
     "plugin:import/typescript"
   ],
   "parser": "@typescript-eslint/parser",
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": ["src/windows/tsconfig.json", "src/main/tsconfig.json"]
+      }
+    }
+  },
   "rules": {
     "@typescript-eslint/ban-ts-comment": "off",
     "no-empty": "off",
