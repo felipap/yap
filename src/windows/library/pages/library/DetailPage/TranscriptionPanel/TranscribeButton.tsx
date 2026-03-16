@@ -85,19 +85,21 @@ export function TranscribeButton({
         onClick={handleTranscribe}
         disabled={computedIsTranscribing || disabled}
         className={twMerge(
-          'btn-secondary text-nowrap text-[12px] rounded-md border hover:opacity-80 transition-opacity bg-two h-7 px-2 dark:border-white/5',
+          'text-nowrap text-sm font-medium rounded-full transition-all px-5 py-2',
+          'bg-contrast text-inverted hover:opacity-90',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
           className,
         )}
       >
         {computedIsTranscribing ? (
           <div className="flex items-center gap-2">
-            <MdRefresh size={14} className="animate-spin" />
+            <MdRefresh size={16} className="animate-spin" />
             <span>{computedProgressLabel}</span>
-            <span className="text-xs opacity-75">{computedProgress}%</span>
+            <span className="text-sm opacity-75">{computedProgress}%</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5">
-            <MicIcon size={14} />
+          <div className="flex items-center gap-2">
+            <MicIcon size={16} />
             <span>Transcribe</span>
           </div>
         )}

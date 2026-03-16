@@ -56,8 +56,7 @@ export const TranscriptionPanel = withBoundary(function ({
 
   if (!transcription) {
     return (
-      <div className="flex justify-between items-center">
-        <div className="text-md font-medium text-contrast">Transcript</div>
+      <div className="flex flex-col items-center justify-center py-6 gap-3">
         <TranscribeButton
           logId={logId}
           useExternal
