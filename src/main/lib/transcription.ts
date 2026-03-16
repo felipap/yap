@@ -40,10 +40,14 @@ export async function extractAudioFromVideo(
   try {
     await access(audioPath)
     debug(`Using cached audio file: ${audioPath}`)
+    onProgress?.(100) // Report completion when using cached audio
     return audioPath
   } catch {
     // Audio doesn't exist, extract it
   }
+
+  // Report extraction starting
+  onProgress?.(0)
 
   // Check if source video file is actually readable
   const isReadable = await isFileActuallyReadable(videoPath)
