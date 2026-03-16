@@ -108,9 +108,25 @@ export class Recorder {
     }
   }
 
+  pause(): void {
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.pause()
+    }
+  }
+
+  resume(): void {
+    if (this.mediaRecorder && this.mediaRecorder.state === 'paused') {
+      this.mediaRecorder.resume()
+    }
+  }
+
   async stop(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.mediaRecorder || this.mediaRecorder.state !== 'recording') {
+      if (
+        !this.mediaRecorder ||
+        (this.mediaRecorder.state !== 'recording' &&
+          this.mediaRecorder.state !== 'paused')
+      ) {
         resolve()
         return
       }

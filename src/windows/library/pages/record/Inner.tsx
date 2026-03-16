@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { MicrophoneIcon } from '../../../shared/icons'
 import {
   getRecordingMode,
   setRecordingMode as saveRecordingMode,
 } from '../../../shared/ipc'
 import { useRouter } from '../../../shared/Router'
+import { VolumeMeter } from '../../../shared/ui/VolumeMeter'
 import { RecordingMode } from '../../types'
+import { PillButton, RecordButton } from './buttons'
 import { DeviceSelector } from './DeviceSelector'
 import { useCameras } from './hooks/useCameras'
 import { useMicrophones } from './hooks/useMicrophones'
 import { usePreviewStreams } from './hooks/usePreviewStreams'
 import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
-import { RecordButton } from './RecordButton'
 import { Recorder } from './Recorder'
 import { RecordingModeSelector } from './RecordingModeSelector'
-import { VolumeMeter } from '../../../shared/ui/VolumeMeter'
 
 interface Props {
   close: () => void
@@ -28,6 +29,7 @@ export function RecordInner({ close }: Props) {
     useMicrophones()
   const [recorder, setRecorder] = useState<Recorder | null>(null)
   const [isRecording, setIsRecording] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const previewRef = useRef<PreviewScreenRef | null>(null)
   const handleStopRecordingRef = useRef<(() => Promise<void>) | null>(null)
@@ -41,7 +43,7 @@ export function RecordInner({ close }: Props) {
   })
 
   useEffect(() => {
-    if (!isRecording) {
+    if (!isRecording || isPaused) {
       return
     }
 
@@ -77,7 +79,7 @@ export function RecordInner({ close }: Props) {
         removeStopRecordingListener()
       }
     }
-  }, [isRecording, recorder])
+  }, [isRecording, isPaused, recorder])
 
   const loadSettings = useCallback(async () => {
     try {
@@ -160,13 +162,27 @@ export function RecordInner({ close }: Props) {
     try {
       await recorder.stop()
       setIsRecording(false)
+      setIsPaused(false)
       setRecorder(null)
       setRecordingTime(0)
-      // Navigate back to library after stopping
       router.navigate({ name: 'library' })
     } catch (error) {
       console.error('Failed to stop recording:', error)
       alert('Failed to stop recording.')
+    }
+  }
+
+  const handleTogglePause = () => {
+    if (!recorder) {
+      return
+    }
+
+    if (isPaused) {
+      recorder.resume()
+      setIsPaused(false)
+    } else {
+      recorder.pause()
+      setIsPaused(true)
     }
   }
 
@@ -235,21 +251,24 @@ export function RecordInner({ close }: Props) {
         </div>
         <RecordButton
           isRecording={isRecording}
+          isPaused={isPaused}
           onStartRecording={handleStartRecording}
-          onStopRecording={handleStopRecording}
+          onTogglePause={handleTogglePause}
         />
-        {isRecording && (
+        {isRecording && !isPaused && (
           <div className="absolute right-6 text-[19px] font-medium text-contrast tabular-nums">
             {formatTime(recordingTime)}
           </div>
         )}
+        {isRecording && isPaused && (
+          <div className="absolute right-6">
+            <PillButton onClick={handleStopRecording}>Done</PillButton>
+          </div>
+        )}
         {!isRecording && (
-          <button
-            onClick={close}
-            className="absolute right-6 px-3 py-1.5 text-[15px] font-medium text-black/70 bg-white/70 hover:bg-white/80 rounded-full transition-colors"
-          >
-            Library
-          </button>
+          <div className="absolute right-6">
+            <PillButton onClick={close}>Library</PillButton>
+          </div>
         )}
       </footer>
     </div>
@@ -265,24 +284,4 @@ const formatTime = (seconds: number): string => {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
   return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-function MicrophoneIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-black/30 dark:text-gray-50/20"
-    >
-      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-      <line x1="12" x2="12" y1="19" y2="22" />
-    </svg>
-  )
 }
