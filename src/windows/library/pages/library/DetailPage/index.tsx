@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { onViewLogEntry } from '../../../../shared/ipc'
-import { withBoundary } from '../../../../shared/withBoundary'
+import { onViewLogEntry } from '~/shared/ipc'
+import { PlaybackPreferencesProvider } from '~/shared/PlaybackPreferencesProvider'
+import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../types'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
@@ -17,19 +18,26 @@ interface Props {
 }
 
 export const DetailPage = withBoundary(function ({ log, unselect }: Props) {
+  const isMissing = !log.fileExists
+  if (isMissing) {
+    return <MissingFileDetailPage log={log} unselect={unselect} />
+  }
+
+  return (
+    <PlaybackPreferencesProvider>
+      <DetailPageInner log={log} unselect={unselect} />
+    </PlaybackPreferencesProvider>
+  )
+})
+
+function DetailPageInner({ log, unselect }: Props) {
   const playerRef = useRef<PlayerRef | null>(null)
 
-  // Notify backend when viewing this log entry
   useEffect(() => {
     onViewLogEntry(log.id)
   }, [log.id])
 
   usePlayerShortcuts({ playerRef })
-
-  const isMissing = !log.fileExists
-  if (isMissing) {
-    return <MissingFileDetailPage log={log} unselect={unselect} />
-  }
 
   return (
     <div
@@ -71,4 +79,4 @@ export const DetailPage = withBoundary(function ({ log, unselect }: Props) {
       </div>
     </div>
   )
-})
+}
