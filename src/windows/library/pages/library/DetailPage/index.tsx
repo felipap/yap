@@ -4,14 +4,14 @@ import { onViewLogEntry } from '~/shared/ipc'
 import { PlaybackPreferencesProvider } from '~/shared/PlaybackPreferencesProvider'
 import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../types'
-import { FloatingToolbar } from './FloatingToolbar'
+import { Toolbar } from './Toolbar'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
 import { SummarySubtitle } from './SummarySubtitle'
 import { TitleInput } from './TitleInput'
-import { Toolbar } from './Toolbar'
 import { TranscriptionPanel } from './TranscriptionPanel'
 import { usePlayerShortcuts } from './usePlayerShortcuts'
+import { DebugToolbar } from './DebugToolbar'
 
 interface Props {
   log: EnrichedLog
@@ -61,14 +61,26 @@ function DetailPageInner({ log, unselect }: Props) {
       </div>
       <div className="flex flex-col items-center gap-8 justify-start mt-5">
         <header className="px-0 flex flex-col gap-1 w-full">
-          <div className="flex items-start gap-2 pr-3">
+          <div className="flex items-start gap-2 pr-3 pt-2">
             <TitleInput
               logId={log.id}
               isVideo={!log.isAudioOnly}
               title={log.title || ''}
               className="flex-1 min-w-0"
             />
-            <FloatingToolbar logId={log.id} onDeleted={unselect} />
+            <div className="-mt-2">
+              <Toolbar
+                logId={log.id}
+                isFavorited={log.isFavorited ?? false}
+                isWebmOrMov={
+                  log.name?.toLowerCase().endsWith('.webm') ||
+                  log.name?.toLowerCase().endsWith('.mov') ||
+                  false
+                }
+                isInDefaultFolder={log.isInDefaultFolder ?? true}
+                onDeleted={unselect}
+              />
+            </div>
           </div>
           <div className="px-1.5">
             <SummarySubtitle log={log} />
@@ -80,7 +92,7 @@ function DetailPageInner({ log, unselect }: Props) {
         </div>
 
         <div className="px-1 w-full">
-          {/* <Toolbar log={log} unselect={unselect} /> */}
+          <DebugToolbar log={log} unselect={unselect} />
         </div>
       </div>
     </div>
