@@ -34,15 +34,7 @@ export interface PlayerRef {
 export const Player = withBoundary(
   forwardRef<PlayerRef, Props>(
     (
-      {
-        logId,
-        isVideo,
-        src,
-        className = 'w-full max-w-4xl h-auto rounded-lg shadow-lg',
-        onLoadedData,
-        onTimeUpdate,
-        onSeeked,
-      },
+      { logId, isVideo, src, className, onLoadedData, onTimeUpdate, onSeeked },
       ref,
     ) => {
       const videoRef = useRef<HTMLVideoElement>(null)
@@ -156,6 +148,7 @@ export const Player = withBoundary(
         <div
           className={twMerge(
             'relative group',
+            'w-full max-w-4xl h-auto rounded-[13px] overflow-hidden',
             className,
             isFullscreen && 'w-full h-full',
           )}
@@ -165,7 +158,7 @@ export const Player = withBoundary(
             controls={false}
             // autoPlay
             className={twMerge(
-              'w-full h-full rounded-md',
+              'w-full h-full',
               isBuffering ? 'opacity-50' : 'opacity-100',
               // For audio, show background, otherwise it's weird.
               !isVideo && 'bg-neutral-500/60',

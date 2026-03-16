@@ -7,6 +7,10 @@ import {
   PauseIcon,
   PlayIcon,
 } from '~/shared/icons'
+import { SeekBar } from './SeekBar'
+import { useAutoHideControls } from './useAutoHideControls'
+import { useVideoActions, useVideoState } from './useVideoState'
+import { formatTime } from './utils'
 import { VolumeControl } from './VolumeControl'
 
 interface Props {
@@ -14,6 +18,54 @@ interface Props {
   className?: string
   canFullscreen: boolean
   onBackgroundClick?: () => void
+}
+
+function useFullscreen() {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  return isFullscreen
+}
+
+function useArrowKeySeek(
+  videoRef: RefObject<HTMLVideoElement>,
+  skipBackward: () => void,
+  skipForward: () => void,
+) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        skipBackward()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        skipForward()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [videoRef, skipBackward, skipForward])
 }
 
 // Note: Even though PlaybackPreferencesProvider exists, we're changing the state
@@ -27,332 +79,42 @@ export function VideoControls({
   canFullscreen,
   onBackgroundClick,
 }: Props) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isDraggingSeek, setIsDraggingSeek] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showControls, setShowControls] = useState(true)
-  const [bufferedRanges, setBufferedRanges] = useState<TimeRanges | null>(null)
-  const [isMuted, setIsMuted] = useState(false)
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
-
   const controlsRef = useRef<HTMLDivElement>(null)
-  const seekBarRef = useRef<HTMLDivElement>(null)
-  const hideControlsTimer = useRef<NodeJS.Timeout | null>(null)
+  const [isDraggingSeek, setIsDraggingSeek] = useState(false)
 
-  const speeds = [1, 1.25, 1.5, 1.75, 2]
+  const {
+    isPlaying,
+    currentTime,
+    duration,
+    bufferedRanges,
+    isMuted,
+    playbackSpeed,
+  } = useVideoState(videoRef, isDraggingSeek)
 
-  // Sync mute state from video element
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
+  const {
+    togglePlay,
+    skipBackward,
+    skipForward,
+    cycleSpeed,
+    toggleMute,
+    seekTo,
+  } = useVideoActions(videoRef, duration, playbackSpeed)
 
-    setIsMuted(video.muted)
-    setPlaybackSpeed(video.playbackRate)
+  const showControls = useAutoHideControls(controlsRef, isPlaying)
+  const isFullscreen = useFullscreen()
 
-    const handleVolumeChange = () => {
-      setIsMuted(video.muted)
-    }
-
-    const handleRateChange = () => {
-      setPlaybackSpeed(video.playbackRate)
-    }
-
-    video.addEventListener('volumechange', handleVolumeChange)
-    video.addEventListener('ratechange', handleRateChange)
-
-    return () => {
-      video.removeEventListener('volumechange', handleVolumeChange)
-      video.removeEventListener('ratechange', handleRateChange)
-    }
-  }, [videoRef])
-
-  // Update play state
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-
-    const handlePlay = () => {
-      setIsPlaying(true)
-    }
-    const handlePause = () => {
-      setIsPlaying(false)
-    }
-
-    video.addEventListener('play', handlePlay)
-    video.addEventListener('pause', handlePause)
-
-    return () => {
-      video.removeEventListener('play', handlePlay)
-      video.removeEventListener('pause', handlePause)
-    }
-  }, [videoRef])
-
-  // Update time and duration
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-
-    const handleTimeUpdate = () => {
-      if (!isDraggingSeek) {
-        setCurrentTime(video.currentTime)
-      }
-    }
-
-    const handleDurationChange = () => {
-      setDuration(video.duration)
-    }
-
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration)
-    }
-
-    const handleProgress = () => {
-      setBufferedRanges(video.buffered)
-    }
-
-    video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('durationchange', handleDurationChange)
-    video.addEventListener('loadedmetadata', handleLoadedMetadata)
-    video.addEventListener('progress', handleProgress)
-
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('durationchange', handleDurationChange)
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      video.removeEventListener('progress', handleProgress)
-    }
-  }, [videoRef, isDraggingSeek])
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
-        return
-      }
-
-      const video = videoRef.current
-      if (!video) {
-        return
-      }
-
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault()
-        video.currentTime = Math.max(0, video.currentTime - 10)
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault()
-        video.currentTime = Math.min(
-          video.duration || 0,
-          video.currentTime + 10,
-        )
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [videoRef])
-
-  // Auto-hide controls
-  useEffect(() => {
-    const video = videoRef.current
-    const container = controlsRef.current?.parentElement
-    if (!video || !container) {
-      return
-    }
-
-    const resetHideTimer = () => {
-      setShowControls(true)
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current)
-      }
-      if (isPlaying) {
-        hideControlsTimer.current = setTimeout(() => {
-          setShowControls(false)
-        }, 3000)
-      }
-    }
-
-    const handleMouseMove = () => {
-      resetHideTimer()
-    }
-
-    const handleMouseLeave = () => {
-      if (isPlaying) {
-        setShowControls(false)
-      }
-    }
-
-    container.addEventListener('mousemove', handleMouseMove)
-    container.addEventListener('mouseleave', handleMouseLeave)
-
-    resetHideTimer()
-
-    return () => {
-      container.removeEventListener('mousemove', handleMouseMove)
-      container.removeEventListener('mouseleave', handleMouseLeave)
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current)
-      }
-    }
-  }, [videoRef, isPlaying])
-
-  // Handle fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-    }
-  }, [])
-
-  const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-
-    if (video.paused) {
-      video.play()
-    } else {
-      video.pause()
-    }
-  }
-
-  const skipBackward = () => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-    video.currentTime = Math.max(0, video.currentTime - 10)
-  }
-
-  const skipForward = () => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-    video.currentTime = Math.min(duration, video.currentTime + 10)
-  }
-
-  const cycleSpeed = () => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-
-    const currentIndex = speeds.indexOf(playbackSpeed)
-    const nextIndex = (currentIndex + 1) % speeds.length
-    video.playbackRate = speeds[nextIndex]
-  }
-
-  const toggleMute = () => {
-    const video = videoRef.current
-    if (!video) {
-      return
-    }
-    video.muted = !video.muted
-  }
-
-  const handleSeekBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const video = videoRef.current
-    const seekBar = seekBarRef.current
-    if (!video || !seekBar) {
-      return
-    }
-
-    const rect = seekBar.getBoundingClientRect()
-    const percent = (e.clientX - rect.left) / rect.width
-    video.currentTime = percent * duration
-  }
-
-  const handleSeekBarMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsDraggingSeek(true)
-    handleSeekBarClick(e)
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const video = videoRef.current
-      const seekBar = seekBarRef.current
-      if (!video || !seekBar) {
-        return
-      }
-
-      const rect = seekBar.getBoundingClientRect()
-      const percent = Math.max(
-        0,
-        Math.min(1, (moveEvent.clientX - rect.left) / rect.width),
-      )
-      const newTime = percent * duration
-      setCurrentTime(newTime)
-      video.currentTime = newTime
-    }
-
-    const handleMouseUp = () => {
-      setIsDraggingSeek(false)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }
+  useArrowKeySeek(videoRef, skipBackward, skipForward)
 
   const toggleFullscreen = () => {
     const container = controlsRef.current?.parentElement
     if (!container) {
       return
     }
-
     if (!document.fullscreenElement) {
       container.requestFullscreen()
     } else {
       document.exitFullscreen()
     }
-  }
-
-  const formatTime = (seconds: number): string => {
-    if (!isFinite(seconds)) {
-      return '0:00'
-    }
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const getBufferedPercent = (): number => {
-    if (!bufferedRanges || bufferedRanges.length === 0 || !duration) {
-      return 0
-    }
-
-    // Find the buffered range that contains the current time
-    for (let i = 0; i < bufferedRanges.length; i++) {
-      if (
-        bufferedRanges.start(i) <= currentTime &&
-        currentTime <= bufferedRanges.end(i)
-      ) {
-        return (bufferedRanges.end(i) / duration) * 100
-      }
-    }
-
-    // If current time is not in any buffered range, return the last buffered end
-    return (bufferedRanges.end(bufferedRanges.length - 1) / duration) * 100
   }
 
   return (
@@ -370,38 +132,14 @@ export function VideoControls({
         onClick={onBackgroundClick}
       />
       <div className="absolute bottom-0 left-0 right-0 p-3 pb-3">
-        {/* Seek Bar */}
-        <div className="mb-3">
-          <div
-            className="relative cursor-pointer py-2 -my-2 group"
-            onClick={handleSeekBarClick}
-            onMouseDown={handleSeekBarMouseDown}
-          >
-            <div
-              ref={seekBarRef}
-              className="relative h-1 bg-white/30 rounded-full pointer-events-none"
-            >
-              {/* Buffered Progress */}
-              <div
-                className="absolute h-full bg-white/40 rounded-full pointer-events-none"
-                style={{ width: `${getBufferedPercent()}%` }}
-              />
-              {/* Played Progress */}
-              <div
-                className="absolute h-full bg-white rounded-full pointer-events-none"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
-              {/* Seek Handle */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                style={{
-                  left: `${(currentTime / duration) * 100}%`,
-                  marginLeft: '-6px',
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <SeekBar
+          currentTime={currentTime}
+          duration={duration}
+          bufferedRanges={bufferedRanges}
+          onSeek={seekTo}
+          onSeekStart={() => setIsDraggingSeek(true)}
+          onSeekEnd={() => setIsDraggingSeek(false)}
+        />
 
         {/* Controls Row */}
         <div className="flex items-center gap-3 text-white">

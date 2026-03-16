@@ -68,7 +68,7 @@ function DetailPageInner({ log, unselect }: Props) {
     <div
       ref={scrollRef}
       className={twMerge(
-        'gap-7 overflow-x-hidden overflow-y-scroll w-full pb-8 relative',
+        'overflow-x-hidden overflow-y-scroll w-full pb-2 relative',
       )}
     >
       <div className="sticky top-0 z-10 bg-one">
@@ -81,14 +81,14 @@ function DetailPageInner({ log, unselect }: Props) {
               isVideo={!log.isAudioOnly}
               src={`log-media://${log.id}`}
               className={twMerge(
-                'w-full rounded-md',
+                'w-full',
                 log.isAudioOnly ? 'h-[100px]' : 'h-full',
               )}
             />
           </ShrinkingPlayer>
         </div>
       </div>
-      <main className="flex flex-col gap-5 mt-4 pl-2 pr-4">
+      <main className="flex flex-col gap-4 mt-4 pl-2 pr-4">
         <div className="bg-two rounded-lg p-3 pt-3 flex flex-col gap-2">
           <div className="flex items-start gap-2 -ml-3">
             <TitleInput
@@ -119,6 +119,7 @@ function DetailPageInner({ log, unselect }: Props) {
           <DebugToolbar log={log} unselect={unselect} />
         </div>
       </main>
+
       <ScrollToTopButton onClick={scrollToTop} visible={showScrollTop} />
     </div>
   )

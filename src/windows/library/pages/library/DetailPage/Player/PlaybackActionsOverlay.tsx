@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 import { usePlaybackPreferences } from '../../../../../shared/PlaybackPreferencesProvider'
 
 interface PlaybackActionsOverlayProps {
@@ -109,9 +110,11 @@ export function PlaybackActionsOverlay({
 
   return (
     <div
-      className={`absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-lg text-lg font-medium transition-opacity duration-300 pointer-events-none z-10 ${
-        isVisible ? 'opacity-100' : '!opacity-0'
-      } ${className}`}
+      className={twMerge(
+        'absolute top-4 right-4 bg-black/50 text-white px-4 py-1 text-lg font-medium transition-opacity duration-300 pointer-events-none z-10',
+        isVisible ? 'opacity-100' : '!opacity-0',
+        className,
+      )}
     >
       {displayText}
     </div>
