@@ -1,5 +1,5 @@
 import { Select } from '../../../shared/ui/Select'
-import { VolumeMeter } from './VolumeMeter'
+import { VolumeMeter } from '../../../shared/ui/VolumeMeter'
 import { VideocamIcon, MicIcon } from '../../../shared/icons'
 
 interface DeviceSelectorProps {

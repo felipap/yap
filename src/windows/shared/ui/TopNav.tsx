@@ -12,72 +12,59 @@ export function TopNav({ currentTab }: Props) {
   const router = useRouter()
   useTabShortcuts()
 
+  const handleLibraryClick = async () => {
+    const result = await requestSwitchToLibrary()
+    if (!result.allowed) {
+      return
+    }
+    if (!result.wasRecording) {
+      router.navigate({ name: 'library' })
+    }
+  }
+
+  const handleRecordClick = () => {
+    router.navigate({ name: 'record' })
+  }
+
   return (
     <div className="drag-region">
-      <div className="flex flex-row justify-between w-full select-none items-center py-1.5 px-2 bg-one  h-(--nav-height)">
-        <div className="flex items-center gap-3 pl-20 justify-between w-full">
-          <TabButton
-            active={currentTab === 'library'}
-            onClick={async () => {
-              const result = await requestSwitchToLibrary()
-              if (!result.allowed) {
-                return
-              }
-              if (!result.wasRecording) {
-                router.navigate({ name: 'library' })
-              }
-            }}
-            className={twMerge(
-              'border hover:text-contrast',
-              currentTab === 'record' && 'dark:border-white/10',
-            )}
-          >
-            <LibraryIcon className="w-3 h-3 mr-1" />
-            Library
-          </TabButton>
+      <div className="flex flex-row justify-end w-full select-none items-center py-1.5 px-2 bg-one h-(--nav-height)">
+        <div className="flex items-center bg-stone-200 dark:bg-stone-700 rounded-full p-0.5">
+            <PillTab
+              active={currentTab === 'library'}
+              onClick={handleLibraryClick}
+            >
+              <LibraryIcon className="w-3 h-3" />
+              Library
+            </PillTab>
 
-          <TabButton
-            active={currentTab === 'record'}
-            onClick={() => {
-              router.navigate({ name: 'record' })
-            }}
-            className={twMerge(
-              'dark:border-white/10 pr-2',
-              'hover:text-red-500 dark:hover:text-red-400',
-              currentTab === 'record' &&
-                'text-red-500 dark:text-red-400 bg-red-400/10',
-            )}
-          >
-            Record
-            <RecordIcon className="w-4 h-4 ml-0.5 mt-px" />
-          </TabButton>
+            <PillTab
+              active={currentTab === 'record'}
+              onClick={handleRecordClick}
+            >
+              <RecordIcon className="w-3 h-3" />
+              Record
+            </PillTab>
         </div>
       </div>
     </div>
   )
 }
 
-interface TabButtonProps {
+interface PillTabProps {
   onClick: () => void
   active?: boolean
   children: React.ReactNode
-  className?: string
 }
 
-function TabButton({
-  onClick,
-  active = false,
-  children,
-  className,
-}: TabButtonProps) {
+function PillTab({ onClick, active = false, children }: PillTabProps) {
   return (
     <button
       className={twMerge(
-        'no-drag-region px-3 h-[30px]  pb-0.5 leading-1 self-stretch text-[13px] track-10 font-medium  transition-colors rounded-md hover:bg-two flex items-center gap-1',
+        'no-drag-region px-2.5 py-1 text-[11px] font-medium transition-all rounded-full flex items-center gap-1',
         active
-          ? 'text-contrast bg-two border border-transparent'
-          : 'border border-contrast/10 text-secondary',
-        className,
+          ? 'bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 shadow-sm'
+          : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200',
       )}
       onClick={onClick}
     >

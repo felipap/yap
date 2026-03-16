@@ -13,7 +13,7 @@ import { PreviewScreen, PreviewScreenRef } from './PreviewScreen'
 import { RecordButton } from './RecordButton'
 import { Recorder } from './Recorder'
 import { RecordingModeSelector } from './RecordingModeSelector'
-import { VolumeMeter } from './VolumeMeter'
+import { VolumeMeter } from '../../../shared/ui/VolumeMeter'
 
 interface Props {
   close: () => void
@@ -22,17 +22,10 @@ interface Props {
 export function RecordInner({ close }: Props) {
   const router = useRouter()
   const [recordingMode, setRecordingMode] = useState<RecordingMode>('camera')
-  const {
-    cameras,
-    selectedCameraId,
-    setSelectedCameraId,
-    enableScreenFlash,
-  } = useCameras()
-  const {
-    microphones,
-    selectedMicrophoneId,
-    setSelectedMicrophoneId,
-  } = useMicrophones()
+  const { cameras, selectedCameraId, setSelectedCameraId, enableScreenFlash } =
+    useCameras()
+  const { microphones, selectedMicrophoneId, setSelectedMicrophoneId } =
+    useMicrophones()
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null)
   const [screenPreviewStream, setScreenPreviewStream] =
     useState<MediaStream | null>(null)
@@ -297,69 +290,76 @@ export function RecordInner({ close }: Props) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-one/40">
-      <div className="flex-1 flex flex-col items-center justify-center pb-4 gap-4 min-h-0">
+      <div className="h-10 bg-black/40 shrink-0 drag-region" />
+      <div className="relative flex-1 flex flex-col items-center justify-center gap-4 min-h-0">
         {/* Preview Area */}
         <div className="flex flex-col items-center gap-4 w-full flex-1 min-h-0">
           <div className="relative w-full h-full">
             <PreviewScreen mode={recordingMode} ref={previewRef} />
 
-            {/* Duration Timer during recording */}
-            {isRecording && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-                <div className="text-[32px] font-bold text-white tabular-nums drop-shadow-lg">
-                  {formatTime(recordingTime)}
-                </div>
-              </div>
-            )}
-
-            {/* Volume Meter during recording */}
-            {isRecording && selectedMicrophoneId && (
-              <div className="absolute top-4 right-8 z-10">
-                <VolumeMeter
-                  microphoneId={selectedMicrophoneId}
-                  size="sm"
-                  showLabel={false}
-                  className="w-[20px]"
-                />
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-4 w-full shrink-0 z-10 px-4">
-          {/* Recording Mode Selection */}
-          <RecordingModeSelector
-            recordingMode={recordingMode}
-            onModeChange={(mode) => {
-              setRecordingMode(mode)
-              saveRecordingMode(mode)
-            }}
-            isRecording={isRecording}
-          />
-
-          {/* Device Selection */}
-          {/* {!isRecording && ( */}
-          {false && (
-            <DeviceSelector
-              cameras={cameras}
-              microphones={microphones}
-              selectedCameraId={selectedCameraId}
-              selectedMicrophoneId={selectedMicrophoneId}
-              onCameraChange={setSelectedCameraId}
-              onMicrophoneChange={setSelectedMicrophoneId}
+        {/* Controls - Recording Mode Selection */}
+        {!isRecording && (
+          <div className="absolute flex flex-col gap-4 w-full shrink-0 z-10 px-4">
+            <RecordingModeSelector
               recordingMode={recordingMode}
+              onModeChange={(mode) => {
+                setRecordingMode(mode)
+                saveRecordingMode(mode)
+              }}
+              isRecording={isRecording}
+            />
+
+            {/* Device Selection */}
+            {/* {!isRecording && ( */}
+            {false && (
+              <DeviceSelector
+                cameras={cameras}
+                microphones={microphones}
+                selectedCameraId={selectedCameraId}
+                selectedMicrophoneId={selectedMicrophoneId}
+                onCameraChange={setSelectedCameraId}
+                onMicrophoneChange={setSelectedMicrophoneId}
+                recordingMode={recordingMode}
+              />
+            )}
+          </div>
+        )}
+
+      </div>
+
+      {/* Footer */}
+      <footer className="relative flex items-center justify-center py-4 px-6 shrink-0">
+        <div className="absolute left-6">
+          {selectedMicrophoneId && (
+            <VolumeMeter
+              microphoneId={selectedMicrophoneId}
+              size="sm"
+              showLabel={false}
             />
           )}
-
-          {/* Recording Button */}
-          <RecordButton
-            isRecording={isRecording}
-            onStartRecording={handleStartRecording}
-            onStopRecording={handleStopRecording}
-          />
         </div>
-      </div>
+        <RecordButton
+          isRecording={isRecording}
+          onStartRecording={handleStartRecording}
+          onStopRecording={handleStopRecording}
+        />
+        {isRecording && (
+          <div className="absolute right-6 text-[15px] font-medium text-contrast tabular-nums">
+            {formatTime(recordingTime)}
+          </div>
+        )}
+        {!isRecording && (
+          <button
+            onClick={close}
+            className="absolute right-6 px-3 py-1.5 text-[15px] font-medium text-black/70 bg-white/70 hover:bg-white/80 rounded-full transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </footer>
     </div>
   )
 }

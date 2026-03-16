@@ -1,7 +1,7 @@
 import { twMerge } from 'tailwind-merge'
 import { useVolumeMeter } from './useVolumeMeter'
 
-interface VolumeMeterProps {
+interface Props {
   microphoneId?: string
   className?: string
   showLabel?: boolean
@@ -13,11 +13,12 @@ export function VolumeMeter({
   className = '',
   showLabel = true,
   size = 'md',
-}: VolumeMeterProps) {
+}: Props) {
   const { volumeData } = useVolumeMeter({ microphoneId })
 
   const barCount = getBarCount(size)
-  const activeBars = Math.ceil(volumeData.volume * barCount)
+  const adjustedVolume = Math.max(0, (volumeData.volume - 0.1) / 0.9)
+  const activeBars = Math.ceil(adjustedVolume * barCount)
 
   const getBarColor = (index: number) => {
     if (index < activeBars) {
@@ -46,13 +47,16 @@ export function VolumeMeter({
       )}
 
       <div
-        className={twMerge('flex items-end gap-1 w-fit', getSizeClasses(size))}
+        className={twMerge(
+          'flex items-end gap-[2px] w-fit',
+          getSizeClasses(size),
+        )}
       >
         {Array.from({ length: barCount }, (_, index) => (
           <div
             key={index}
             className={twMerge(
-              'w-[5px] rounded-sm transition-all duration-100',
+              'w-[5px] rounded- transition-all duration-100',
               getBarColor(index),
             )}
             style={{

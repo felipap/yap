@@ -1,6 +1,3 @@
-import { Button } from '../../../shared/ui/Button'
-import { SolidSquare } from '../../../shared/icons'
-
 interface Props {
   isRecording: boolean
   onStartRecording: () => void
@@ -14,24 +11,21 @@ export function RecordButton({
 }: Props) {
   if (isRecording) {
     return (
-      <Button variant="stop" onClick={onStopRecording}>
-        <div className="flex items-center w-full justify-center gap-3">
-          <SolidSquare size={16} />
-          Stop Recording
-        </div>
-      </Button>
+      <button
+        onClick={onStopRecording}
+        className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center transition-all hover:bg-red-600 hover:scale-105"
+      >
+        <div className="w-3.5 h-3.5 bg-red-900 rounded-sm" />
+      </button>
     )
   }
 
   return (
-    <Button
-      className="w-full px-6 h-16 sm:px-8 sm:h-20 bg-red-500 hover:bg-red-600 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transition-all hover:shadow-xl hover:scale-101"
+    <button
       onClick={onStartRecording}
+      className="w-14 h-14 p-0.5 rounded-full border-2 border-red-500 flex items-center justify-center transition-all hover:scale-105"
     >
-      <div className="flex items-center w-full justify-center gap-3">
-        <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
-        Record
-      </div>
-    </Button>
+      <div className="w-full h-full rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
+    </button>
   )
 }

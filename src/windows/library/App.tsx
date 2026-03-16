@@ -16,23 +16,20 @@ export function App() {
     }
   }, [currentRoute.name])
 
-  let inner = null
-  if (currentRoute.name == 'library' || !currentRoute.name) {
-    inner = (
-      <div>
-        <TopNav currentTab={currentRoute.name} />
-        <div className="flex-1 overflow-hidden">
-          <LibraryPage />
-        </div>
+  if (currentRoute.name === 'record') {
+    return (
+      <div className="flex flex-col h-screen text-[14px] track-10 dark:antialiased">
+        <RecordPage />
       </div>
     )
-  } else {
-    inner = <RecordPage />
   }
 
   return (
     <div className="flex flex-col h-screen text-[14px] track-10 dark:antialiased">
-      {inner}
+      <TopNav currentTab="library" />
+      <div className="flex-1 overflow-hidden">
+        <LibraryPage />
+      </div>
     </div>
   )
 }

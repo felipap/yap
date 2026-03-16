@@ -13,7 +13,7 @@ export interface VolumeData {
 }
 
 export function useVolumeMeter(options: VolumeMeterOptions = {}) {
-  const { microphoneId, smoothingFactor = 0.8, updateInterval = 50 } = options
+  const { microphoneId, smoothingFactor = 0.8 } = options
 
   const [volumeData, setVolumeData] = useState<VolumeData>({
     volume: 0,
@@ -27,45 +27,6 @@ export function useVolumeMeter(options: VolumeMeterOptions = {}) {
   const streamRef = useRef<MediaStream | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const lastVolumeRef = useRef(0)
-
-  const startMonitoring = async () => {
-    try {
-      // Stop existing monitoring
-      stopMonitoring()
-
-      // Create audio context
-      audioContextRef.current = new (window.AudioContext ||
-        (window as any).webkitAudioContext)()
-
-      // Get microphone stream
-      const constraints: MediaStreamConstraints = {
-        audio: microphoneId ? { deviceId: { exact: microphoneId } } : true,
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      streamRef.current = stream
-
-      // Create audio source and analyser
-      microphoneRef.current =
-        audioContextRef.current.createMediaStreamSource(stream)
-      analyserRef.current = audioContextRef.current.createAnalyser()
-
-      // Configure analyser
-      analyserRef.current.fftSize = 256
-      analyserRef.current.smoothingTimeConstant = smoothingFactor
-
-      // Connect nodes
-      microphoneRef.current.connect(analyserRef.current)
-
-      // Start monitoring loop
-      monitorVolume()
-
-      setVolumeData((prev) => ({ ...prev, isActive: true }))
-    } catch (error) {
-      console.error('Failed to start volume monitoring:', error)
-      setVolumeData((prev) => ({ ...prev, isActive: false }))
-    }
-  }
 
   const stopMonitoring = () => {
     if (animationFrameRef.current) {
@@ -107,7 +68,6 @@ export function useVolumeMeter(options: VolumeMeterOptions = {}) {
     const dataArray = new Uint8Array(bufferLength)
     analyserRef.current.getByteFrequencyData(dataArray)
 
-    // Calculate RMS (Root Mean Square) for better volume representation
     let sum = 0
     for (let i = 0; i < bufferLength; i++) {
       sum += dataArray[i] * dataArray[i]
@@ -115,12 +75,10 @@ export function useVolumeMeter(options: VolumeMeterOptions = {}) {
     const rms = Math.sqrt(sum / bufferLength)
     const volume = rms / 255
 
-    // Apply smoothing to reduce jitter
     const smoothedVolume =
       lastVolumeRef.current * smoothingFactor + volume * (1 - smoothingFactor)
     lastVolumeRef.current = smoothedVolume
 
-    // Check if audio is muted (very low volume for extended period)
     const isMuted = smoothedVolume < 0.01
 
     setVolumeData({
@@ -129,14 +87,43 @@ export function useVolumeMeter(options: VolumeMeterOptions = {}) {
       isMuted,
     })
 
-    // Continue monitoring
     animationFrameRef.current = requestAnimationFrame(monitorVolume)
   }
 
-  // Start monitoring when microphoneId changes
+  const startMonitoring = async () => {
+    stopMonitoring()
+
+    const audioContext = new (window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext)()
+    audioContextRef.current = audioContext
+
+    const constraints: MediaStreamConstraints = {
+      audio: microphoneId ? { deviceId: { exact: microphoneId } } : true,
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    streamRef.current = stream
+
+    microphoneRef.current = audioContext.createMediaStreamSource(stream)
+    analyserRef.current = audioContext.createAnalyser()
+
+    analyserRef.current.fftSize = 256
+    analyserRef.current.smoothingTimeConstant = smoothingFactor
+
+    microphoneRef.current.connect(analyserRef.current)
+
+    monitorVolume()
+
+    setVolumeData((prev) => ({ ...prev, isActive: true }))
+  }
+
   useEffect(() => {
     if (microphoneId) {
-      startMonitoring()
+      startMonitoring().catch((error) => {
+        console.error('Failed to start volume monitoring:', error)
+        setVolumeData((prev) => ({ ...prev, isActive: false }))
+      })
     } else {
       stopMonitoring()
     }
@@ -146,7 +133,6 @@ export function useVolumeMeter(options: VolumeMeterOptions = {}) {
     }
   }, [microphoneId])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopMonitoring()
