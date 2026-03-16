@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MicrophoneIcon } from '../../../shared/icons'
+import { MicrophoneIcon } from '~/shared/icons'
 import {
   getRecordingMode,
   setRecordingMode as saveRecordingMode,
-} from '../../../shared/ipc'
-import { useRouter } from '../../../shared/Router'
-import { VolumeMeter } from '../../../shared/ui/VolumeMeter'
+} from '~/shared/ipc'
+import { useRouter } from '~/shared/Router'
+import { VolumeMeter } from '~/shared/ui/VolumeMeter'
 import { RecordingMode } from '../../types'
 import { PillButton, RecordButton } from './buttons'
 import { DeviceSelector } from './DeviceSelector'
