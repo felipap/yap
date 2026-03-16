@@ -4,6 +4,7 @@ import { onViewLogEntry } from '~/shared/ipc'
 import { PlaybackPreferencesProvider } from '~/shared/PlaybackPreferencesProvider'
 import { withBoundary } from '~/shared/withBoundary'
 import { EnrichedLog } from '../../../types'
+import { FloatingToolbar } from './FloatingToolbar'
 import { MissingFileDetailPage } from './MissingFileDetailPage'
 import { Player, PlayerRef } from './Player'
 import { SummarySubtitle } from './SummarySubtitle'
@@ -45,6 +46,7 @@ function DetailPageInner({ log, unselect }: Props) {
         'gap-7 overflow-x-hidden overflow-y-scroll w-full pb-8',
       )}
     >
+      <div className="h-(--nav-height) drag-region" />
       <div className="w-full px-1">
         <Player
           ref={playerRef}
@@ -59,11 +61,14 @@ function DetailPageInner({ log, unselect }: Props) {
       </div>
       <div className="flex flex-col items-center gap-8 justify-start mt-5">
         <header className="px-0 flex flex-col gap-1 w-full">
-          <TitleInput
-            logId={log.id}
-            isVideo={!log.isAudioOnly}
-            title={log.title || ''}
-          />
+          <div className="flex items-start justify-between gap-2 pr-3">
+            <TitleInput
+              logId={log.id}
+              isVideo={!log.isAudioOnly}
+              title={log.title || ''}
+            />
+            <FloatingToolbar logId={log.id} onDeleted={unselect} />
+          </div>
           <div className="px-1.5">
             <SummarySubtitle log={log} />
           </div>
@@ -74,7 +79,7 @@ function DetailPageInner({ log, unselect }: Props) {
         </div>
 
         <div className="px-1 w-full">
-          <Toolbar log={log} unselect={unselect} />
+          {/* <Toolbar log={log} unselect={unselect} /> */}
         </div>
       </div>
     </div>

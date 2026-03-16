@@ -2,7 +2,11 @@ import { BsFillCollectionFill } from 'react-icons/bs'
 import {
   MdAccessTime,
   MdContentCopy,
+  MdDelete,
+  MdFavorite,
+  MdFavoriteBorder,
   MdFolder,
+  MdIosShare,
   MdMic,
   MdMovie,
   MdRefresh,
@@ -109,4 +113,23 @@ export function MicrophoneIcon() {
       <line x1="12" x2="12" y1="19" y2="22" />
     </svg>
   )
+}
+
+export function ShareIcon({ size = 16, className }: IconProps) {
+  return <MdIosShare size={size} className={className} />
+}
+
+export function HeartIcon({
+  size = 16,
+  className,
+  filled,
+}: IconProps & { filled?: boolean }) {
+  if (filled) {
+    return <MdFavorite size={size} className={className} />
+  }
+  return <MdFavoriteBorder size={size} className={className} />
+}
+
+export function TrashIcon({ size = 16, className }: IconProps) {
+  return <MdDelete size={size} className={className} />
 }
