@@ -16,6 +16,7 @@ export function SummarySubtitle({ log }: Props) {
   const {
     summary,
     hasEmptyTranscription,
+    hasEmptySummary,
     hasTranscription,
     isGenerating,
     error,
@@ -39,6 +40,14 @@ export function SummarySubtitle({ log }: Props) {
       return (
         <div className="text-[13px] text-contrast opacity-60 italic">
           nothing to transcribe
+        </div>
+      )
+    }
+
+    if (hasEmptySummary) {
+      return (
+        <div className="text-[13px] text-contrast opacity-60 italic">
+          nothing to summarize
         </div>
       )
     }

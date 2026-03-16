@@ -109,10 +109,9 @@ export async function triggerGenerateSummary(
       }
 
       const result = await generateSummary(transcription.result.text, openaiApiKey)
-      if (!result.success) {
-        return result
-      }
-
+      
+      // Save an empty summary to indicate "attempted but no meaningful content"
+      // This distinguishes from "never attempted" (no file exists)
       await setSummaryData(logId, result.summary)
       return result
     } catch (error) {

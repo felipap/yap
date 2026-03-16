@@ -56,11 +56,19 @@ Create a summary that:
 - Avoids addressing the speaker directly or giving advice
 - Simply reports what was said and discussed${contextSection}
 
-If the transcript is empty or contains no meaningful words, set hasContent to false.
+IMPORTANT: Set hasContent to FALSE if any of these apply:
+- The transcript is empty or mostly empty
+- The transcript contains only gibberish, nonsense words, or speech artifacts
+- The transcript is just a single short phrase or sentence with no real information
+- The transcript contains only filler words, background noise transcriptions, or repeated phrases
+- There is no substantive topic, discussion, or information being conveyed
+- The transcript appears to be a failed or garbled transcription
+
+Only set hasContent to TRUE if the transcript contains actual meaningful discussion, ideas, topics, or information worth summarizing.
 
 Respond with a JSON object containing:
-- "summary": string (the summary text)
-- "hasContent": boolean (whether there was meaningful content)`
+- "summary": string (the summary text, can be empty if hasContent is false)
+- "hasContent": boolean (whether there was meaningful content worth summarizing)`
 
   const client = new OpenAI({ apiKey: openaiApiKey })
 

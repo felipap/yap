@@ -13,6 +13,10 @@ export function useSummary(log: EnrichedLog) {
     log.transcription &&
     (!log.transcription.text || log.transcription.text.trim().length === 0)
 
+  // Summary file exists but is empty = attempted but no meaningful content
+  const hasSummaryFile = log.summary !== null && log.summary !== undefined
+  const hasEmptySummary = hasSummaryFile && log.summary === ''
+
   useEffect(() => {
     if (isGenerating && summary !== summaryAtGenerateStart.current) {
       setIsGenerating(false)
@@ -47,6 +51,7 @@ export function useSummary(log: EnrichedLog) {
   return {
     summary,
     hasEmptyTranscription,
+    hasEmptySummary,
     hasTranscription: !!log.transcription,
     isGenerating,
     error,

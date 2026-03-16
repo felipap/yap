@@ -918,7 +918,7 @@ async function enrichLog(log: Log): Promise<EnrichedLog> {
     created: createdDate,
     thumbnailPath: `log-thumbnail://${log.id}.jpg${thumbQuery}`,
     duration: log.duration,
-    summary: summary || undefined,
+    summary: summary ?? undefined,
     transcription: transcriptionData?.result || undefined,
     isAudioOnly: log.isAudioOnly,
     isFavorited: log.isFavorited,
