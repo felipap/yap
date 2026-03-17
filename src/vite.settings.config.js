@@ -2,6 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+const rootDir = path.resolve(__dirname, '..')
+const srcDir = __dirname
+
 export default defineConfig({
   plugins: [
     // react({
@@ -9,7 +12,7 @@ export default defineConfig({
     // }),
     react(),
   ],
-  root: 'src/windows/settings',
+  root: path.resolve(srcDir, 'windows/settings'),
   base: './',
   server: {
     port: 4001,
@@ -26,12 +29,12 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: {
-      '~': path.resolve(__dirname, 'src/windows'),
+      '~': path.resolve(srcDir, 'windows'),
     },
   },
   build: {
     sourcemap: true,
-    outDir: '../../../dist/windows/settings',
+    outDir: path.resolve(rootDir, 'dist/windows/settings'),
     emptyOutDir: true,
     rollupOptions: {
       external: [],

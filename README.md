@@ -17,10 +17,16 @@ Yap transcribes and summarizes your videos if you provide it an OpenAI API key.
 
 Yap stores videos in a folder of your choice inside your computer.
 
-## Contributing
+## Roadmap
 
-See [CONTRIBUTE.md](CONTRIBUTE.md) for development setup, project structure, and guidelines.
-
-## License
-
-MIT
+- [ ] Launch on Hackernews.
+- [ ] Launch on Bookface.
+- [ ] Feat: skip silent parts.
+- [ ] Keep recording if the window closes
+- [ ] Fix asking for keychain access all the time.
+- [x] "are you sure you want to close?" dialog.
+- [x] Output mp4 straight away instead of having to convert.
+- [x] Move transcript to files.
+- [x] Fix `ffmpeg not available` error when ffmpeg is, in fact, available.
+- [x] An icon that makes sense for "Yap".
+- [x] Don't lose the log if the program crashes
