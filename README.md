@@ -23,7 +23,6 @@ Yap stores videos in a folder of your choice inside your computer.
 - [ ] Launch on Bookface.
 - [ ] Feat: skip silent parts.
 - [ ] Keep recording if the window closes
-- [ ] Fix asking for keychain access all the time.
 - [x] "are you sure you want to close?" dialog.
 - [x] Output mp4 straight away instead of having to convert.
 - [x] Move transcript to files.

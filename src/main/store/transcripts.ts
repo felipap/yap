@@ -98,38 +98,3 @@ export async function copySidecarData(
     await setSummaryData(toLogId, summary)
   }
 }
-
-/**
- * One-time migration: extracts transcription and summary fields from logs
- * in data.json into individual sidecar files, then strips them from the store.
- */
-export async function migrateTranscriptsFromStore(): Promise<void> {
-  const logs = store.get('logs') || {}
-  let migrated = 0
-
-  for (const [logId, log] of Object.entries(logs)) {
-    const rawLog = log as unknown as Record<string, unknown>
-    let changed = false
-
-    if (rawLog.transcription) {
-      await setTranscriptionData(logId, rawLog.transcription as TranscriptionState)
-      delete rawLog.transcription
-      changed = true
-    }
-
-    if (typeof rawLog.summary === 'string' && rawLog.summary.length > 0) {
-      await setSummaryData(logId, rawLog.summary as string)
-      delete rawLog.summary
-      changed = true
-    }
-
-    if (changed) {
-      migrated++
-    }
-  }
-
-  if (migrated > 0) {
-    store.set('logs', logs)
-    console.log(`Migrated transcripts/summaries for ${migrated} logs to sidecar files`)
-  }
-}

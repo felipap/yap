@@ -1,8 +1,8 @@
 // Utilities for using `ffmpeg`
 
 import { spawn } from 'child_process'
-import { access } from 'fs/promises'
 import { constants } from 'fs'
+import { access } from 'fs/promises'
 
 let cachedFfmpegPath: string | null = null
 
@@ -70,9 +70,6 @@ export function getFFmpegEnv(): NodeJS.ProcessEnv {
   }
 }
 
-/**
- * Check if FFmpeg is available on the system
- */
 export async function isFFmpegAvailable(): Promise<boolean> {
   const ffmpegPath = await findFFmpegPath()
   if (!ffmpegPath) {

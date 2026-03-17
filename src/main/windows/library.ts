@@ -148,3 +148,32 @@ export function createLibraryWindow(): BrowserWindow {
 export function getLibraryWindow(): BrowserWindow | undefined {
   return libraryWindow ?? undefined
 }
+
+export function registerBeforeQuitHandler(): void {
+  // Before app quits
+  app.on('before-quit', async (event) => {
+    if (isRecordingActive() && !app.isQuitting) {
+      event.preventDefault()
+
+      const response = await dialog.showMessageBox(libraryWindow, {
+        type: 'warning',
+        buttons: ['Cancel', 'Quit Anyway'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Recording in Progress',
+        message: 'A recording is currently in progress.',
+        detail:
+          'Quitting will stop the recording. Are you sure you want to quit?',
+      })
+
+      if (response.response === 1) {
+        libraryWindow?.webContents.send('stop-recording-requested')
+        await cancelStreamingRecording()
+        app.isQuitting = true
+        app.quit()
+      }
+    } else {
+      app.isQuitting = true
+    }
+  })
+}
