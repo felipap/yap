@@ -5,20 +5,18 @@ import { app, dialog } from 'electron'
 import started from 'electron-squirrel-startup'
 import { registerProtocols, setupProtocolHandlers } from './handle-protocols'
 import { setupIpcHandlers } from './ipc'
-import { store } from './store'
-import { migrateTranscriptsFromStore } from './store/transcripts'
 import { setupMenu } from './menu'
+import { store } from './store'
 // import { createTray } from './tray'
+import { isFFmpegAvailable } from './lib/ffmpeg'
+import { cancelStreamingRecording, isRecordingActive } from './recording'
 import { setupAutoUpdater } from './updater'
-import {
-  cancelStreamingRecording,
-  isRecordingActive,
-} from './recording'
 import {
   createLibraryWindow,
   createSettingsWindow,
   libraryWindow,
 } from './windows'
+import { registerBeforeQuitHandler } from './windows/library'
 
 if (app.isPackaged && store.get('sentryEnabled') !== false) {
   SentryInit({
@@ -53,18 +51,24 @@ async function onInit() {
   isInitialized = true
 
   setupProtocolHandlers()
-
-  await migrateTranscriptsFromStore()
-
   setupIpcHandlers()
-
   setupMenu()
-
-  // Create windows
   createLibraryWindow()
   createSettingsWindow()
-  // createRecordingWindow()
-  // createTray()
+  registerBeforeQuitHandler()
+
+  // Check for FFmpeg availability and show a warning if not found
+  const ffmpegAvailable = await isFFmpegAvailable()
+  if (!ffmpegAvailable) {
+    dialog.showMessageBox(libraryWindow, {
+      type: 'warning',
+      buttons: ['OK'],
+      title: 'FFmpeg Not Found',
+      message: 'Please install ffmpeg',
+      detail:
+        'Yap needs `ffmpeg` to record and transcribe videos. Please install it before using Yap.',
+    })
+  }
 
   app.on('activate', () => {
     // On macOS, when the dock icon is clicked, show the library window
@@ -87,13 +91,6 @@ async function quitApp() {
   app.quit()
   process.exit(0)
 }
-
-//
-//
-//
-//
-//
-//
 
 // Declare `isQuitting`
 declare global {
@@ -140,32 +137,5 @@ app.on('window-all-closed', () => {
   // Note: Tray is currently disabled
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-// Before app quits
-app.on('before-quit', async (event) => {
-  if (isRecordingActive() && !app.isQuitting) {
-    event.preventDefault()
-
-    const response = await dialog.showMessageBox(libraryWindow, {
-      type: 'warning',
-      buttons: ['Cancel', 'Quit Anyway'],
-      defaultId: 0,
-      cancelId: 0,
-      title: 'Recording in Progress',
-      message: 'A recording is currently in progress.',
-      detail:
-        'Quitting will stop the recording. Are you sure you want to quit?',
-    })
-
-    if (response.response === 1) {
-      libraryWindow?.webContents.send('stop-recording-requested')
-      await cancelStreamingRecording()
-      app.isQuitting = true
-      app.quit()
-    }
-  } else {
-    app.isQuitting = true
   }
 })
