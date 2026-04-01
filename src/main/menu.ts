@@ -255,6 +255,18 @@ export function setupMenu() {
       submenu: [
         { role: 'minimize' },
         {
+          label: 'Float on Top',
+          type: 'checkbox',
+          checked: getLibraryWindow()?.isAlwaysOnTop() ?? false,
+          click: (menuItem) => {
+            const window = getLibraryWindow()
+            if (window && !window.isDestroyed()) {
+              window.setAlwaysOnTop(menuItem.checked)
+            }
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Close',
           accelerator: 'CommandOrControl+W',
           click: () => {
