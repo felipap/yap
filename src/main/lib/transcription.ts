@@ -483,9 +483,10 @@ export async function transcribeVideo(
   } finally {
     // Clean up temporary audio file (failure shouldn't fail the whole operation)
     try {
+      await access(audioPath)
       await unlink(audioPath)
-    } catch (error) {
-      console.warn('Failed to delete temporary audio file:', error)
+    } catch {
+      // File already cleaned up or never created
     }
   }
   return result

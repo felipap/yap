@@ -98,9 +98,7 @@ export async function triggerGenerateSummary(
 
       const extension = log.path.split('.').pop()
       if (!log.isAudioOnly && extension !== 'mp4') {
-        throw new Error(
-          'Only audio logs or mp4 videos can have summaries generated',
-        )
+        return null
       }
 
       const transcription = await getTranscriptionData(logId)
