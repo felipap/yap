@@ -230,7 +230,7 @@ export function setupVideoHandlers() {
         detail: `The file has been copied to the recordings folder. Do you want to move the original file to trash?`,
       })
 
-      if (response.response === 1) {
+      if (response.response === 0) {
         try {
           await moveToTrash(filePath)
           debug(`Moved original file to trash: ${filePath}`)
